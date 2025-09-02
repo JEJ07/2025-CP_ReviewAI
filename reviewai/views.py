@@ -183,13 +183,23 @@ def get_fake_review_word_frequency(user=None, limit=10):
     
     return word_counter.most_common(limit)
 
+
+def get_top_platforms(limit=5):
+    """Return top platforms and their review counts."""
+    return (
+        Review.objects.values('platform')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:limit]
+    )
+    
 @staff_member_required
 def admin_dashboard(request):    
     total_reviews = Review.objects.count()
     
     total_users = User.objects.filter(reviews__isnull=False).distinct().count()
     guest_reviews_count = Review.objects.filter(user__isnull=True).count()
-    
+    top_platforms = get_top_platforms(limit=5)
+
     web_reviews_count = Review.objects.filter(platform='web').count()
     extension_reviews_count = Review.objects.exclude(platform='web').count()
     
@@ -243,6 +253,7 @@ def admin_dashboard(request):
         review_count=Count('reviews')
     ).filter(review_count__gt=0).order_by('-review_count')[:5]
     
+    
     context = {
         'total_reviews': total_reviews,
         'fake_count': fake_count,
@@ -254,7 +265,9 @@ def admin_dashboard(request):
         'recent_reviews': recent_reviews,
         'daily_data': daily_data,
         'top_users': top_users,
-        'fake_word_frequency': fake_word_frequency,  # ADD THIS LINE
+        'fake_word_frequency': fake_word_frequency,  
+        'top_platforms': top_platforms,
+
     }
     
     return render(request, 'reviewai/admin/admin_dashboard.html', context)

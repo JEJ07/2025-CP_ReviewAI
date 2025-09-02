@@ -151,78 +151,11 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <!-- Charts Section - CHANGED FROM lg:grid-cols-2 TO lg:grid-cols-3 -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Review Activity</h3>
-            
-            {% if daily_data %}
-                <div class="space-y-3">
-                    {% for day in daily_data %}
-                    <div class="flex items-center">
-                        <div class="w-20 text-sm text-gray-600">{{ day.date }}</div>
-                        <div class="flex-1 flex items-center space-x-2 ml-3">
-                            <div class="flex-1 bg-gray-200 rounded-full h-4">
-                                {% if day.total > 0 %}
-                                    <div class="bg-blue-500 h-4 rounded-full transition-all duration-300" 
-                                         style="width: {% if day.total <= 5 %}{{ day.total|add:'0' }}0%{% else %}100%{% endif %}; min-width: 15%;"></div>
-                                {% else %}
-                                    <div class="bg-gray-300 h-4 rounded-full" style="width: 8%;"></div>
-                                {% endif %}
-                            </div>
-                            <span class="text-sm font-semibold text-gray-900 w-6">{{ day.total }}</span>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                
-                <!-- Summary -->
-                <div class="mt-4 pt-3 border-t border-gray-200 text-center">
-                    <p class="text-xs text-gray-500">
-                        Total: {{ daily_data|length }} day{{ daily_data|length|pluralize }} with activity
-                    </p>
-                </div>
-            {% else %}
-                <!-- Empty State -->
-                <div class="text-center py-8">
-                    <div class="mx-auto h-12 w-12 text-gray-400 mb-3">📊</div>
-                    <h3 class="text-sm font-medium text-gray-900">No Activity Data</h3>
-                    <p class="text-xs text-gray-500 mt-1">Review activity will appear here</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Top Users -->
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Most Active Users</h3>
-            <div class="space-y-4">
-                {% for user in top_users %}
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span class="text-sm font-medium text-blue-600">{{ user.username|first|upper }}</span>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">{{ user.username }}</p>
-                        </div>
-                    </div>
-                    <div class="text-sm text-gray-500">
-                        {{ user.review_count }} review{{ user.review_count|pluralize }}
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-sm text-gray-500">No active users yet.</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    
     <!-- NEW: Common Fake Review Words -->
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
@@ -262,13 +195,56 @@
                 </div>
             {% endif %}
         </div>
+</div>
+
+    <!-- Top Platforms Pie Chart -->
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Top Platforms</h3>
+        <canvas id="platformsPieChart" height="180"></canvas>
+        <script>
+            const platformLabels = [{% for p in top_platforms %}'{{ p.platform|title }}',{% endfor %}];
+            const platformCounts = [{% for p in top_platforms %}{{ p.count }},{% endfor %}];
+            const platformColors = [
+                'rgba(59,130,246,0.7)',   // blue
+                'rgba(16,185,129,0.7)',   // green
+                'rgba(239,68,68,0.7)',    // red
+                'rgba(251,191,36,0.7)',   // yellow
+                'rgba(139,92,246,0.7)'    // purple
+            ];
+            const ctxPlatform = document.getElementById('platformsPieChart').getContext('2d');
+            new Chart(ctxPlatform, {
+                type: 'pie',
+                data: {
+                    labels: platformLabels,
+                    datasets: [{
+                        data: platformCounts,
+                        backgroundColor: platformColors.slice(0, platformLabels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        </script>
+        <div class="mt-4 flex flex-wrap gap-4 justify-center">
+            {% for p in top_platforms %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold shadow">
+                {{ p.platform|title }} <span class="ml-2 bg-gray-200 text-gray-600 rounded-full px-2 py-0.5 text-xs font-medium">{{ p.count }}</span>
+            </span>
+            {% endfor %}
+        </div>
     </div>
+</div>
 </div>
 
 <!-- System Overview -->
 <div class="bg-white shadow rounded-lg mb-8">
     <div class="px-4 py-5 sm:p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">System Overview</h3>
+        <h3 class="text-lg font-medium text-gray-900  text-center">System Overview</h3>
         <div class="grid grid-cols-2 gap-4 text-center">
             <div>
                 <div class="text-2xl font-bold text-blue-600">
@@ -294,28 +270,7 @@
     </div>
 </div>
 
-<!-- Common Words -->
-<div class="bg-white shadow rounded-lg mb-8">
-    <div class="px-4 py-5 sm:p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Common Words in Reviews</h3>
-        {% if common_words %}
-        <div class="flex flex-wrap gap-3">
-            {% for item in common_words %}
-            <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold shadow">
-                {{ item.word }}
-                <span class="ml-2 bg-blue-100 text-blue-600 rounded-full px-2 py-0.5 text-xs font-medium">{{ item.count }}</span>
-            </span>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="text-center py-8">
-            <div class="text-gray-400 text-3xl mb-3">🔍</div>
-            <h4 class="text-sm font-medium text-gray-900">No Data Yet</h4>
-            <p class="text-xs text-gray-500 mt-1">Common words will appear here once reviews are analyzed</p>
-        </div>
-        {% endif %}
-    </div>
-</div>
+
 
 <!-- Charts Section -->
 <div class="grid grid-cols-1  gap-8 mb-8">
