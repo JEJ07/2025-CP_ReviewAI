@@ -11,6 +11,8 @@ from django.core.paginator import Paginator
 from datetime import datetime, timedelta
 import json
 import logging
+import re
+from collections import Counter
 from .utils.fake_review_detector import get_detector
 from django.conf import settings
 from .models import Review, ReviewAnalysis
@@ -43,7 +45,6 @@ def predict_review(request):
         
         logger.info(f"Prediction completed for review length: {len(review_text)}")
         
-        # DATABASE SAVING - UPDATED WITH PLATFORM
         try:
             product_name = data.get('product_name', 'Unknown Product')
             
@@ -53,7 +54,7 @@ def predict_review(request):
                 user=user,
                 product_name=product_name[:255],
                 review_text=review_text,
-                platform='web',  # Web app is always 'web'
+                platform='web',
                 created_at=timezone.now()
             )
             
@@ -69,7 +70,7 @@ def predict_review(request):
                     db_result = 'possibly_fake'
                 else:
                     db_result = 'uncertain'
-            else:  # genuine
+            else:
                 if confidence >= 0.9:
                     db_result = 'genuine'
                 elif confidence >= 0.75:
@@ -143,8 +144,45 @@ def admin_history(request):
     }
     return render(request, 'reviewai/admin/admin_history.html', context)
 
+def get_fake_review_word_frequency(user=None, limit=10):
+    """Get most common words in fake reviews from database"""
+    # Filter fake reviews from database
+    fake_analyses = ReviewAnalysis.objects.filter(
+        result__in=['fake', 'likely_fake', 'possibly_fake']
+    )
+    
+    if user:
+        fake_analyses = fake_analyses.filter(review__user=user)
+    
+    # Get all fake review texts
+    fake_texts = fake_analyses.select_related('review').values_list('review__review_text', flat=True)
+    
+    # Process words
+    word_counter = Counter()
+    stop_words = {
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+        'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
+        'before', 'after', 'above', 'below', 'between', 'among', 'this', 'that',
+        'these', 'those', 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 
+        'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 
+        'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 
+        'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 
+        'which', 'who', 'whom', 'whose', 'am', 'is', 'are', 'was', 'were', 
+        'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 
+        'did', 'doing', 'will', 'would', 'should', 'could', 'can', 'may', 
+        'might', 'must', 'shall', 'not', 'no', 'yes'
+    }
+    
+    for text in fake_texts:
+        if text:
+            # Clean and split text - extract words only
+            words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+            # Filter out stop words and short words
+            filtered_words = [word for word in words if word not in stop_words and len(word) >= 3]
+            word_counter.update(filtered_words)
+    
+    return word_counter.most_common(limit)
 
-# Admin Dashboard - UPDATED WITH PLATFORM STATS
 @staff_member_required
 def admin_dashboard(request):    
     total_reviews = Review.objects.count()
@@ -152,7 +190,6 @@ def admin_dashboard(request):
     total_users = User.objects.filter(reviews__isnull=False).distinct().count()
     guest_reviews_count = Review.objects.filter(user__isnull=True).count()
     
-    # Platform stats - NEW
     web_reviews_count = Review.objects.filter(platform='web').count()
     extension_reviews_count = Review.objects.exclude(platform='web').count()
     
@@ -165,6 +202,9 @@ def admin_dashboard(request):
     ).count()
     
     recent_reviews = Review.objects.select_related('user').prefetch_related('analyses').order_by('-created_at')[:5]
+    
+    # Get fake review word frequency - ADD THIS LINE
+    fake_word_frequency = get_fake_review_word_frequency(limit=10)
     
     daily_data = []
     
@@ -209,22 +249,21 @@ def admin_dashboard(request):
         'genuine_count': genuine_count,
         'total_users': total_users,
         'guest_reviews_count': guest_reviews_count,
-        'web_reviews_count': web_reviews_count,          # NEW
-        'extension_reviews_count': extension_reviews_count,  # NEW
+        'web_reviews_count': web_reviews_count,
+        'extension_reviews_count': extension_reviews_count,
         'recent_reviews': recent_reviews,
         'daily_data': daily_data,
         'top_users': top_users,
+        'fake_word_frequency': fake_word_frequency,  # ADD THIS LINE
     }
     
     return render(request, 'reviewai/admin/admin_dashboard.html', context)
 
 @login_required
 def user_dashboard(request):    
-    # User's personal stats
     user_reviews = Review.objects.filter(user=request.user)
     total_user_reviews = user_reviews.count()
     
-    # User's fake/genuine counts
     user_fake_count = ReviewAnalysis.objects.filter(
         review__user=request.user,
         result__in=['fake', 'likely_fake', 'possibly_fake']
@@ -235,11 +274,12 @@ def user_dashboard(request):
         result__in=['genuine', 'likely_genuine', 'possibly_genuine']
     ).count()
     
-    # User's recent activity (last 30 days)
     thirty_days_ago = timezone.now() - timedelta(days=30)
     recent_reviews = user_reviews.filter(created_at__gte=thirty_days_ago).count()
     
-    # User's daily activity for chart
+    # Get user's fake review word frequency - ADD THIS LINE
+    user_fake_word_frequency = get_fake_review_word_frequency(user=request.user, limit=10)
+    
     daily_data = []
     if total_user_reviews > 0:
         user_reviews_by_date = user_reviews.filter(
@@ -270,7 +310,6 @@ def user_dashboard(request):
         
         daily_data = list(reversed(daily_data))
     
-    # User's most analyzed product categories (top 5)
     top_products = user_reviews.values('product_name').annotate(
         count=Count('id')
     ).order_by('-count')[:5]
@@ -286,6 +325,7 @@ def user_dashboard(request):
         'top_products': top_products,
         'recent_user_reviews': recent_user_reviews,
         'username': request.user.username,
+        'user_fake_word_frequency': user_fake_word_frequency,  # ADD THIS LINE
     }
     
     return render(request, 'reviewai/user_dashboard.html', context)
@@ -320,7 +360,6 @@ def predict_batch(request):
             'error': str(e)
         }, status=500)
 
-# API endpoint for browser extension single review analysis - UPDATED WITH DATABASE SAVING
 @csrf_exempt
 @require_http_methods(["POST"])
 def extension_predict(request):
@@ -337,20 +376,18 @@ def extension_predict(request):
         detector_instance = get_detector()
         result = detector_instance.predict_single_review(review_text)
         
-        # NEW: DATABASE SAVING FOR EXTENSION
         try:
             product_name = data.get('product_name', 'Unknown Product')
             platform = data.get('platform_name', 'extension')
             
             review = Review.objects.create(
-                user=None,  # Extension reviews are anonymous
+                user=None,
                 product_name=product_name[:255],
                 review_text=review_text,
-                platform=platform,  # Platform from extension (amazon, ebay, etc.)
+                platform=platform,
                 created_at=timezone.now()
             )
             
-            # Create analysis record
             prediction_lower = result['prediction'].lower().strip()
             confidence = result['confidence']
             
@@ -363,7 +400,7 @@ def extension_predict(request):
                     db_result = 'possibly_fake'
                 else:
                     db_result = 'uncertain'
-            else:  # genuine
+            else:
                 if confidence >= 0.9:
                     db_result = 'genuine'
                 elif confidence >= 0.75:
@@ -400,7 +437,6 @@ def extension_predict(request):
             'error': str(e)
         }, status=500)
 
-# API endpoint for browser extension batch analysis - UPDATED WITH DATABASE SAVING
 @csrf_exempt
 @require_http_methods(["POST"])
 def extension_batch_predict(request):
@@ -417,13 +453,11 @@ def extension_batch_predict(request):
         detector_instance = get_detector()
         results = []
         
-        # NEW: Get platform and product info for batch
         platform = data.get('platform_name', 'extension')
         default_product = data.get('product_name', 'Unknown Product')
         
         for i, review_data in enumerate(reviews):
             try:
-                # Handle both string array and object array
                 if isinstance(review_data, str):
                     review_text = review_data
                     product_name = f"{default_product} #{i+1}"
@@ -433,7 +467,6 @@ def extension_batch_predict(request):
                 
                 result = detector_instance.predict_single_review(review_text)
                 
-                # NEW: Save each review to database
                 try:
                     review = Review.objects.create(
                         user=None,
@@ -443,7 +476,6 @@ def extension_batch_predict(request):
                         created_at=timezone.now()
                     )
                     
-                    # Create analysis record
                     prediction_lower = result['prediction'].lower().strip()
                     confidence = result['confidence']
                     
