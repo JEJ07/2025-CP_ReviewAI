@@ -11,6 +11,8 @@ from django.core.paginator import Paginator
 from datetime import datetime, timedelta
 import json
 import logging
+import re
+from collections import Counter
 from .utils.fake_review_detector import get_detector
 from django.conf import settings
 from .models import Review, ReviewAnalysis
@@ -139,6 +141,44 @@ def admin_history(request):
     }
     return render(request, 'reviewai/admin/admin_history.html', context)
 
+def get_fake_review_word_frequency(user=None, limit=10):
+    """Get most common words in fake reviews from database"""
+    # Filter fake reviews from database
+    fake_analyses = ReviewAnalysis.objects.filter(
+        result__in=['fake', 'likely_fake', 'possibly_fake']
+    )
+    
+    if user:
+        fake_analyses = fake_analyses.filter(review__user=user)
+    
+    # Get all fake review texts
+    fake_texts = fake_analyses.select_related('review').values_list('review__review_text', flat=True)
+    
+    # Process words
+    word_counter = Counter()
+    stop_words = {
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+        'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
+        'before', 'after', 'above', 'below', 'between', 'among', 'this', 'that',
+        'these', 'those', 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 
+        'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 
+        'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 
+        'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 
+        'which', 'who', 'whom', 'whose', 'am', 'is', 'are', 'was', 'were', 
+        'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 
+        'did', 'doing', 'will', 'would', 'should', 'could', 'can', 'may', 
+        'might', 'must', 'shall', 'not', 'no', 'yes'
+    }
+    
+    for text in fake_texts:
+        if text:
+            # Clean and split text - extract words only
+            words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+            # Filter out stop words and short words
+            filtered_words = [word for word in words if word not in stop_words and len(word) >= 3]
+            word_counter.update(filtered_words)
+    
+    return word_counter.most_common(limit)
 
 @staff_member_required
 def admin_dashboard(request):    
@@ -159,6 +199,9 @@ def admin_dashboard(request):
     ).count()
     
     recent_reviews = Review.objects.select_related('user').prefetch_related('analyses').order_by('-created_at')[:5]
+    
+    # Get fake review word frequency - ADD THIS LINE
+    fake_word_frequency = get_fake_review_word_frequency(limit=10)
     
     daily_data = []
     
@@ -208,6 +251,7 @@ def admin_dashboard(request):
         'recent_reviews': recent_reviews,
         'daily_data': daily_data,
         'top_users': top_users,
+        'fake_word_frequency': fake_word_frequency,  # ADD THIS LINE
     }
     
     return render(request, 'reviewai/admin/admin_dashboard.html', context)
@@ -229,6 +273,9 @@ def user_dashboard(request):
     
     thirty_days_ago = timezone.now() - timedelta(days=30)
     recent_reviews = user_reviews.filter(created_at__gte=thirty_days_ago).count()
+    
+    # Get user's fake review word frequency - ADD THIS LINE
+    user_fake_word_frequency = get_fake_review_word_frequency(user=request.user, limit=10)
     
     daily_data = []
     if total_user_reviews > 0:
@@ -275,6 +322,7 @@ def user_dashboard(request):
         'top_products': top_products,
         'recent_user_reviews': recent_user_reviews,
         'username': request.user.username,
+        'user_fake_word_frequency': user_fake_word_frequency,  # ADD THIS LINE
     }
     
     return render(request, 'reviewai/user_dashboard.html', context)
