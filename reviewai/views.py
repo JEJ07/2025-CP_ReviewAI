@@ -19,8 +19,11 @@ logger = logging.getLogger(__name__)
 
 def analyze_view(request):
     return render(request, 'reviewai/analyze.html')
+
 def blueprint_view(request):
     return render(request, 'reviewai/blueprint.html')
+def landing_view(request):
+    return render(request, 'reviewai/landing.html')
 
 @csrf_exempt
 @require_http_methods(["POST"])
