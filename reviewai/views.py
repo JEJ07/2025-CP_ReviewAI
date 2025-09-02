@@ -547,6 +547,38 @@ def extension_batch_predict(request):
         }, status=500)
 
 @csrf_exempt
+@require_http_methods(["POST"])
+def extension_quick_analyze(request):
+    try:
+        data = json.loads(request.body)
+        review_text = data.get('review_text', '').strip()
+        
+        if not review_text:
+            return JsonResponse({
+                'success': False,
+                'error': 'Review text is required'
+            }, status=400)
+
+        detector_instance = get_detector()
+        result = detector_instance.predict_single_review(review_text)
+        
+        logger.info(f"Quick analysis completed (not saved): {len(review_text)} chars")
+        
+        return JsonResponse({
+            'prediction': result['prediction'],
+            'confidence': result['confidence'],
+            'probabilities': result['probabilities'],
+            'individual_predictions': result.get('individual_predictions'),
+            'cleaned_text': result.get('cleaned_text')
+        })
+        
+    except Exception as e:
+        logger.error(f"Quick analysis error: {str(e)}")
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
+
+@csrf_exempt
 @require_http_methods(["GET"])
 def get_batch_limit(request):
     batch_limit = getattr(settings, 'REVIEWAI_BATCH_LIMIT', 20)

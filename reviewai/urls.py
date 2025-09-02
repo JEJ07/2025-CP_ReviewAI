@@ -20,5 +20,6 @@ urlpatterns = [
 
     path('api/analyze-review/', views.extension_predict, name='extension_predict'),
     path('api/analyze-batch-reviews/', views.extension_batch_predict, name='extension_batch'),
+    path('api/quick-analyze/', views.extension_quick_analyze, name='extension_quick_analyze'),
     path('api/get-batch-limit/', views.get_batch_limit, name='get_batch_limit'),
 ]
