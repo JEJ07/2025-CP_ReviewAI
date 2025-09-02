@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviewAI - Analyze Fake Reviews</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#0ea5e9',
+                        dark: '#1e293b',
+                        light: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hero-bg {
+            background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+        }
+        .review-box {
+            transition: all 0.3s ease;
+        }
+        .review-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .platform-logo {
+            height: 40px;
+            filter: grayscale(100%);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+        .platform-logo:hover {
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-robot text-primary text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-dark">ReviewAI</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        Guest Mode
+                    </span>
+                    <a href="#" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                        Login
+                    </a>
+                    <a href="#" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Sign Up
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-bg text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">Analyze Fake Reviews with AI </h1>
+                    <p class="text-xl mb-8 opacity-90">Let our advanced AI technology help you distinguish genuine feedback from deceptive reviews.</p>
+                    <div class="bg-white rounded-lg p-6 shadow-lg">
+                        <h3 class="text-dark font-semibold mb-3">Paste the product review text</h3>
+                        <textarea class="w-full h-32 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Copy and paste the review you want to analyze here..."></textarea>
+                        <button class="mt-4 w-full bg-primary hover:bg-secondary text-white font-medium py-3 px-4 rounded-md transition-colors">
+                            Analyze Review
+                        </button>
+                    </div>
+                </div>
+                <div class="md:w-2/5 flex justify-center">
+                    <div class="relative">
+                        <div class="absolute -inset-4 bg-blue-300 rounded-lg blur opacity-30"></div>
+                        <div class="relative bg-white rounded-lg shadow-xl p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <div class="flex items-center mb-2">
+                                        <div class="flex text-yellow-400">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star-half-alt"></i>
+                                        </div>
+                                        <span class="ml-2 text-sm font-semibold text-dark">4.5/5</span>
+                                    </div>
+                                    <h4 class="font-semibold text-dark">John D.</h4>
+                                </div>
+                                <div class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                                    Verified Purchase
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-4">"This product exceeded my expectations. The quality is outstanding and it arrived sooner than expected."</p>
+                            <div class="bg-blue-50 border border-blue-100 rounded-md p-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-robot text-primary mr-2"></i>
+                                    <span class="text-sm font-medium text-dark">AI Analysis: 92% Authentic</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="bg-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="p-6">
+                    <div class="text-5xl font-bold text-primary mb-2">2.5M+</div>
+                    <div class="text-gray-600">Reviews Analyzed</div>
+                </div>
+                <div class="p-6">
+                    <div class="text-5xl font-bold text-primary mb-2">98%</div>
+                    <div class="text-gray-600">Accuracy Rate</div>
+                </div>
+                <div class="p-6">
+                    <div class="text-5xl font-bold text-primary mb-2">24/7</div>
+                    <div class="text-gray-600">AI Monitoring</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="bg-gray-50 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center text-dark mb-12">How ReviewAI Works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm text-center review-box">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-paste text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-dark mb-2">Paste Review</h3>
+                    <p class="text-gray-600">Copy and paste the product review text you want to analyze into our system.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm text-center review-box">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-brain text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-dark mb-2">AI Analysis</h3>
+                    <p class="text-gray-600">Our advanced AI algorithms examine the review for authenticity patterns and red flags.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm text-center review-box">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chart-pie text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-dark mb-2">Get Results</h3>
+                    <p class="text-gray-600">Receive a detailed breakdown of the review's authenticity score and potential concerns.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Supported Platforms -->
+    <section class="bg-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center text-dark mb-4">Supported Platforms</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">ReviewAI works across all major e-commerce platforms to help you shop smarter everywhere.</p>
+            
+            <div class="flex flex-wrap justify-center gap-10 mb-16">
+                <div class="flex items-center justify-center w-40 h-20 bg-gray-100 rounded-lg platform-logo">
+                    <span class="text-xl font-bold text-gray-700">Amazon</span>
+                </div>
+                <div class="flex items-center justify-center w-40 h-20 bg-gray-100 rounded-lg platform-logo">
+                    <span class="text-xl font-bold text-gray-700">eBay</span>
+                </div>
+                <div class="flex items-center justify-center w-40 h-20 bg-gray-100 rounded-lg platform-logo">
+                    <span class="text-xl font-bold text-gray-700">Walmart</span>
+                </div>
+                <div class="flex items-center justify-center w-40 h-20 bg-gray-100 rounded-lg platform-logo">
+                    <span class="text-xl font-bold text-gray-700">Best Buy</span>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 rounded-xl p-8 max-w-4xl mx-auto">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-shield-alt text-primary text-4xl"></i>
+                    </div>
+                    <div class="ml-6">
+                        <h3 class="text-xl font-semibold text-dark mb-2">Shop with Confidence</h3>
+                        <p class="text-gray-600">ReviewAI empowers smarter shopping by analyzing reviews on all major e-commerce platforms, helping you avoid scams and make informed purchasing decisions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="hero-bg py-16 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold mb-6">Ready to Shop Smarter?</h2>
+            <p class="text-xl max-w-3xl mx-auto mb-8">Join millions of users who trust ReviewAI to help them make better purchasing decisions.</p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="#" class="bg-white text-primary hover:bg-gray-100 font-medium px-8 py-3 rounded-lg transition-colors">
+                    Get Started Free
+                </a>
+                <a href="#" class="border-2 border-white text-white hover:bg-white hover:text-primary font-medium px-8 py-3 rounded-lg transition-colors">
+                    Learn More
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="md:flex md:justify-between md:items-center">
+                <div class="mb-8 md:mb-0">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-robot text-secondary text-2xl mr-2"></i>
+                        <span class="text-xl font-bold">ReviewAI</span>
+                    </div>
+                    <p class="text-gray-400 max-w-md">Helping millions shop smarter, safer, and scam-free since 2023.</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-8 sm:grid-cols-3">
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-wider mb-4">Product</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Features</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">API</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-wider mb-4">Company</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">About</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Careers</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-wider mb-4">Legal</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Cookie Policy</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm">Copyright 2025 ReviewAI. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple animation for stats counter
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+        
+        // Animate stats when they come into view
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                animateValue("stat-1", 0, 2500000, 2000);
+                animateValue("stat-2", 0, 98, 2000);
+            }, 500);
+        });
+    </script>
+</body>
+</html>

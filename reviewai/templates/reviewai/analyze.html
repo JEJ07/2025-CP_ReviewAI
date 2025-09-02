@@ -1,0 +1,92 @@
+{% extends 'reviewai/base.html' %} 
+{% load static %} 
+
+{% block title %}ReviewAI{% endblock %}
+
+{% block content %}
+<!-- Override container styling for analyze page -->
+<div style="margin: -1.5rem; padding: 1.5rem 1.5rem 0;">
+  <!-- Hero Section with proper top padding -->
+  <div class="text-center mb-12 pt-8">
+    <h2 class="text-5xl font-bold text-gray-900 mb-4">Analyze Fake Reviews</h2>
+    <p class="text-xl text-gray-600 mb-8">
+      Let our AI tell you what's real and what's not.
+    </p>
+
+    <!-- Main Form -->
+    <div class="max-w-2xl mx-auto">
+      <form id="reviewForm" class="flex gap-3">
+        {% csrf_token %}
+        <textarea
+          id="reviewText"
+          placeholder="Paste the product review text..."
+          class="flex-1 h-12 px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none"
+          rows="1"
+          required
+        ></textarea>
+        <button
+          type="submit"
+          id="analyzeBtn"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 whitespace-nowrap"
+        >
+          Analyze
+        </button>
+      </form>
+    </div>
+
+    <p class="text-gray-500 mt-4">
+      Helping <span class="font-semibold">millions</span> shop smarter, safer, and
+      scam-free.
+    </p>
+  </div>
+
+  <!-- Results Section -->
+  <div id="result" class="hidden mb-12"></div>
+
+  <!-- Supported Platforms -->
+  <div class="text-center">
+    <p class="text-gray-700 font-medium mb-8">
+      ReviewAI empowers smarter shopping by analyzing reviews on:
+    </p>
+
+    <div class="flex justify-center items-center gap-12 mb-5">
+      <!-- Shopee -->
+      <div class="flex flex-col items-center">
+        <a href="https://www.shopee.ph" target="_blank" >
+        <img src="{% static 'reviewai/images/shopee.png' %}" class="w-20 h-20 object-contain" alt="shopee logo">
+      </a>
+      </div>
+
+      <!-- Amazon -->
+      <div class="flex flex-col items-center">
+        <a href="https://www.amazon.com" target="_blank" >
+        <img src="{% static 'reviewai/images/amazon.png' %}" class="w-20 h-20 object-contain" alt="amazon logo">
+      </a>
+      </div>
+
+      <!-- Lazada -->
+      <div class="flex flex-col items-center">
+        <a href="https://www.amazon.com" target="_blank" >
+        <img src="{% static 'reviewai/images/laz.png' %}" class="w-20 h-20 object-contain" alt="shopee logo">
+      </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
+
+{% block extra_js %}
+<script>
+  // Pass authentication status and URLs to JavaScript
+  document.body.dataset.authenticated =
+    '{{ user.is_authenticated|yesno:"true,false" }}';
+
+  window.djangoUrls = {
+    predict: '{% url "reviewai:predict" %}',
+    analyze: '{% url "reviewai:analyze" %}',
+  };
+
+  window.csrfToken = "{{ csrf_token }}";
+</script>
+<script src="{% static 'reviewai/js/review-analyzer.js' %}"></script>
+{% endblock %}

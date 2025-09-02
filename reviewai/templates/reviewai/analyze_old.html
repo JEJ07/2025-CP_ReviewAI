@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ReviewAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 font-sans min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+      <div
+        class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <h1 class="text-2xl font-bold text-gray-900">ReviewAI</h1>
+        <button
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          Login
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-16">
+      <!-- Hero Section -->
+      <div class="text-center mb-12">
+        <h2 class="text-5xl font-bold text-gray-900 mb-4">
+          Analyze Fake Reviews
+        </h2>
+        <p class="text-xl text-gray-600 mb-8">
+          Let our AI tell you what's real and what's not.
+        </p>
+
+        <!-- Main Form -->
+        <div class="max-w-2xl mx-auto">
+          <form id="reviewForm" class="flex gap-3">
+            <textarea
+              id="reviewText"
+              placeholder="Paste the product review text..."
+              class="flex-1 h-12 px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none"
+              rows="1"
+            ></textarea>
+            <button
+              type="submit"
+              id="analyzeBtn"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 whitespace-nowrap"
+            >
+              Analyze
+            </button>
+          </form>
+        </div>
+
+        <p class="text-gray-500 mt-4">
+          Helping <span class="font-semibold">millions</span> shop smarter,
+          safer, and scam-free.
+        </p>
+      </div>
+
+      <!-- Results Section -->
+      <div id="result" class="hidden mb-12"></div>
+
+      <!-- Supported Platforms -->
+      <div class="text-center">
+        <p class="text-gray-700 font-medium mb-8">
+          ReviewAI empowers smarter shopping by analyzing reviews on:
+        </p>
+
+        <div class="flex justify-center items-center gap-12">
+          <!-- Shopee -->
+          <div class="flex flex-col items-center">
+            <div
+              class="w-16 h-16 bg-orange-500 rounded-lg flex items-center justify-center mb-2"
+            >
+              <span class="text-white font-bold text-xl">S</span>
+            </div>
+            <span class="text-sm text-gray-600">Shopee</span>
+          </div>
+
+          <!-- Amazon -->
+          <div class="flex flex-col items-center">
+            <div
+              class="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center mb-2"
+            >
+              <span class="text-white font-bold text-sm">amazon</span>
+            </div>
+            <span class="text-sm text-gray-600">Amazon</span>
+          </div>
+
+          <!-- Lazada -->
+          <div class="flex flex-col items-center">
+            <div
+              class="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mb-2"
+            >
+              <span class="text-white font-bold text-xl">Laz</span>
+            </div>
+            <span class="text-sm text-gray-600">Lazada</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+      <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="text-center">
+          <h3 class="font-bold text-gray-900 mb-4">ReviewAI</h3>
+          <div class="flex justify-center gap-8 mb-4">
+            <a href="#" class="text-gray-600 hover:text-gray-900"
+              >Terms of Use</a
+            >
+            <a href="#" class="text-gray-600 hover:text-gray-900"
+              >Privacy Policy</a
+            >
+          </div>
+          <p class="text-gray-500">
+            Copyright 2025 <span class="font-semibold">ReviewAI</span>
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Auto-resize textarea
+      const textarea = document.getElementById("reviewText");
+      textarea.addEventListener("input", function () {
+        this.style.height = "auto";
+        this.style.height = Math.min(this.scrollHeight, 120) + "px";
+      });
+
+      // Function to create SVG circular progress with confidence-based colors
+      function createCircularProgress(percentage, isGenuine, confidence) {
+        const radius = 60;
+        const circumference = 2 * Math.PI * radius;
+        const strokeDashoffset =
+          circumference - (percentage / 100) * circumference;
+
+        // Dynamic color based on confidence
+        let color;
+        if (confidence >= 0.75) {
+          color = isGenuine ? "#10b981" : "#ef4444"; // Green/Red for high confidence
+        } else if (confidence >= 0.6) {
+          color = isGenuine ? "#f59e0b" : "#f97316"; // Yellow/Orange for moderate confidence
+        } else {
+          color = "#6b7280"; // Gray for low confidence
+        }
+
+        return `
+            <div class="relative w-40 h-40">
+                <svg class="w-40 h-40 transform -rotate-90" viewBox="0 0 144 144">
+                    <!-- Background circle -->
+                    <circle cx="72" cy="72" r="60" stroke="#e5e7eb" stroke-width="8" fill="none" />
+                    <!-- Progress circle -->
+                    <circle 
+                        cx="72" 
+                        cy="72" 
+                        r="60" 
+                        stroke="${color}" 
+                        stroke-width="8" 
+                        fill="none"
+                        stroke-dasharray="${circumference}"
+                        stroke-dashoffset="${strokeDashoffset}"
+                        stroke-linecap="round"
+                        class="transition-all duration-1000 ease-out"
+                    />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-gray-900">${percentage}%</div>
+                    </div>
+                </div>
+            </div>
+        `;
+      }
+
+      // Helper functions for improved labeling
+      function getPredictionLabel(prediction, confidence) {
+        const confidenceLevel = confidence * 100;
+        const isGenuine = prediction.toLowerCase().trim() === "genuine";
+
+        if (confidenceLevel >= 90) {
+          return isGenuine ? "Highly Genuine" : "Definitely Fake";
+        } else if (confidenceLevel >= 75) {
+          return isGenuine ? "Likely Genuine" : "Likely Fake";
+        } else if (confidenceLevel >= 60) {
+          return isGenuine ? "Possibly Genuine" : "Possibly Fake";
+        } else {
+          return "Uncertain Result";
+        }
+      }
+
+      function getConfidenceDescription(confidence) {
+        const confidenceLevel = confidence * 100;
+
+        if (confidenceLevel >= 90) {
+          return "Very High Confidence";
+        } else if (confidenceLevel >= 75) {
+          return "High Confidence";
+        } else if (confidenceLevel >= 60) {
+          return "Moderate Confidence";
+        } else {
+          return "Low Confidence - Manual Review Recommended";
+        }
+      }
+
+      function getConfidenceColors(prediction, confidence) {
+        const confidenceLevel = confidence * 100;
+        const isGenuine = prediction.toLowerCase().trim() === "genuine";
+
+        if (confidenceLevel >= 75) {
+          return isGenuine
+            ? {
+                bg: "bg-green-50",
+                border: "border-green-200",
+                text: "text-green-800",
+                accent: "text-green-600",
+              }
+            : {
+                bg: "bg-red-50",
+                border: "border-red-200",
+                text: "text-red-800",
+                accent: "text-red-600",
+              };
+        } else if (confidenceLevel >= 60) {
+          return isGenuine
+            ? {
+                bg: "bg-yellow-50",
+                border: "border-yellow-200",
+                text: "text-yellow-800",
+                accent: "text-yellow-600",
+              }
+            : {
+                bg: "bg-orange-50",
+                border: "border-orange-200",
+                text: "text-orange-800",
+                accent: "text-orange-600",
+              };
+        } else {
+          return {
+            bg: "bg-gray-50",
+            border: "border-gray-300",
+            text: "text-gray-800",
+            accent: "text-gray-600",
+          };
+        }
+      }
+
+      document
+        .getElementById("reviewForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const reviewText = document.getElementById("reviewText").value;
+          const resultDiv = document.getElementById("result");
+          const analyzeBtn = document.getElementById("analyzeBtn");
+
+          if (!reviewText.trim()) {
+            alert("Please enter a review text");
+            return;
+          }
+
+          // Show loading state
+          analyzeBtn.disabled = true;
+          analyzeBtn.textContent = "Analyzing...";
+          analyzeBtn.className =
+            "bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold cursor-not-allowed whitespace-nowrap";
+
+          try {
+            const response = await fetch("/predict/", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                review_text: reviewText,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              const result = data.result;
+              const prediction = result.prediction.toLowerCase().trim();
+              const isGenuine = prediction === "genuine";
+              const confidence = result.confidence;
+              const confidencePercentage = Math.round(confidence * 100);
+
+              // Get improved labels and colors
+              const predictionLabel = getPredictionLabel(
+                result.prediction,
+                confidence
+              );
+              const confidenceDesc = getConfidenceDescription(confidence);
+              const colors = getConfidenceColors(result.prediction, confidence);
+
+              resultDiv.innerHTML = `
+                    <!-- Main Result Card -->
+                    <div class="bg-white rounded-xl shadow-lg border-2 ${
+                      colors.border
+                    } p-8 ${colors.bg} mb-8">
+                        <div class="flex items-center justify-center gap-8">
+                            <!-- Circular Progress -->
+                            <div class="flex-shrink-0">
+                                ${createCircularProgress(
+                                  confidencePercentage,
+                                  isGenuine,
+                                  confidence
+                                )}
+                            </div>
+                            
+                            <!-- Review Text and Prediction -->
+                            <div class="flex-1 max-w-md">
+                                <div class="text-sm ${
+                                  colors.accent
+                                } italic mb-4 line-clamp-3">
+                                    "${
+                                      reviewText.length > 150
+                                        ? reviewText.substring(0, 150) + "..."
+                                        : reviewText
+                                    }"
+                                </div>
+                                <div class="text-2xl font-bold ${
+                                  colors.text
+                                } mb-2">
+                                    ${predictionLabel}
+                                </div>
+                                <div class="text-sm ${
+                                  colors.accent
+                                } font-medium">
+                                    ${confidenceDesc}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Confidence Indicator -->
+                        ${
+                          confidence < 0.6
+                            ? `
+                        <div class="mt-6 p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
+                            <div class="flex items-center">
+                                <span class="text-yellow-600 text-lg mr-2">⚠️</span>
+                                <div>
+                                    <div class="font-semibold text-yellow-800">Low Confidence Result</div>
+                                    <div class="text-sm text-yellow-700">Consider getting additional opinions or manual review.</div>
+                                </div>
+                            </div>
+                        </div>
+                        `
+                            : ""
+                        }
+                    </div>
+
+                    <!-- Detailed Breakdown -->
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Probability Breakdown -->
+                        <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <h4 class="font-bold text-gray-800 mb-4 text-lg">Probability Breakdown</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-green-700 font-medium">Genuine:</span>
+                                        <span class="font-bold text-green-700 text-lg">${(
+                                          result.probabilities.genuine * 100
+                                        ).toFixed(1)}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-3">
+                                        <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: ${
+                                          result.probabilities.genuine * 100
+                                        }%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-red-700 font-medium">Fake:</span>
+                                        <span class="font-bold text-red-700 text-lg">${(
+                                          result.probabilities.fake * 100
+                                        ).toFixed(1)}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-3">
+                                        <div class="bg-red-500 h-3 rounded-full transition-all duration-1000" style="width: ${
+                                          result.probabilities.fake * 100
+                                        }%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Model Breakdown -->
+                        ${
+                          result.individual_predictions
+                            ? `
+                        <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <h4 class="font-bold text-gray-800 mb-4 text-lg">Model Breakdown2</h4>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="font-medium">SVM:</span>
+                                    <span>G: ${(
+                                      result.individual_predictions.svm
+                                        .genuine * 100
+                                    ).toFixed(1)}% | F: ${(
+                                result.individual_predictions.svm.fake * 100
+                              ).toFixed(1)}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="font-medium">Random Forest:</span>
+                                    <span>G: ${(
+                                      result.individual_predictions.rf.genuine *
+                                      100
+                                    ).toFixed(1)}% | F: ${(
+                                result.individual_predictions.rf.fake * 100
+                              ).toFixed(1)}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="font-medium">DistilBERT:</span>
+                                    <span>G: ${(
+                                      result.individual_predictions.distilbert
+                                        .genuine * 100
+                                    ).toFixed(1)}% | F: ${(
+                                result.individual_predictions.distilbert.fake *
+                                100
+                              ).toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        `
+                            : ""
+                        }
+                    </div>
+                `;
+
+              resultDiv.classList.remove("hidden");
+              resultDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+            } else {
+              resultDiv.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-lg border-2 border-red-200 p-8 bg-red-50">
+                            <div class="text-center">
+                                <div class="text-6xl mb-4">⚠️</div>
+                                <h3 class="text-2xl font-bold text-red-800 mb-4">Analysis Error</h3>
+                                <p class="text-red-700 text-lg">${data.error}</p>
+                            </div>
+                        </div>
+                    `;
+              resultDiv.classList.remove("hidden");
+              resultDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          } catch (error) {
+            resultDiv.innerHTML = `
+                    <div class="bg-white rounded-xl shadow-lg border-2 border-red-200 p-8 bg-red-50">
+                        <div class="text-center">
+                            <div class="text-6xl mb-4">🔌</div>
+                            <h3 class="text-2xl font-bold text-red-800 mb-4">Network Error</h3>
+                            <p class="text-red-700 text-lg">${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            resultDiv.classList.remove("hidden");
+            resultDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+
+          // Reset button
+          analyzeBtn.disabled = false;
+          analyzeBtn.textContent = "Analyze";
+          analyzeBtn.className =
+            "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 whitespace-nowrap";
+        });
+    </script>
+  </body>
+</html>

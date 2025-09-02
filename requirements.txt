@@ -1,0 +1,9 @@
+Django==4.2.23
+django-cors-headers==4.7.0
+torch==2.7.1
+transformers==4.53.2
+scikit-learn==1.6.1
+numpy==2.2.2
+joblib==1.4.2
+requests==2.32.3
+nltk==3.9.1
