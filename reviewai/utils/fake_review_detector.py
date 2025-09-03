@@ -120,20 +120,41 @@ class FakeReviewDetector:
     def preprocess_text(self, text):
         if not isinstance(text, str):
             return ""
-        # Remove URLs
-        text = re.sub(r'http\S+|www\S+|https\S+', '', text)
-        # Keep .,!?/: and numbers; remove other punctuation
+        
+        # Step 1: Basic cleaning
+        text = re.sub(r'http\S+|www\S+|https\S+', '', text)  # Remove URLs
+        
+        # Step 2: Normalize whitespace and convert to lowercase
+        text = re.sub(r'\s+', ' ', text).strip().lower()
+        
+        # Step 3: Keep only letters, numbers, and basic punctuation
         text = re.sub(r'[^\w\s\.\,\!\?\/\:]', ' ', text)
-        text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
+        
+        # Step 4: Remove standalone numbers at the end
+        text = re.sub(r'\s+\d+\s*$', '', text)  # Remove trailing numbers
+        
+        # Step 5: Normalize multiple spaces again
+        text = re.sub(r'\s+', ' ', text).strip()
+        
         try:
             tokens = word_tokenize(text)
+            
+            # Filter out stop words but keep meaningful content
             stop_words = set(stopwords.words('english'))
-            tokens = [word for word in tokens if word not in stop_words]
+            # Keep numbers and important punctuation
+            tokens = [word for word in tokens if word not in stop_words or word.isdigit()]
+            
+            # Apply lemmatization
             lemmatizer = WordNetLemmatizer()
-            tokens = [lemmatizer.lemmatize(word) for word in tokens]
-        except:
+            tokens = [lemmatizer.lemmatize(word) for word in tokens if word.strip()]
+            
+        except Exception as e:
+            # Fallback to simple split if NLTK fails
             tokens = text.split()
-        return " ".join(tokens)
+        
+        # Final cleanup
+        result = " ".join(tokens).strip()
+        return result
 
     def preprocess_for_distilbert(self, text):
         if not text or not isinstance(text, str):

@@ -47,13 +47,15 @@ def predict_review(request):
         
         try:
             product_name = data.get('product_name', 'Unknown Product')
-            
             user = request.user if request.user.is_authenticated else None
+            
+            # Get ML-cleaned text
+            cleaned_text = result.get('cleaned_text', review_text)
             
             review = Review.objects.create(
                 user=user,
                 product_name=product_name[:255],
-                review_text=review_text,
+                review_text=cleaned_text,
                 platform='web',
                 created_at=timezone.now()
             )
@@ -70,7 +72,7 @@ def predict_review(request):
                     db_result = 'possibly_fake'
                 else:
                     db_result = 'uncertain'
-            else:
+            else:  # genuine
                 if confidence >= 0.9:
                     db_result = 'genuine'
                 elif confidence >= 0.75:
@@ -89,7 +91,7 @@ def predict_review(request):
             )
             
             username = request.user.username if request.user.is_authenticated else 'Guest'
-            logger.info(f"Saved review {review.id} and analysis {analysis.id} for user {username}")
+            logger.info(f"Saved review {review.id} with cleaned text and analysis {analysis.id} for user {username}")
             
         except Exception as save_error:
             logger.warning(f"Database save failed: {save_error}")
@@ -115,7 +117,7 @@ def predict_review(request):
             'success': False,
             'error': f'Analysis failed: {str(e)}'
         }, status=500)
-
+    
 @login_required
 def review_history(request):
     all_reviews = Review.objects.filter(user=request.user).prefetch_related('analyses').order_by('-created_at')
@@ -145,8 +147,6 @@ def admin_history(request):
     return render(request, 'reviewai/admin/admin_history.html', context)
 
 def get_fake_review_word_frequency(user=None, limit=10):
-    """Get most common words in fake reviews from database"""
-    # Filter fake reviews from database
     fake_analyses = ReviewAnalysis.objects.filter(
         result__in=['fake', 'likely_fake', 'possibly_fake']
     )
@@ -154,7 +154,6 @@ def get_fake_review_word_frequency(user=None, limit=10):
     if user:
         fake_analyses = fake_analyses.filter(review__user=user)
     
-    # Get all fake review texts
     fake_texts = fake_analyses.select_related('review').values_list('review__review_text', flat=True)
     
     # Process words
@@ -175,9 +174,7 @@ def get_fake_review_word_frequency(user=None, limit=10):
     
     for text in fake_texts:
         if text:
-            # Clean and split text - extract words only
             words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
-            # Filter out stop words and short words
             filtered_words = [word for word in words if word not in stop_words and len(word) >= 3]
             word_counter.update(filtered_words)
     
@@ -185,7 +182,6 @@ def get_fake_review_word_frequency(user=None, limit=10):
 
 
 def get_top_platforms(limit=5):
-    """Return top platforms and their review counts."""
     return (
         Review.objects.values('platform')
         .annotate(count=Count('id'))
@@ -213,7 +209,6 @@ def admin_dashboard(request):
     
     recent_reviews = Review.objects.select_related('user').prefetch_related('analyses').order_by('-created_at')[:5]
     
-    # Get fake review word frequency - ADD THIS LINE
     fake_word_frequency = get_fake_review_word_frequency(limit=10)
     
     daily_data = []
@@ -290,7 +285,6 @@ def user_dashboard(request):
     thirty_days_ago = timezone.now() - timedelta(days=30)
     recent_reviews = user_reviews.filter(created_at__gte=thirty_days_ago).count()
     
-    # Get user's fake review word frequency - ADD THIS LINE
     user_fake_word_frequency = get_fake_review_word_frequency(user=request.user, limit=10)
     
     daily_data = []
@@ -338,7 +332,7 @@ def user_dashboard(request):
         'top_products': top_products,
         'recent_user_reviews': recent_user_reviews,
         'username': request.user.username,
-        'user_fake_word_frequency': user_fake_word_frequency,  # ADD THIS LINE
+        'user_fake_word_frequency': user_fake_word_frequency,
     }
     
     return render(request, 'reviewai/user_dashboard.html', context)
@@ -390,51 +384,70 @@ def extension_predict(request):
         result = detector_instance.predict_single_review(review_text)
         
         try:
-            product_name = data.get('product_name', 'Unknown Product')
+            product_name = data.get('product_name', 'Unknown Product').strip()
             platform = data.get('platform_name', 'extension')
             
-            review = Review.objects.create(
-                user=None,
-                product_name=product_name[:255],
-                review_text=review_text,
+            # Get the ML-cleaned text from the result
+            cleaned_text = result.get('cleaned_text', review_text)
+            
+            logger.info(f"Processing extension review - Platform: {platform}")
+            logger.info(f"Original text: '{review_text[:50]}...'")
+            logger.info(f"Cleaned text: '{cleaned_text[:50]}...'")
+            
+            # Check for duplicates using cleaned text AND product name
+            existing_review = Review.objects.filter(
                 platform=platform,
-                created_at=timezone.now()
-            )
+                product_name=product_name[:255],
+                review_text=cleaned_text
+            ).first()
             
-            prediction_lower = result['prediction'].lower().strip()
-            confidence = result['confidence']
-            
-            if 'fake' in prediction_lower:
-                if confidence >= 0.9:
-                    db_result = 'fake'
-                elif confidence >= 0.75:
-                    db_result = 'likely_fake'
-                elif confidence >= 0.6:
-                    db_result = 'possibly_fake'
-                else:
-                    db_result = 'uncertain'
+            if existing_review:
+                logger.info(f"EXTENSION DUPLICATE: Match found (Review ID: {existing_review.id}) - SKIPPING SAVE")
             else:
-                if confidence >= 0.9:
-                    db_result = 'genuine'
-                elif confidence >= 0.75:
-                    db_result = 'likely_genuine'
-                elif confidence >= 0.6:
-                    db_result = 'possibly_genuine'
-                else:
-                    db_result = 'uncertain'
-            
-            analysis = ReviewAnalysis.objects.create(
-                review=review,
-                result=db_result,
-                confidence_score=confidence,
-                model='ensemble_svm_rf_distilbert',
-                created_at=timezone.now()
-            )
-            
-            logger.info(f"Saved extension review {review.id} from platform: {platform}")
+                logger.info(f"NEW EXTENSION REVIEW: Saving cleaned text to database")
+                
+                review = Review.objects.create(
+                    user=None,
+                    product_name=product_name[:255],
+                    review_text=cleaned_text,
+                    platform=platform,
+                    created_at=timezone.now()
+                )
+                
+                prediction_lower = result['prediction'].lower().strip()
+                confidence = result['confidence']
+                
+                if 'fake' in prediction_lower:
+                    if confidence >= 0.9:
+                        db_result = 'fake'
+                    elif confidence >= 0.75:
+                        db_result = 'likely_fake'
+                    elif confidence >= 0.6:
+                        db_result = 'possibly_fake'
+                    else:
+                        db_result = 'uncertain'
+                else:  # genuine
+                    if confidence >= 0.9:
+                        db_result = 'genuine'
+                    elif confidence >= 0.75:
+                        db_result = 'likely_genuine'
+                    elif confidence >= 0.6:
+                        db_result = 'possibly_genuine'
+                    else:
+                        db_result = 'uncertain'
+                
+                analysis = ReviewAnalysis.objects.create(
+                    review=review,
+                    result=db_result,
+                    confidence_score=confidence,
+                    model='ensemble_svm_rf_distilbert',
+                    created_at=timezone.now()
+                )
+                
+                logger.info(f"SAVED: Extension review {review.id} with cleaned text and analysis {analysis.id}")
             
         except Exception as save_error:
-            logger.warning(f"Extension database save failed: {save_error}")
+            logger.error(f"Extension database save failed: {save_error}")
         
         return JsonResponse({
             'prediction': result['prediction'],
@@ -467,59 +480,78 @@ def extension_batch_predict(request):
         results = []
         
         platform = data.get('platform_name', 'extension')
-        default_product = data.get('product_name', 'Unknown Product')
+        default_product = data.get('product_name', 'Unknown Product').strip()
+        
+        logger.info(f"Starting batch analysis for platform: {platform}, {len(reviews)} reviews")
         
         for i, review_data in enumerate(reviews):
             try:
                 if isinstance(review_data, str):
-                    review_text = review_data
-                    product_name = f"{default_product} #{i+1}"
+                    review_text = review_data.strip()
+                    product_name = default_product
                 else:
-                    review_text = review_data.get('text', '')
-                    product_name = review_data.get('product_name', f"{default_product} #{i+1}")
+                    review_text = review_data.get('text', '').strip()
+                    product_name = review_data.get('product_name', default_product).strip()
+                
+                logger.info(f"Batch #{i+1}: Processing review: '{review_text[:50]}...'")
                 
                 result = detector_instance.predict_single_review(review_text)
                 
                 try:
-                    review = Review.objects.create(
-                        user=None,
-                        product_name=product_name[:255],
-                        review_text=review_text,
+                    cleaned_text = result.get('cleaned_text', review_text)
+                    
+                    # Check for duplicates using cleaned text AND product name
+                    existing_review = Review.objects.filter(
                         platform=platform,
-                        created_at=timezone.now()
-                    )
+                        product_name=product_name[:255],
+                        review_text=cleaned_text
+                    ).first()
                     
-                    prediction_lower = result['prediction'].lower().strip()
-                    confidence = result['confidence']
-                    
-                    if 'fake' in prediction_lower:
-                        if confidence >= 0.9:
-                            db_result = 'fake'
-                        elif confidence >= 0.75:
-                            db_result = 'likely_fake'
-                        elif confidence >= 0.6:
-                            db_result = 'possibly_fake'
-                        else:
-                            db_result = 'uncertain'
-                    else:  # genuine
-                        if confidence >= 0.9:
-                            db_result = 'genuine'
-                        elif confidence >= 0.75:
-                            db_result = 'likely_genuine'
-                        elif confidence >= 0.6:
-                            db_result = 'possibly_genuine'
-                        else:
-                            db_result = 'uncertain'
-                    
-                    ReviewAnalysis.objects.create(
-                        review=review,
-                        result=db_result,
-                        confidence_score=confidence,
-                        model='ensemble_svm_rf_distilbert',
-                        created_at=timezone.now()
-                    )
-                    
-                    logger.info(f"Saved batch extension review {review.id}")
+                    if existing_review:
+                        logger.info(f"Batch #{i+1}: DUPLICATE DETECTED - Review ID {existing_review.id} - SKIPPING SAVE")
+                    else:
+                        logger.info(f"Batch #{i+1}: NEW REVIEW - Saving cleaned text to database")
+                        
+                        # Save cleaned text
+                        review = Review.objects.create(
+                            user=None,
+                            product_name=product_name[:255],
+                            review_text=cleaned_text,
+                            platform=platform,
+                            created_at=timezone.now()
+                        )
+                        
+                        prediction_lower = result['prediction'].lower().strip()
+                        confidence = result['confidence']
+                        
+                        if 'fake' in prediction_lower:
+                            if confidence >= 0.9:
+                                db_result = 'fake'
+                            elif confidence >= 0.75:
+                                db_result = 'likely_fake'
+                            elif confidence >= 0.6:
+                                db_result = 'possibly_fake'
+                            else:
+                                db_result = 'uncertain'
+                        else:  # genuine
+                            if confidence >= 0.9:
+                                db_result = 'genuine'
+                            elif confidence >= 0.75:
+                                db_result = 'likely_genuine'
+                            elif confidence >= 0.6:
+                                db_result = 'possibly_genuine'
+                            else:
+                                db_result = 'uncertain'
+                        
+                        ReviewAnalysis.objects.create(
+                            review=review,
+                            result=db_result,
+                            confidence_score=confidence,
+                            model='ensemble_svm_rf_distilbert',
+                            created_at=timezone.now()
+                        )
+                        
+                        logger.info(f"Batch #{i+1}: SAVED - Review {review.id} with cleaned text")
                     
                 except Exception as save_error:
                     logger.warning(f"Batch extension save failed for review {i}: {save_error}")
@@ -533,11 +565,13 @@ def extension_batch_predict(request):
                 })
                 
             except Exception as e:
+                logger.error(f"Batch review {i} processing error: {str(e)}")
                 results.append({
                     'error': str(e),
                     'prediction': 'error'
                 })
         
+        logger.info(f"Batch processing completed. {len(results)} results generated.")
         return JsonResponse(results, safe=False)
         
     except Exception as e:
