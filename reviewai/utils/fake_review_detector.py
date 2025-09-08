@@ -34,7 +34,6 @@ class FakeReviewDetector:
             # Path to ml_models directory
             self.model_folder = os.path.join(settings.BASE_DIR, 'reviewai', 'ml_models')
             
-            # Set device explicitly to CPU to avoid device issues
             self.device = torch.device('cpu')
             logger.info(f"Using device: {self.device}")
             
@@ -46,10 +45,8 @@ class FakeReviewDetector:
             with open(config_path, 'r') as f:
                 self.config = json.load(f)
             
-            # Load traditional ML models with error handling
             self._load_traditional_models()
             
-            # Load DistilBERT with proper device handling
             self._load_distilbert_model()
             
             # Load weights and classes
@@ -95,7 +92,6 @@ class FakeReviewDetector:
             # Load tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(distilbert_path)
             
-            # Load model with explicit device and dtype settings
             self.distilbert_model = AutoModelForSequenceClassification.from_pretrained(
                 distilbert_path,
                 torch_dtype=torch.float32,
@@ -103,11 +99,9 @@ class FakeReviewDetector:
                 low_cpu_mem_usage=True
             )
             
-            # Explicitly move to CPU and set eval mode
             self.distilbert_model.to(self.device)
             self.distilbert_model.eval()
             
-            # Disable gradients for inference (memory optimization)
             for param in self.distilbert_model.parameters():
                 param.requires_grad = False
                 
@@ -121,19 +115,19 @@ class FakeReviewDetector:
         if not isinstance(text, str):
             return ""
         
-        # Step 1: Basic cleaning
+        # Basic cleaning
         text = re.sub(r'http\S+|www\S+|https\S+', '', text)  # Remove URLs
         
-        # Step 2: Normalize whitespace and convert to lowercase
+        # Normalize whitespace and convert to lowercase
         text = re.sub(r'\s+', ' ', text).strip().lower()
         
-        # Step 3: Keep only letters, numbers, and basic punctuation
+        # Keep only letters, numbers, and basic punctuation
         text = re.sub(r'[^\w\s\.\,\!\?\/\:]', ' ', text)
         
-        # Step 4: Remove standalone numbers at the end
-        text = re.sub(r'\s+\d+\s*$', '', text)  # Remove trailing numbers
+        # Remove standalone numbers at the end
+        text = re.sub(r'\s+\d+\s*$', '', text)
         
-        # Step 5: Normalize multiple spaces again
+        # Normalize multiple spaces again
         text = re.sub(r'\s+', ' ', text).strip()
         
         try:
