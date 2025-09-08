@@ -1,4 +1,5 @@
 {% extends 'reviewai/admin/admin_base.html' %}
+{% load timezone_tags %}
 
 {% block title %}Admin Dashboard{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
@@ -344,7 +345,7 @@
                                     <span class="text-xs text-gray-500">{{ analysis.confidence_percentage }} confidence</span>
                                     {% endif %}
                                     <span class="text-xs text-gray-500">
-                                        {% if review.user %}by {{ review.user.username }}{% else %}by Guest{% endif %} • {{ review.created_at|timesince }} ago
+                                        {% if review.user %}by {{ review.user.username }}{% else %}by Guest{% endif %} • {{ review.local_created_at|timesince }} ago
                                     </span>
                                 </div>
                             </div>

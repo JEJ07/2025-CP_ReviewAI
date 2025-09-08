@@ -16,6 +16,8 @@ from collections import Counter
 from .utils.fake_review_detector import get_detector
 from django.conf import settings
 from .models import Review, ReviewAnalysis
+from .utils.timezone_utils import convert_to_user_timezone, get_current_user_time
+
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +128,11 @@ def review_history(request):
     page_number = request.GET.get('page')
     reviews = paginator.get_page(page_number)
     
+    for review in reviews:
+        review.local_created_at = convert_to_user_timezone(review.created_at, request.user)
+        for analysis in review.analyses.all():
+            analysis.local_created_at = convert_to_user_timezone(analysis.created_at, request.user)
+    
     context = {
         'reviews': reviews,
         'total_reviews': all_reviews.count(),
@@ -139,6 +146,11 @@ def admin_history(request):
     paginator = Paginator(all_reviews, 25)
     page_number = request.GET.get('page')
     reviews = paginator.get_page(page_number)
+    
+    for review in reviews:
+        review.local_created_at = convert_to_user_timezone(review.created_at, request.user)
+        for analysis in review.analyses.all():
+            analysis.local_created_at = convert_to_user_timezone(analysis.created_at, request.user)
     
     context = {
         'reviews': reviews,
@@ -248,6 +260,12 @@ def admin_dashboard(request):
         review_count=Count('reviews')
     ).filter(review_count__gt=0).order_by('-review_count')[:5]
     
+    recent_reviews = Review.objects.select_related('user').prefetch_related('analyses').order_by('-created_at')[:5]
+    
+    for review in recent_reviews:
+        review.local_created_at = convert_to_user_timezone(review.created_at, request.user)
+        for analysis in review.analyses.all():
+            analysis.local_created_at = convert_to_user_timezone(analysis.created_at, request.user)
     
     context = {
         'total_reviews': total_reviews,
@@ -262,8 +280,9 @@ def admin_dashboard(request):
         'top_users': top_users,
         'fake_word_frequency': fake_word_frequency,  
         'top_platforms': top_platforms,
-
+        'current_admin_time': get_current_user_time(request.user),
     }
+    
     
     return render(request, 'reviewai/admin/admin_dashboard.html', context)
 
@@ -323,6 +342,11 @@ def user_dashboard(request):
     
     recent_user_reviews = user_reviews.prefetch_related('analyses').order_by('-created_at')[:5]
     
+    for review in recent_user_reviews:
+        review.local_created_at = convert_to_user_timezone(review.created_at, request.user)
+        for analysis in review.analyses.all():
+            analysis.local_created_at = convert_to_user_timezone(analysis.created_at, request.user)
+    
     context = {
         'total_user_reviews': total_user_reviews,
         'user_fake_count': user_fake_count,
@@ -333,6 +357,7 @@ def user_dashboard(request):
         'recent_user_reviews': recent_user_reviews,
         'username': request.user.username,
         'user_fake_word_frequency': user_fake_word_frequency,
+        'current_user_time': get_current_user_time(request.user),
     }
     
     return render(request, 'reviewai/user_dashboard.html', context)
