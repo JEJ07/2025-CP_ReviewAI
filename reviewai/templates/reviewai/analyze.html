@@ -1,5 +1,7 @@
 {% extends 'reviewai/base.html' %}
 {% load static %}
+{% load humanize %}
+{% load short_number %}
 
 {% block title %}ReviewAI{% endblock %}
 
@@ -44,7 +46,7 @@
   <div class="max-w-3xl mx-auto px-8">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mb-8 ">
       <div>
-        <div class="text-5xl font-bold mb-2">2.5M+</div>
+        <div id="review-counter" class="text-5xl font-bold mb-2">0</div>
         <div class="text-gray-600">Reviews Analyzed</div>
       </div>
       <div>
@@ -145,6 +147,29 @@
   };
 
   window.csrfToken = "{{ csrf_token }}";
+
+  {% comment %} if ung numbers is 1k or 1M IT WILL ADJUST LIVE {% endcomment %}
+  function shortNumber(n) {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return n.toString();
+  }
+
+  {% comment %} FUNCTION FOR GETTING THE API ENDPOINT {% endcomment %}
+  async function fetchReviewCount() {
+    try {
+    const response = await fetch("/review-count/");
+    const data = await response.json();
+    const counter = document.getElementById("review-counter");
+    counter.textContent = shortNumber(data.total_reviews) + "+";
+  } catch (err) {
+    console.error("Error fetching count:", err);
+  }
+}
+
+  // Fetch then every 5 seconds
+  fetchReviewCount();
+  setInterval(fetchReviewCount, 5000);
 </script>
 <script src="{% static 'reviewai/js/review-analyzer.js' %}"></script>
 {% endblock %}

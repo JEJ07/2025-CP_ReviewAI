@@ -24,6 +24,12 @@ logger = logging.getLogger(__name__)
 def analyze_view(request):
     return render(request, 'reviewai/analyze.html')
 
+# api for review count ajax
+def review_count(request):
+    total_reviews = Review.objects.count()
+    return JsonResponse({"total_reviews": total_reviews})
+
+
 def blueprint_view(request):
     return render(request, 'reviewai/blueprint.html')
 def landing_view(request):
