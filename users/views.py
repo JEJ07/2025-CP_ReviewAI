@@ -23,28 +23,24 @@ def register_view(request):
     return render(request, 'users/register.html', {'form': form})
 
 
-def login_view(request):
+def login_view(request): 
     if request.user.is_authenticated:
         return redirect('reviewai:analyze')
         
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, f'Welcome back, {username}!')
-                
-                if user.is_staff or user.is_superuser:
-                    return redirect('reviewai:admin_dashboard')
-                else:
-                    return redirect('reviewai:user_dashboard')
-        else:
-            messages.error(request, 'Invalid username or password.')
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, f'Welcome back, {user.username}!')
+            
+            if user.is_staff or user.is_superuser:
+                return redirect('reviewai:admin_dashboard')
+            else:
+                return redirect('reviewai:user_dashboard')
     else:
         form = AuthenticationForm()
+    
     return render(request, 'users/login.html', {'form': form})
 
 @login_required
