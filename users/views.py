@@ -8,20 +8,20 @@ from django.contrib.auth.models import User
 def register_view(request):
     if request.user.is_authenticated:
         return redirect('reviewai:analyze')
-        
+
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created successfully for {username}!')
             login(request, user)
+            messages.success(request, f'Welcome, {username}! Your account was created successfully.')
             return redirect('reviewai:analyze')
-        else:
-            messages.error(request, 'Please correct the errors below.')
     else:
         form = UserCreationForm()
+
     return render(request, 'users/register.html', {'form': form})
+
 
 def login_view(request):
     if request.user.is_authenticated:

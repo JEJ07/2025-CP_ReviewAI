@@ -13,7 +13,9 @@ import json
 import logging
 import re
 from collections import Counter
-from .utils.fake_review_detector import get_detector
+# from .utils.fake_review_detector import get_detector
+from .utils.fake_review_detector2 import get_detector
+
 from django.conf import settings
 from .models import Review, ReviewAnalysis
 from .utils.timezone_utils import convert_to_user_timezone, get_current_user_time
