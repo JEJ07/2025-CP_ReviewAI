@@ -13,6 +13,9 @@ urlpatterns = [
     path('history/', views.review_history, name='history'),
     path('dashboard/', views.user_dashboard, name='user_dashboard'),
 
+    # API PATH FOR REVIEW COUNT AJAX
+    path("review-count/", views.review_count, name="review_count"),
+
 
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-history/', views.admin_history, name='admin_history'),
