@@ -6,22 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     {% load static %}
     {% block extra_css %}
-    <style>
-
-        .social-login-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-        
-        .social-login-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    
 {% endblock %}
 </head>
 <body>
@@ -167,7 +152,8 @@
 
                 <!-- Social Login Options -->
                 <div class=" ">
-                    <a href="#" class="social-login-btn text-gray-700 bg-white py-2 px-4 rounded-lg font-medium">
+                    <a href="#" class="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-4 py-2 
+         hover:-translate-y-0.5 hover:shadow-md transition">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>

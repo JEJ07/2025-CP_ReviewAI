@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Register - ReviewAI{% endblock %}</title>  
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% load static %}
+    {% block extra_css %}
+    
+    {% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+            <div class="mx-auto h-12 w-12 bg-green-600 rounded-full flex items-center justify-center mb-4">
+                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.105-.895-2-2-2H6v2h4a2 2 0 002-2zm0 0c0-1.105.895-2 2-2h4v2h-4a2 2 0 01-2-2zM4 19v-2a4 4 0 014-4h8a4 4 0 014 4v2" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+            <p class="text-gray-600">Sign up to get started with ReviewAI</p>
+        </div>
+
+        <!-- Register Form -->
+        <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+            <!-- Form Errors -->
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-start">
+                    <svg class="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                            <p class="text-sm">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Username -->
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="{{ form.username.name }}" 
+                               id="{{ form.username.id_for_label }}"
+                               value="{{ form.username.value|default:'' }}"
+                               placeholder="Enter your username"
+                               class="w-full pl-10 px-4 py-3 border {% if form.username.errors %}border-red-300{% else %}border-gray-300{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                               required
+                               autocomplete="username">
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2.94 6.94A10 10 0 0112 2a10 10 0 019.06 4.94L12 13 2.94 6.94zM2 8v8a2 2 0 002 2h12a2 2 0 002-2V8l-8 5-8-5z"/>
+                            </svg>
+                        </div>
+                        <input type="email" 
+                               name="{{ form.email.name }}" 
+                               id="{{ form.email.id_for_label }}"
+                               value="{{ form.email.value|default:'' }}"
+                               placeholder="Enter your email"
+                               class="w-full pl-10 px-4 py-3 border {% if form.email.errors %}border-red-300{% else %}border-gray-300{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                               required
+                               autocomplete="email">
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <input type="password" 
+                               name="{{ form.password1.name }}" 
+                               id="{{ form.password1.id_for_label }}"
+                               placeholder="Enter your password"
+                               class="w-full pl-10 pr-10 px-4 py-3 border {% if form.password1.errors %}border-red-300{% else %}border-gray-300{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                               required
+                               autocomplete="new-password">
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <input type="password" 
+                               name="{{ form.password2.name }}" 
+                               id="{{ form.password2.id_for_label }}"
+                               placeholder="Confirm your password"
+                               class="w-full pl-10 pr-10 px-4 py-3 border {% if form.password2.errors %}border-red-300{% else %}border-gray-300{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                               required
+                               autocomplete="new-password">
+                    </div>
+                </div>
+
+                <!-- Password Requirements -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <p class="text-sm text-gray-600 mb-2">Password requirements:</p>
+                <ul class="text-sm text-gray-500 list-disc list-inside space-y-1">
+                    <li>At least 8 characters long</li>
+                    <li>Can't be too similar to your username</li>
+                    <li>Can't be a commonly used password</li>
+                    <li>Can't be entirely numeric</li>
+                </ul>
+            </div>
+
+                <!-- Submit -->
+                <div>
+                    <button type="submit" 
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="text-center bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+            <p class="text-sm text-gray-600">
+                Already have an account? 
+                <a href="{% url 'users:login' %}" class="font-medium text-green-600 hover:text-green-500 transition-colors hover:underline">
+                    Sign in here
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>
