@@ -16,6 +16,11 @@ from collections import Counter
 # from .utils.fake_review_detector import get_detector
 from .utils.fake_review_detector2 import get_detector
 
+import io
+import base64
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+
 from django.conf import settings
 from .models import Review, ReviewAnalysis
 from .utils.timezone_utils import convert_to_user_timezone, get_current_user_time
@@ -207,11 +212,54 @@ def get_top_platforms(limit=5):
         .annotate(count=Count('id'))
         .order_by('-count')[:limit]
     )
+
+
+def generate_wordcloud(fake_reviews):
+    
+    # join all fake review texts
+    fake_texts = " ".join([
+        fa.review.review_text 
+        for fa in fake_reviews 
+        if fa.review.review_text
+    ])
+
+    #DEBUG PURPOSE LNG TO IDELETE LNG
+    if fake_texts.strip():
+        words = fake_texts.lower().split()
+        word_counts = Counter(words)
+        for word, count in word_counts.most_common(10):
+            print(f"[DEBUG] The word count for '{word}' is: {count}")
+
+        # Generate na once may text
+        try:
+            wc = WordCloud(width=800, height=400, background_color="white").generate(fake_texts)
+            buf = io.BytesIO()
+            wc.to_image().save(buf, format="PNG")
+            buf.seek(0)
+            return base64.b64encode(buf.getvalue()).decode("utf-8")
+        except Exception as e:
+            print("WordCloud error:", e)
+
+    return None
     
 @staff_member_required
 def admin_dashboard(request):    
-    total_reviews = Review.objects.count()
     
+    #wordcloud
+    fake_reviews = ReviewAnalysis.objects.filter(
+        result__in=['fake', 'likely_fake', 'possibly_fake']
+    ).select_related('review')
+
+    #call lng ung function to generate wordcloud
+    wordcloud_image = generate_wordcloud(fake_reviews)
+
+    #DEBUG PURPOSE LNG TO IDELETE LNG
+    if wordcloud_image:
+        print("[DEBUG] WordCloud image generated successfully.")
+    else:
+        print("[DEBUG] WordCloud image generation failed.")
+
+    total_reviews = Review.objects.count()
     total_users = User.objects.filter(reviews__isnull=False).distinct().count()
     guest_reviews_count = Review.objects.filter(user__isnull=True).count()
     top_platforms = get_top_platforms(limit=5)
@@ -289,10 +337,11 @@ def admin_dashboard(request):
         'fake_word_frequency': fake_word_frequency,  
         'top_platforms': top_platforms,
         'current_admin_time': get_current_user_time(request.user),
+        "wordcloud_image": wordcloud_image,
     }
     
-    
     return render(request, 'reviewai/admin/admin_dashboard.html', context)
+
 
 @login_required
 def user_dashboard(request):    
