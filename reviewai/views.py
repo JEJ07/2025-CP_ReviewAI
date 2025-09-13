@@ -15,6 +15,8 @@ import re
 from collections import Counter
 # from .utils.fake_review_detector import get_detector
 from .utils.fake_review_detector2 import get_detector
+from django.db.models import Count, Avg, Q
+
 
 import io
 import base64
@@ -191,6 +193,40 @@ def admin_history(request):
         return render(request, 'reviewai/admin/partials/review_table.html', context)
 
     return render(request, 'reviewai/admin/admin_history.html', context)
+
+@staff_member_required
+def admin_lazada(request):
+    lazada_reviews = (
+        Review.objects.filter(platform="lazada")
+        .prefetch_related("analyses")
+        .order_by("-created_at")
+    )
+
+    total_reviews = lazada_reviews.count()
+    paginator = Paginator(lazada_reviews, 25)
+    page_number = request.GET.get("page")
+    reviews = paginator.get_page(page_number)
+
+    # Stats
+    analysis_stats = (
+        ReviewAnalysis.objects.filter(review__platform="lazada")
+        .values("result")
+        .annotate(count=Count("id"))
+    )
+
+    avg_confidence = (
+        ReviewAnalysis.objects.filter(review__platform="lazada")
+        .aggregate(Avg("confidence_score"))["confidence_score__avg"]
+    )
+
+    context = {
+        "reviews": reviews,
+        "total_reviews": total_reviews,
+        "analysis_stats": analysis_stats,
+        "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
+    }
+
+    return render(request, "reviewai/admin/admin_lazada.html", context)
 
 def get_fake_review_word_frequency(user=None, limit=10):
     fake_analyses = ReviewAnalysis.objects.filter(
