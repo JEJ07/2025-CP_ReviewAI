@@ -154,7 +154,24 @@ def review_history(request):
 
 @staff_member_required
 def admin_history(request):
+    
+    result_filter = request.GET.get('result')
+    confidence_filter = request.GET.get('confidence')
+    
     all_reviews = Review.objects.select_related('user').prefetch_related('analyses').order_by('-created_at')
+    
+    #filter result
+    if result_filter:
+        all_reviews = all_reviews.filter(analyses__result=result_filter)
+    
+    if confidence_filter:
+        try:
+            threshold = float(confidence_filter)
+            #print("Filtering with threshold:", threshold)  
+            all_reviews = all_reviews.filter(analyses__confidence_score__gte=threshold)
+            #print("Count after filter:", all_reviews.count())  # DEBUG
+        except ValueError:
+            pass
     
     paginator = Paginator(all_reviews, 25)
     page_number = request.GET.get('page')
@@ -169,6 +186,10 @@ def admin_history(request):
         'reviews': reviews,
         'total_reviews': all_reviews.count(),
     }
+    
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'reviewai/admin/partials/review_table.html', context)
+
     return render(request, 'reviewai/admin/admin_history.html', context)
 
 def get_fake_review_word_frequency(user=None, limit=10):
