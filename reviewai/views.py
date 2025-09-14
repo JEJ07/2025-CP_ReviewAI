@@ -670,6 +670,7 @@ def extension_predict(request):
         try:
             product_name = data.get('product_name', 'Unknown Product').strip()
             platform = data.get('platform_name', 'extension')
+            link = data.get('link', '').strip() or None #PRODUCT LINK
             
             # Get the ML-cleaned text from the result
             cleaned_text = result.get('cleaned_text', review_text)
@@ -690,11 +691,13 @@ def extension_predict(request):
             else:
                 logger.info(f"NEW EXTENSION REVIEW: Saving cleaned text to database")
                 
+                
                 review = Review.objects.create(
                     user=None,
                     product_name=product_name[:255],
                     review_text=cleaned_text,
                     platform=platform,
+                    link=link,
                     created_at=timezone.now()
                 )
                 
@@ -738,7 +741,8 @@ def extension_predict(request):
             'confidence': result['confidence'],
             'probabilities': result['probabilities'],
             'individual_predictions': result.get('individual_predictions'),
-            'cleaned_text': result.get('cleaned_text')
+            'cleaned_text': result.get('cleaned_text'),
+            'link': link 
         })
         
     except Exception as e:
@@ -750,6 +754,7 @@ def extension_predict(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def extension_batch_predict(request):
+    
     try:
         data = json.loads(request.body)
         reviews = data.get('reviews', [])
@@ -765,7 +770,8 @@ def extension_batch_predict(request):
         
         platform = data.get('platform_name', 'extension')
         default_product = data.get('product_name', 'Unknown Product').strip()
-        
+        default_link = data.get('link', '').strip() or None  #default link
+
         logger.info(f"Starting batch analysis for platform: {platform}, {len(reviews)} reviews")
         
         for i, review_data in enumerate(reviews):
@@ -773,10 +779,13 @@ def extension_batch_predict(request):
                 if isinstance(review_data, str):
                     review_text = review_data.strip()
                     product_name = default_product
+                    link = default_link
+
                 else:
                     review_text = review_data.get('text', '').strip()
                     product_name = review_data.get('product_name', default_product).strip()
-                
+                    link = review_data.get('link', default_link)  # ✅ individual link
+
                 logger.info(f"Batch #{i+1}: Processing review: '{review_text[:50]}...'")
                 
                 result = detector_instance.predict_single_review(review_text)
@@ -796,12 +805,14 @@ def extension_batch_predict(request):
                     else:
                         logger.info(f"Batch #{i+1}: NEW REVIEW - Saving cleaned text to database")
                         
+                        
                         # Save cleaned text
                         review = Review.objects.create(
                             user=None,
                             product_name=product_name[:255],
                             review_text=cleaned_text,
                             platform=platform,
+                            link=link,
                             created_at=timezone.now()
                         )
                         
@@ -845,7 +856,8 @@ def extension_batch_predict(request):
                     'confidence': result['confidence'],
                     'probabilities': result['probabilities'],
                     'individual_predictions': result.get('individual_predictions'),
-                    'cleaned_text': result.get('cleaned_text')
+                    'cleaned_text': result.get('cleaned_text'),
+                    'link': link 
                 })
                 
             except Exception as e:

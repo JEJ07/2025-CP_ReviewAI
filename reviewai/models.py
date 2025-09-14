@@ -23,6 +23,7 @@ class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
     product_name = models.CharField(max_length=255, default='Unknown Product')
     review_text = models.TextField()
+    link = models.URLField(max_length=500, blank=True, null=True)
     platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES, default='web')  # NEW FIELD
     created_at = models.DateTimeField(default=timezone.now)
     

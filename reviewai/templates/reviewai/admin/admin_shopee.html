@@ -84,7 +84,16 @@
                     {% for review in reviews %}
                         {% for analysis in review.analyses.all %}
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="px-6 py-4 font-semibold text-gray-800">{{ review.product_name }}</td>
+                            <td class="px-6 py-4 font-semibold text-gray-800">
+                                {% if review.link %}
+                                    <a href="{{ review.link }}" target="_blank" class="text-indigo-600 hover:underline">
+                                        {{ review.product_name }}
+                                    </a>
+                                {% else %}
+                                    {{ review.product_name }}
+                                {% endif %}
+                            </td>
+
                             <td class="px-6 py-4">{{ review.review_text|truncatewords:15 }}</td>
                             <td class="px-6 py-4">
                                 <span class="capitalize px-2 py-1 rounded-full text-xs 
