@@ -21,6 +21,9 @@ urlpatterns = [
     path('admin-history/', views.admin_history, name='admin_history'),
     ###### ROUTES FOR PLATFORMS ###########
     path('admin-lazada/', views.admin_lazada, name='admin_lazada'),
+    path('admin-shopee/', views.admin_shopee, name='admin_shopee'),
+    path('admin-amazon/', views.admin_amazon, name='admin_amazon'),
+    path('admin-ebay/', views.admin_ebay, name='admin_ebay'),
 
     ###### ENDD ###########
     
