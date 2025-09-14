@@ -194,6 +194,7 @@ def admin_history(request):
 
     return render(request, 'reviewai/admin/admin_history.html', context)
 
+# FUNC TO ADMIN LAZADA
 @staff_member_required
 def admin_lazada(request):
     lazada_reviews = (
@@ -213,6 +214,15 @@ def admin_lazada(request):
         .values("result")
         .annotate(count=Count("id"))
     )
+    
+
+    genuine_count = ReviewAnalysis.objects.filter(
+        review__platform="lazada", result="genuine"
+    ).count()
+
+    fake_count = ReviewAnalysis.objects.filter(
+        review__platform="lazada", result="fake"
+    ).count()
 
     avg_confidence = (
         ReviewAnalysis.objects.filter(review__platform="lazada")
@@ -223,10 +233,139 @@ def admin_lazada(request):
         "reviews": reviews,
         "total_reviews": total_reviews,
         "analysis_stats": analysis_stats,
+        "genuine_count": genuine_count,     
+        "fake_count": fake_count,
         "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
     }
 
     return render(request, "reviewai/admin/admin_lazada.html", context)
+
+# FUNC TO ADMIN SHOPEE
+@staff_member_required
+def admin_shopee(request):
+    shopee_reviews = (
+        Review.objects.filter(platform="shopee")
+        .prefetch_related("analyses")
+        .order_by("-created_at")
+    )
+
+    total_reviews = shopee_reviews.count()
+    paginator = Paginator(shopee_reviews, 25)
+    page_number = request.GET.get("page")
+    reviews = paginator.get_page(page_number)
+
+    # Stats
+    analysis_stats = (
+        ReviewAnalysis.objects.filter(review__platform="shopee")
+        .values("result")
+        .annotate(count=Count("id"))
+    )
+    
+    genuine_count = ReviewAnalysis.objects.filter(
+        review__platform="shopee", result="genuine"
+    ).count()
+
+    fake_count = ReviewAnalysis.objects.filter(
+        review__platform="shopee", result="fake"
+    ).count()
+
+    avg_confidence = (
+        ReviewAnalysis.objects.filter(review__platform="shopee")
+        .aggregate(Avg("confidence_score"))["confidence_score__avg"]
+    )
+
+    context = {
+        "reviews": reviews,
+        "total_reviews": total_reviews,
+        "analysis_stats": analysis_stats,
+        "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
+    }
+
+    return render(request, "reviewai/admin/admin_shopee.html", context)
+
+@staff_member_required
+def admin_amazon(request):
+    amazon_reviews = (
+        Review.objects.filter(platform="amazon")
+        .prefetch_related("analyses")
+        .order_by("-created_at")
+    )
+
+    total_reviews = amazon_reviews.count()
+    paginator = Paginator(amazon_reviews, 25)
+    page_number = request.GET.get("page")
+    reviews = paginator.get_page(page_number)
+
+    # Stats
+    analysis_stats = (
+        ReviewAnalysis.objects.filter(review__platform="amazon")
+        .values("result")
+        .annotate(count=Count("id"))
+    )
+    
+    genuine_count = ReviewAnalysis.objects.filter(
+        review__platform="amazon", result="genuine"
+    ).count()
+
+    fake_count = ReviewAnalysis.objects.filter(
+        review__platform="amazon", result="fake"
+    ).count()
+
+    avg_confidence = (
+        ReviewAnalysis.objects.filter(review__platform="amazon")
+        .aggregate(Avg("confidence_score"))["confidence_score__avg"]
+    )
+
+    context = {
+        "reviews": reviews,
+        "total_reviews": total_reviews,
+        "analysis_stats": analysis_stats,
+        "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
+    }
+
+    return render(request, "reviewai/admin/admin_amazon.html", context)
+
+@staff_member_required
+def admin_ebay(request):
+    ebay_reviews = (
+        Review.objects.filter(platform="ebay")
+        .prefetch_related("analyses")
+        .order_by("-created_at")
+    )
+
+    total_reviews = ebay_reviews.count()
+    paginator = Paginator(ebay_reviews, 25)
+    page_number = request.GET.get("page")
+    reviews = paginator.get_page(page_number)
+
+    # Stats
+    analysis_stats = (
+        ReviewAnalysis.objects.filter(review__platform="ebay")
+        .values("result")
+        .annotate(count=Count("id"))
+    )
+    
+    genuine_count = ReviewAnalysis.objects.filter(
+        review__platform="ebay", result="genuine"
+    ).count()
+
+    fake_count = ReviewAnalysis.objects.filter(
+        review__platform="ebay", result="fake"
+    ).count()
+
+    avg_confidence = (
+        ReviewAnalysis.objects.filter(review__platform="ebay")
+        .aggregate(Avg("confidence_score"))["confidence_score__avg"]
+    )
+
+    context = {
+        "reviews": reviews,
+        "total_reviews": total_reviews,
+        "analysis_stats": analysis_stats,
+        "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
+    }
+
+    return render(request, "reviewai/admin/admin_ebay.html", context)
 
 def get_fake_review_word_frequency(user=None, limit=10):
     fake_analyses = ReviewAnalysis.objects.filter(
