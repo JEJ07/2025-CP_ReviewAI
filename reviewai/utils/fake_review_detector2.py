@@ -98,13 +98,15 @@ class FakeReviewDetector:
             logger.error(f"Error loading DistilBERT model: {str(e)}")
             raise
 
+
     def preprocess_text(self, text):
         if not isinstance(text, str):
             return ""
         text = re.sub(r'http\S+|www\S+|https\S+', '', text)
         text = re.sub(r'\s+', ' ', text).strip().lower()
         text = re.sub(r'[^\w\s\.\,\!\?\/\:]', ' ', text)
-        text = re.sub(r'\s+\d+\s*$', '', text)
+        
+     ##   text = re.sub(r'\s+\d+\s*$', '', text)
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
