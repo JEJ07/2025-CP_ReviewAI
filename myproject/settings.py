@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-rkhpc_ha6kkf6%%zsd@69n9#x*#y8h^3d-s(!+fo#*50*pr1f_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # EXTENTION BATCH LIMIT

@@ -15,6 +15,13 @@ import re
 from collections import Counter
 # from .utils.fake_review_detector import get_detector
 from .utils.fake_review_detector2 import get_detector
+from django.db.models import Count, Avg, Q
+
+
+import io
+import base64
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 from django.conf import settings
 from .models import Review, ReviewAnalysis
@@ -149,7 +156,24 @@ def review_history(request):
 
 @staff_member_required
 def admin_history(request):
+    
+    result_filter = request.GET.get('result')
+    confidence_filter = request.GET.get('confidence')
+    
     all_reviews = Review.objects.select_related('user').prefetch_related('analyses').order_by('-created_at')
+    
+    #filter result
+    if result_filter:
+        all_reviews = all_reviews.filter(analyses__result=result_filter)
+    
+    if confidence_filter:
+        try:
+            threshold = float(confidence_filter)
+            #print("Filtering with threshold:", threshold)  
+            all_reviews = all_reviews.filter(analyses__confidence_score__gte=threshold)
+            #print("Count after filter:", all_reviews.count())  # DEBUG
+        except ValueError:
+            pass
     
     paginator = Paginator(all_reviews, 25)
     page_number = request.GET.get('page')
@@ -164,7 +188,45 @@ def admin_history(request):
         'reviews': reviews,
         'total_reviews': all_reviews.count(),
     }
+    
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'reviewai/admin/partials/review_table.html', context)
+
     return render(request, 'reviewai/admin/admin_history.html', context)
+
+@staff_member_required
+def admin_lazada(request):
+    lazada_reviews = (
+        Review.objects.filter(platform="lazada")
+        .prefetch_related("analyses")
+        .order_by("-created_at")
+    )
+
+    total_reviews = lazada_reviews.count()
+    paginator = Paginator(lazada_reviews, 25)
+    page_number = request.GET.get("page")
+    reviews = paginator.get_page(page_number)
+
+    # Stats
+    analysis_stats = (
+        ReviewAnalysis.objects.filter(review__platform="lazada")
+        .values("result")
+        .annotate(count=Count("id"))
+    )
+
+    avg_confidence = (
+        ReviewAnalysis.objects.filter(review__platform="lazada")
+        .aggregate(Avg("confidence_score"))["confidence_score__avg"]
+    )
+
+    context = {
+        "reviews": reviews,
+        "total_reviews": total_reviews,
+        "analysis_stats": analysis_stats,
+        "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
+    }
+
+    return render(request, "reviewai/admin/admin_lazada.html", context)
 
 def get_fake_review_word_frequency(user=None, limit=10):
     fake_analyses = ReviewAnalysis.objects.filter(
@@ -207,11 +269,54 @@ def get_top_platforms(limit=5):
         .annotate(count=Count('id'))
         .order_by('-count')[:limit]
     )
+
+
+def generate_wordcloud(fake_reviews):
+    
+    # join all fake review texts
+    fake_texts = " ".join([
+        fa.review.review_text 
+        for fa in fake_reviews 
+        if fa.review.review_text
+    ])
+
+    #DEBUG PURPOSE LNG TO IDELETE LNG
+    if fake_texts.strip():
+        words = fake_texts.lower().split()
+        word_counts = Counter(words)
+        for word, count in word_counts.most_common(10):
+            print(f"[DEBUG] The word count for '{word}' is: {count}")
+
+        # Generate na once may text
+        try:
+            wc = WordCloud(width=800, height=400, background_color="white").generate(fake_texts)
+            buf = io.BytesIO()
+            wc.to_image().save(buf, format="PNG")
+            buf.seek(0)
+            return base64.b64encode(buf.getvalue()).decode("utf-8")
+        except Exception as e:
+            print("WordCloud error:", e)
+
+    return None
     
 @staff_member_required
 def admin_dashboard(request):    
-    total_reviews = Review.objects.count()
     
+    #wordcloud
+    fake_reviews = ReviewAnalysis.objects.filter(
+        result__in=['fake', 'likely_fake', 'possibly_fake']
+    ).select_related('review')
+
+    #call lng ung function to generate wordcloud
+    wordcloud_image = generate_wordcloud(fake_reviews)
+
+    #DEBUG PURPOSE LNG TO IDELETE LNG
+    if wordcloud_image:
+        print("[DEBUG] WordCloud image generated successfully.")
+    else:
+        print("[DEBUG] WordCloud image generation failed.")
+
+    total_reviews = Review.objects.count()
     total_users = User.objects.filter(reviews__isnull=False).distinct().count()
     guest_reviews_count = Review.objects.filter(user__isnull=True).count()
     top_platforms = get_top_platforms(limit=5)
@@ -289,10 +394,11 @@ def admin_dashboard(request):
         'fake_word_frequency': fake_word_frequency,  
         'top_platforms': top_platforms,
         'current_admin_time': get_current_user_time(request.user),
+        "wordcloud_image": wordcloud_image,
     }
     
-    
     return render(request, 'reviewai/admin/admin_dashboard.html', context)
+
 
 @login_required
 def user_dashboard(request):    

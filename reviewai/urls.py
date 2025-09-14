@@ -19,8 +19,12 @@ urlpatterns = [
 
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-history/', views.admin_history, name='admin_history'),
+    ###### ROUTES FOR PLATFORMS ###########
+    path('admin-lazada/', views.admin_lazada, name='admin_lazada'),
 
-
+    ###### ENDD ###########
+    
+    ###### api routes for extension ###########
     path('api/analyze-review/', views.extension_predict, name='extension_predict'),
     path('api/analyze-batch-reviews/', views.extension_batch_predict, name='extension_batch'),
     path('api/quick-analyze/', views.extension_quick_analyze, name='extension_quick_analyze'),
