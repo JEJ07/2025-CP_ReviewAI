@@ -278,6 +278,8 @@ def admin_shopee(request):
         "reviews": reviews,
         "total_reviews": total_reviews,
         "analysis_stats": analysis_stats,
+        "genuine_count": genuine_count,     
+        "fake_count": fake_count,
         "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
     }
 
@@ -320,6 +322,8 @@ def admin_amazon(request):
         "reviews": reviews,
         "total_reviews": total_reviews,
         "analysis_stats": analysis_stats,
+        "genuine_count": genuine_count,     
+        "fake_count": fake_count,
         "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
     }
 
@@ -362,6 +366,8 @@ def admin_ebay(request):
         "reviews": reviews,
         "total_reviews": total_reviews,
         "analysis_stats": analysis_stats,
+        "genuine_count": genuine_count,     
+        "fake_count": fake_count,
         "avg_confidence": round(avg_confidence * 100, 2) if avg_confidence else None,
     }
 
