@@ -6,26 +6,7 @@
 
 {% block content %}
 
-<style>
 
-@media (max-width: 768px) {
-    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .bg-white.p-6.rounded-xl.shadow .grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.overflow-x-auto {
-    overflow-x: auto;
-}
-
-canvas#analysisChart {
-    width: 100% !important;
-}
-</style>
 <div class="space-y-6">
     
     <div class="flex justify-between items-center mb-8">
@@ -36,7 +17,7 @@ canvas#analysisChart {
     </div>
 
     <!-- summary cards-->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white p-4 rounded-xl shadow text-center">
             <h3 class="text-md font-semibold text-gray-700">Total Reviews</h3>
             <p class="text-2xl font-bold text-indigo-600 mt-2">{{ total_reviews }}</p>
@@ -66,11 +47,11 @@ canvas#analysisChart {
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Chart container -->
-            <div class="h-64 lg:h-80">
+            <div class="h-64 lg:h-80 w-full">
                 <canvas id="analysisChart" class="w-full h-full"></canvas>
             </div>
             
-            <!-- Backup list (in case chart fails) -->
+            <!-- Backup list -->
             <div class="flex items-center">
                 <ul class="w-full space-y-2 text-sm">
                     {% for stat in analysis_stats %}
@@ -154,74 +135,74 @@ canvas#analysisChart {
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const canvas = document.getElementById('analysisChart');
-    if (!canvas) {
-        console.error("Canvas not found!");
-        return;
-    }
-    
-    const ctx = canvas.getContext('2d');
+    document.addEventListener("DOMContentLoaded", function () {
+        const canvas = document.getElementById('analysisChart');
+        if (!canvas) {
+            console.error("Canvas not found!");
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
 
-    const labels = [
-        {% for stat in analysis_stats %}
-            "{{ stat.result|capfirst }}",
-        {% endfor %}
-    ];
+        const labels = [
+            {% for stat in analysis_stats %}
+                "{{ stat.result|capfirst }}",
+            {% endfor %}
+        ];
 
-    const data = [
-        {% for stat in analysis_stats %}
-            {{ stat.count }},
-        {% endfor %}
-    ];
+        const data = [
+            {% for stat in analysis_stats %}
+                {{ stat.count }},
+            {% endfor %}
+        ];
 
-    const colorMap = {
-        Genuine: '#22c55e',
-        Fake: '#ef4444',
-        "Likely_genuine": '#4ade80',
-        "Likely_fake": '#f97316',
-        "Possibly_genuine": '#10b981',
-        "Possibly_fake": '#f59e0b',
-        Uncertain: '#6b7280'
-    };
+        const colorMap = {
+            Genuine: '#22c55e',
+            Fake: '#ef4444',
+            "Likely_genuine": '#4ade80',
+            "Likely_fake": '#f97316',
+            "Possibly_genuine": '#10b981',
+            "Possibly_fake": '#f59e0b',
+            Uncertain: '#6b7280'
+        };
 
-    const backgroundColors = labels.map(label => colorMap[label] || '#9ca3af');
+        const backgroundColors = labels.map(label => colorMap[label] || '#9ca3af');
 
-    new Chart(ctx, {
-        type: 'doughnut', 
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Review Analysis',
-                data: data,
-                backgroundColor: backgroundColors,
-                borderWidth: 1,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { 
-                    position: 'bottom',
-                    labels: {
-                        boxWidth: 12,
-                        font: {
-                            size: 11
+        new Chart(ctx, {
+            type: 'doughnut', 
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Review Analysis',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 1,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: {
+                                size: 11
+                            }
                         }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            return context.label + ': ' + context.raw;
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return context.label + ': ' + context.raw;
+                            }
                         }
                     }
                 }
             }
-        }
+        });
     });
-});
 </script>
 
 
