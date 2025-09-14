@@ -1,0 +1,186 @@
+<div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Review Analysis Results</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <!-- Table Header -->
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Review Text</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                </tr>
+            </thead>
+            
+            <!-- Table Body -->
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for review in reviews %}
+                    {% with analysis=review.analyses.first %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <!-- Row Number -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
+                            {{ reviews.start_index|add:forloop.counter0 }}
+                        </td>
+                        
+                        <!-- User -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                    {% if review.user %}
+                                        <span class="text-xs font-medium text-blue-600">{{ review.user.username|first|upper }}</span>
+                                    {% else %}
+                                        <span class="text-xs font-medium text-gray-600">G</span>
+                                    {% endif %}
+                                </div>
+                                {% if review.user %}
+                                    <span class="text-sm font-medium text-gray-900">{{ review.user.username }}</span>
+                                {% else %}
+                                    <span class="text-sm font-medium text-gray-500 italic">Guest</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- Product Name -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ review.product_name|truncatechars:25 }}</div>
+                        </td>
+                        
+                        <!-- Review Text -->
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-700 max-w-xs">
+                                <span title="{{ review.review_text }}">{{ review.review_text|truncatechars:50 }}</span>
+                            </div>
+                        </td>
+                        
+                        <!-- Result Badge -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if analysis %}
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                {% if analysis.result == 'fake' or analysis.result == 'likely_fake' %}bg-red-100 text-red-800
+                                {% elif analysis.result == 'genuine' or analysis.result == 'likely_genuine' %}bg-green-100 text-green-800
+                                {% elif analysis.result == 'possibly_fake' or analysis.result == 'possibly_genuine' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ analysis.get_result_display }}
+                            </span>
+                            {% else %}
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                                Not Analyzed
+                            </span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Confidence -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if analysis %}
+                            <div class="flex items-center">
+                                <div class="flex items-center">
+                                    <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                        {% widthratio analysis.confidence_score 1 100 as confidence_percentage %}
+                                        <div class="h-2 rounded-full 
+                                            {% if analysis.confidence_score >= 0.8 %}bg-green-500
+                                            {% elif analysis.confidence_score >= 0.6 %}bg-yellow-500
+                                            {% else %}bg-red-500{% endif %}"
+                                             style="width: {{ confidence_percentage }}%">
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900">{{ analysis.confidence_percentage }}</span>
+                                </div>
+                            </div>
+                            {% else %}
+                            <span class="text-sm text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Date -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ review.local_created_at|date:"M d, Y" }}</div>
+                            <div class="text-sm text-gray-500">{{ review.local_created_at|date:"H:i" }} ({{ review.local_created_at|date:"T" }})</div>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <svg class="h-10 w-10 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                <p class="text-sm font-medium text-gray-900">No results match your filters</p>
+                                <p class="text-xs text-gray-500 mb-3">Try adjusting or clearing the filters.</p>
+                                <button onclick="resetFilters()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                    Reset Filters
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination Controls -->
+{% if reviews.has_other_pages %}
+<div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm pagination">
+    <div class="flex-1 flex justify-between sm:hidden">
+        {% if reviews.has_previous %}
+            <a href="?page={{ reviews.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Previous
+            </a>
+        {% endif %}
+        {% if reviews.has_next %}
+            <a href="?page={{ reviews.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Next
+            </a>
+        {% endif %}
+    </div>
+    
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm text-gray-700">
+                Showing <span class="font-medium">{{ reviews.start_index }}</span> to <span class="font-medium">{{ reviews.end_index }}</span> of <span class="font-medium">{{ total_reviews }}</span> reviews
+            </p>
+        </div>
+        <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <!-- Prev -->
+                {% if reviews.has_previous %}
+                    <a href="?page={{ reviews.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Previous</span>
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% endif %}
+                
+                <!-- Page Numbers -->
+                {% for num in reviews.paginator.page_range %}
+                    {% if num == reviews.number %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">{{ num }}</span>
+                    {% elif num > reviews.number|add:'-3' and num < reviews.number|add:'3' %}
+                        <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                <!-- Next  -->
+                {% if reviews.has_next %}
+                    <a href="?page={{ reviews.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Next</span>
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+</div>
+{% endif %}
