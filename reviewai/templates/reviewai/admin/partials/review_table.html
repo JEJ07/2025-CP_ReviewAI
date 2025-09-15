@@ -48,7 +48,15 @@
                         
                         <!-- Product Name -->
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ review.product_name|truncatechars:25 }}</div>
+                            <div class="text-sm font-medium text-gray-900">
+                                {% if review.link %}
+                                    <a href="{{ review.link }}" target="_blank" class="text-indigo-600 hover:underline">
+                                        {{ review.product_name|truncatechars:25 }}
+                                    </a>
+                                {% else %}
+                                    {{ review.product_name|truncatechars:25 }}
+                                {% endif %}
+                            </div>
                         </td>
                         
                         <!-- Review Text -->
