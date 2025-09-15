@@ -10,10 +10,13 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Review Text</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Platform</th>
+
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 </tr>
             </thead>
@@ -94,7 +97,7 @@
                                             {% if analysis.confidence_score >= 0.8 %}bg-green-500
                                             {% elif analysis.confidence_score >= 0.6 %}bg-yellow-500
                                             {% else %}bg-red-500{% endif %}"
-                                             style="width: {{ confidence_percentage }}%">
+                                            style="width: {{ confidence_percentage }}%">
                                         </div>
                                     </div>
                                     <span class="text-sm font-medium text-gray-900">{{ analysis.confidence_percentage }}</span>
@@ -103,6 +106,11 @@
                             {% else %}
                             <span class="text-sm text-gray-400">-</span>
                             {% endif %}
+                        </td>
+                        
+                        <!-- Platform -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-medium text-gray-900">{{ review.platform|default:"-" }}</span>
                         </td>
                         
                         <!-- Date -->
