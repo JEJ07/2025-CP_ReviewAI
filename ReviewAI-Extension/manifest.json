@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "ReviewAI",
+  "version": "1.0.0",
+  "description": "Analyze and flag fake reviews using advanced NLP and machine learning models",
+  "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.amazon.com/*",
+        "*://*.ebay.com/*",
+        "*://*.flipkart.com/*",
+        "*://*.shopee.ph/*",
+        "*://*.shopee.com/*",
+        "*://*.shopee.sg/*",
+        "*://*.lazada.com.ph/*",
+        "*://*.lazada.com/*",
+        "*://*.lazada.sg/*",
+        "*://*.temu.com/*",
+        "*://*.ph.shein.com/*",
+        "*://*.us.shein.com/*",
+        "*://*.alibaba.com/*",
+        "*://*.zalora.com.ph/*",
+        "*://*.newegg.com/*",
+        "*://*.walmart.com/*",
+        "*://*.carousell.ph/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ReviewAI Analyzer"
+  }
+}

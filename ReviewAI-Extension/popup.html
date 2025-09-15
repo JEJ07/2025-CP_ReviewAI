@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ReviewAI</title>
+    <style>
+      body {
+        width: 350px;
+        padding: 0;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .header p {
+        margin: 5px 0 0 0;
+        font-size: 12px;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .setting-group {
+        margin-bottom: 20px;
+      }
+
+      .setting-label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: #495057;
+        font-size: 13px;
+      }
+
+      .setting-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 13px;
+        box-sizing: border-box;
+      }
+
+      .setting-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      .setting-description {
+        font-size: 11px;
+        color: #6c757d;
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: auto;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .btn-secondary {
+        background: #f8f9fa;
+        color: #495057;
+        border: 2px solid #e0e0e0;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        width: 100%;
+      }
+
+      .status-message {
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      .status-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .quick-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .footer {
+        padding: 15px 20px;
+        background: white;
+        border-top: 1px solid #e0e0e0;
+        text-align: center;
+      }
+
+      .footer p {
+        margin: 0;
+        font-size: 11px;
+        color: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>🔍 ReviewAI</h1>
+      <p>Fake Review Detection System</p>
+    </div>
+
+    <div class="content">
+      <div
+        id="status-message"
+        class="status-message"
+        style="display: none"
+      ></div>
+
+      <div class="setting-group">
+        <label class="setting-label" for="api-url">Django API URL</label>
+        <input
+          type="text"
+          id="api-url"
+          class="setting-input"
+          placeholder="http://localhost:8000"
+        />
+        <div class="setting-description">
+          URL of your Django ReviewAI backend server. Include the /api path.
+        </div>
+      </div>
+
+      <!-- <div class="setting-group">
+        <div class="checkbox-group">
+          <input type="checkbox" id="auto-analyze" />
+          <label class="setting-label" for="auto-analyze"
+            >Auto-analyze on page load</label
+          >
+        </div>
+        <div class="setting-description">
+          Automatically detect and add analyze buttons to reviews when visiting
+          product pages.
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <div class="checkbox-group">
+          <input type="checkbox" id="show-confidence" />
+          <label class="setting-label" for="show-confidence"
+            >Show detailed confidence scores</label
+          >
+        </div>
+        <div class="setting-description">
+          Display individual model predictions and probability breakdowns.
+        </div>
+      </div> -->
+
+      <!-- <button id="save-settings" class="btn-primary">Save Settings</button> -->
+
+      <div class="quick-actions">
+        <button id="open-panel" class="btn-secondary">Open Panel</button>
+        <button id="test-api" class="btn-secondary">Test API</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>ReviewAI v1.0.0 - Powered by ML & NLP</p>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
