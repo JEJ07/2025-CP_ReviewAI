@@ -41,14 +41,15 @@ class ReviewAIContentScript {
     this.init();
   }
 
-  init() {
+  async init() {
     if (this.isInitialized) return;
 
     console.log("ReviewAI: Initializing on", window.location.hostname);
 
+    await this.checkLoginStatus();
+
     this.createAnalysisPanel();
     this.setupEventListeners();
-    // this.addAnalyzeButtons();
     this.updateBatchLimitDisplay();
     this.isInitialized = true;
 
@@ -264,7 +265,7 @@ class ReviewAIContentScript {
         </div>
       </div>
 
-      <!-- NEW: Account Tab -->
+      <!-- Account Tab -->
       <div id="reviewai-account-tab" class="reviewai-tab-content">
         <div class="reviewai-account-section">
           ${this.isLoggedIn ? this.createLoggedInAccountHTML() : this.createLoginFormHTML()}
@@ -311,7 +312,7 @@ class ReviewAIContentScript {
     `;
   }
 
-  // NEW: Create logged in account HTML
+  // Create logged in account HTML
   createLoggedInAccountHTML() {
     return `
       <div class="reviewai-account-info">
@@ -459,7 +460,7 @@ class ReviewAIContentScript {
     }
   }
 
-  // NEW: Handle login
+  // Handle login
   async handleLogin() {
     const usernameInput = document.getElementById("reviewai-username");
     const passwordInput = document.getElementById("reviewai-password");
@@ -495,11 +496,27 @@ class ReviewAIContentScript {
         statusDiv.textContent = "Login successful! Refreshing...";
         statusDiv.className = "reviewai-status reviewai-success";
 
-        // Update local state
+        // Update local state FIRST
         this.isLoggedIn = true;
-        this.currentUser = { username: response.data.username };
+        this.currentUser = { 
+          username: response.data.username || username // Use returned username or fallback
+        };
 
-        // Refresh the panel
+        // Get complete user info after login
+        try {
+          const userResponse = await new Promise((resolve) => {
+            chrome.runtime.sendMessage({ action: "getUserInfo" }, resolve);
+          });
+          
+          if (userResponse.success) {
+            this.currentUser = userResponse.data.user;
+          }
+        } catch (userInfoError) {
+          console.warn("Failed to get user info:", userInfoError);
+          // Keep basic user info from login response
+        }
+
+        // Refresh the panel with updated state
         setTimeout(() => {
           this.refreshPanel();
           this.switchTab("account");
@@ -519,7 +536,7 @@ class ReviewAIContentScript {
     }
   }
 
-  // NEW: Handle logout
+  // Handle logout
   async handleLogout() {
     const logoutBtn = document.getElementById("reviewai-logout-btn");
     const statusDiv = document.getElementById("reviewai-account-status");
@@ -542,7 +559,7 @@ class ReviewAIContentScript {
       statusDiv.textContent = "Logged out successfully! Refreshing...";
       statusDiv.className = "reviewai-status reviewai-success";
 
-      // Refresh the panel
+      // Refresh the panel with updated state
       setTimeout(() => {
         this.refreshPanel();
         this.switchTab("account");
@@ -563,13 +580,20 @@ class ReviewAIContentScript {
     }
   }
 
-  // NEW: Refresh panel after login/logout
-  refreshPanel() {
+  // Refresh panel after login/logout
+  async refreshPanel() {
     const panel = document.getElementById("reviewai-panel");
     if (panel) {
       panel.remove();
     }
+    
+    // Check login status before recreating panel
+    await this.checkLoginStatus();
+    
     this.createAnalysisPanel();
+    
+    // Keep panel visible after refresh
+    this.showPanel();
   }
 
   // addAnalyzeButtons() {
