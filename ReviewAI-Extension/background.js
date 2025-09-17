@@ -6,11 +6,157 @@ class ReviewAPIService {
       analyzeBatch: "/api/analyze-batch-reviews/",
       analyzeQuick: "/api/quick-analyze/",
       batchLimit: "/api/get-batch-limit/",
+      login: "/api/login/",              // NEW
+      logout: "/api/logout/",            // NEW
+      userInfo: "/api/user-info/",       // NEW
     };
   }
 
+  // NEW: Login method
+  async login(username, password) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}${this.endpoints.login}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      if (data.success) {
+        // Store token in extension storage
+        await chrome.storage.local.set({ 
+          authToken: data.token,
+          username: data.username,
+          loginTime: Date.now()
+        });
+        
+        console.log("Login successful, token stored");
+        return data;
+      } else {
+        throw new Error(data.error || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  }
+
+  // NEW: Logout method
+  async logout() {
+    try {
+      const { authToken } = await chrome.storage.local.get(['authToken']);
+      
+      if (authToken) {
+        await fetch(`${this.apiBaseUrl}${this.endpoints.logout}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            token: authToken,
+          }),
+        });
+      }
+
+      // Clear stored data regardless of API call success
+      await chrome.storage.local.remove(['authToken', 'username', 'loginTime']);
+      console.log("Logout successful, token cleared");
+      
+      return { success: true };
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still clear local data on error
+      await chrome.storage.local.remove(['authToken', 'username', 'loginTime']);
+      throw error;
+    }
+  }
+
+  // NEW: Get current user info
+  async getUserInfo() {
+    try {
+      const { authToken } = await chrome.storage.local.get(['authToken']);
+      
+      if (!authToken) {
+        throw new Error("No auth token found");
+      }
+
+      const response = await fetch(`${this.apiBaseUrl}${this.endpoints.userInfo}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Token ${authToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Get user info error:", error);
+      throw error;
+    }
+  }
+
+  // NEW: Check if user is logged in
+  async isLoggedIn() {
+    try {
+      const { authToken, loginTime } = await chrome.storage.local.get(['authToken', 'loginTime']);
+      
+      if (!authToken) {
+        return false;
+      }
+
+      // Check if token is not too old (optional - 30 days)
+      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      if (loginTime && loginTime < thirtyDaysAgo) {
+        console.log("Token expired, clearing storage");
+        await chrome.storage.local.remove(['authToken', 'username', 'loginTime']);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Check login status error:", error);
+      return false;
+    }
+  }
+
+  // UPDATED: Include token in review analysis
   async analyzeReview(reviewText, metadata = {}) {
     try {
+      // Get auth token from storage
+      const { authToken } = await chrome.storage.local.get(['authToken']);
+      
+      const requestBody = {
+        review_text: reviewText,
+        platform_name: metadata.platformName || 'extension',
+        product_name: metadata.productName || 'Unknown Product',
+        page_url: metadata.pageUrl || '',
+        analysis_type: metadata.analysisType || 'single'
+      };
+
+      // Add token if user is logged in
+      if (authToken) {
+        requestBody.token = authToken;
+      }
+
       const response = await fetch(
         `${this.apiBaseUrl}${this.endpoints.analyzeSingle}`,
         {
@@ -19,13 +165,7 @@ class ReviewAPIService {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({
-            review_text: reviewText,
-            platform_name: metadata.platformName || 'extension',
-            product_name: metadata.productName || 'Unknown Product',
-            page_url: metadata.pageUrl || '',
-            analysis_type: metadata.analysisType || 'single'
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -52,8 +192,25 @@ class ReviewAPIService {
     }
   }
 
+  // UPDATED: Include token in batch analysis
   async analyzeBatchReviews(reviews, metadata = {}) {
     try {
+      // Get auth token from storage
+      const { authToken } = await chrome.storage.local.get(['authToken']);
+      
+      const requestBody = {
+        reviews: reviews,
+        platform_name: metadata.platformName || 'extension',
+        product_name: metadata.productName || 'Unknown Product',
+        page_url: metadata.pageUrl || '',
+        analysis_type: metadata.analysisType || 'batch'
+      };
+
+      // Add token if user is logged in
+      if (authToken) {
+        requestBody.token = authToken;
+      }
+
       const response = await fetch(
         `${this.apiBaseUrl}${this.endpoints.analyzeBatch}`,
         {
@@ -62,13 +219,7 @@ class ReviewAPIService {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({
-            reviews: reviews,
-            platform_name: metadata.platformName || 'extension',
-            product_name: metadata.productName || 'Unknown Product',
-            page_url: metadata.pageUrl || '',
-            analysis_type: metadata.analysisType || 'batch'
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -84,17 +235,20 @@ class ReviewAPIService {
         throw new Error(data.error);
       }
 
-      if (!Array.isArray(data)) {
+      // Handle both formats: {results: [...]} or [...]
+      const results = data.results || data;
+      if (!Array.isArray(results)) {
         throw new Error("Invalid response format - expected array");
       }
 
-      return data;
+      return results;
     } catch (error) {
       console.error("Error analyzing batch reviews:", error);
       throw error;
     }
   }
 
+  // analyzeQuickReview and getBatchLimit remain the same...
   async analyzeQuickReview(reviewText) {
     try {
       const response = await fetch(
@@ -133,7 +287,6 @@ class ReviewAPIService {
       throw error;
     }
   }
-  
 
   async getBatchLimit() {
     try {
@@ -170,6 +323,7 @@ class ReviewAPIService {
 
 const apiService = new ReviewAPIService();
 
+// Existing context menu and message handlers...
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "analyzeSelectedReview",
@@ -199,8 +353,9 @@ function analyzeSelectedText(selectedText) {
   );
 }
 
-// Handle messages from content scripts
+// UPDATED: Handle messages from content scripts (including new auth actions)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // Existing analyze actions...
   if (request.action === "analyzeReview") {
     const metadata = {
       platformName: request.platformName,
@@ -263,6 +418,56 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  // NEW: Authentication actions
+  if (request.action === "login") {
+    apiService
+      .login(request.username, request.password)
+      .then((result) => {
+        sendResponse({ success: true, data: result });
+      })
+      .catch((error) => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true;
+  }
+
+  if (request.action === "logout") {
+    apiService
+      .logout()
+      .then((result) => {
+        sendResponse({ success: true, data: result });
+      })
+      .catch((error) => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true;
+  }
+
+  if (request.action === "getUserInfo") {
+    apiService
+      .getUserInfo()
+      .then((result) => {
+        sendResponse({ success: true, data: result });
+      })
+      .catch((error) => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true;
+  }
+
+  if (request.action === "checkLoginStatus") {
+    apiService
+      .isLoggedIn()
+      .then((isLoggedIn) => {
+        sendResponse({ success: true, isLoggedIn: isLoggedIn });
+      })
+      .catch((error) => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true;
+  }
+
+  // Existing settings actions...
   if (request.action === "getSettings") {
     chrome.storage.sync.get(
       ["apiUrl", "autoAnalyze", "showConfidence"],
