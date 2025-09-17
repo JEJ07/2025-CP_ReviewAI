@@ -17,7 +17,7 @@ class ReviewAIContentScript {
         ".YNedDV",
         // ".item"
       ],
-      lazada: [".content", ".item-content-main-content-reviews-item"],
+      lazada: [".content", ".item-content-main-content"],
       temu: ["._2EO0yd2j"],
       shein: [".rate-des"],
       alibaba: [

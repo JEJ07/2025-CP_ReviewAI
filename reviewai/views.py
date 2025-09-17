@@ -19,6 +19,7 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from django.db.models import Count, Avg, Q
+from .models import ActivityLog
 
 
 import io
@@ -79,7 +80,15 @@ def predict_review(request):
                 platform='web',
                 created_at=timezone.now()
             )
-            
+
+            # Log the activity
+            log_activity(
+                user=user,
+                action='analysis',
+                description=f'Analyzed review for "{product_name[:50]}..." via web app',
+                request=request
+            )
+                        
             prediction_lower = result['prediction'].lower().strip()
             confidence = result['confidence']
             
@@ -667,7 +676,7 @@ def extension_predict(request):
                 'error': 'Review text is required'
             }, status=400)
 
-        # Get user from token (new)
+        # Get user from token
         token = data.get('token')
         user = get_user_from_token(token) if token else None
         
@@ -701,12 +710,19 @@ def extension_predict(request):
                 logger.info(f"NEW EXTENSION REVIEW: Saving cleaned text to database")
                 
                 review = Review.objects.create(
-                    user=user,  # Now associates with user if logged in
+                    user=user,
                     product_name=product_name[:255],
                     review_text=cleaned_text,
                     platform=platform,
                     link=link,
                     created_at=timezone.now()
+                )
+
+                log_activity(
+                    user=user,
+                    action='analysis',
+                    description=f'Analyzed review for "{product_name[:50]}..." via {platform} extension',
+                    request=request
                 )
                 
                 prediction_lower = result['prediction'].lower().strip()
@@ -827,6 +843,14 @@ def extension_batch_predict(request):
                             link=link,
                             created_at=timezone.now()
                         )
+
+                        saved_count = len([r for r in results if 'error' not in r])
+                        log_activity(
+                            user=user,
+                            action='batch_analysis',
+                            description=f'Batch analyzed {len(results)} reviews ({saved_count} saved) via {platform} extension',
+                            request=request
+                        )
                         
                         prediction_lower = result['prediction'].lower().strip()
                         confidence = result['confidence']
@@ -930,6 +954,51 @@ def get_batch_limit(request):
     batch_limit = getattr(settings, 'REVIEWAI_BATCH_LIMIT', 20)
     return JsonResponse({'batch_limit': batch_limit})
 
+def log_activity(user, action, description, request=None):
+    ip = None
+    if request:
+        ip = request.META.get('REMOTE_ADDR') or request.META.get('HTTP_X_FORWARDED_FOR')
+    print(f"Logging activity: {user}, {action}, {description}, {ip}")
+    ActivityLog.objects.create(
+        user=user,
+        action=action,
+        description=description,
+        ip_address=ip
+    )
+
+@staff_member_required
+def admin_activity_log(request):
+    # Get filter parameters
+    action_filter = request.GET.get('action')
+    user_filter = request.GET.get('user')
+    
+    logs = ActivityLog.objects.select_related('user').order_by('-timestamp')
+    
+    # Apply filters
+    if action_filter:
+        logs = logs.filter(action=action_filter)
+    
+    if user_filter:
+        logs = logs.filter(user__username__icontains=user_filter)
+    
+    # Pagination
+    paginator = Paginator(logs, 50)
+    page_number = request.GET.get('page')
+    logs_page = paginator.get_page(page_number)
+    
+    # Convert timestamps for display
+    for log in logs_page:
+        log.local_timestamp = convert_to_user_timezone(log.timestamp, request.user)
+    
+    context = {
+        'logs': logs_page,
+        'total_logs': logs.count(),
+        'action_choices': ActivityLog.ACTION_CHOICES,
+        'current_action_filter': action_filter,
+        'current_user_filter': user_filter,
+    }
+    return render(request, 'reviewai/admin/admin_activity_log.html', context)
+
 def get_user_from_token(token):
     if not token:
         return None
@@ -957,6 +1026,13 @@ def extension_login(request):
         user = authenticate(username=username, password=password)
         if user and user.is_active:
             token, created = Token.objects.get_or_create(user=user)
+            log_activity(
+                user=user,
+                action='login',
+                description='User logged in via browser extension',
+                request=request
+            )
+            
             return JsonResponse({
                 'success': True,
                 'token': token.key,
@@ -987,6 +1063,15 @@ def extension_logout(request):
         if token:
             try:
                 token_obj = Token.objects.get(key=token)
+        
+                # Log the logout
+                log_activity(
+                    user=token_obj.user,
+                    action='logout',
+                    description='User logged out via browser extension',
+                    request=request
+                )
+                
                 token_obj.delete()
                 return JsonResponse({
                     'success': True,
