@@ -15,6 +15,9 @@ import re
 from collections import Counter
 # from .utils.fake_review_detector import get_detector
 from .utils.fake_review_detector2 import get_detector
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
 from django.db.models import Count, Avg, Q
 
 
@@ -664,18 +667,23 @@ def extension_predict(request):
                 'error': 'Review text is required'
             }, status=400)
 
+        # Get user from token (new)
+        token = data.get('token')
+        user = get_user_from_token(token) if token else None
+        
         detector_instance = get_detector()
         result = detector_instance.predict_single_review(review_text)
         
         try:
             product_name = data.get('product_name', 'Unknown Product').strip()
             platform = data.get('platform_name', 'extension')
-            link = data.get('link', '').strip() or None #PRODUCT LINK
+            link = data.get('link', '').strip() or None
             
             # Get the ML-cleaned text from the result
             cleaned_text = result.get('cleaned_text', review_text)
             
             logger.info(f"Processing extension review - Platform: {platform}")
+            logger.info(f"User: {user.username if user else 'Anonymous'}")
             logger.info(f"Original text: '{review_text[:50]}...'")
             logger.info(f"Cleaned text: '{cleaned_text[:50]}...'")
             
@@ -683,7 +691,8 @@ def extension_predict(request):
             existing_review = Review.objects.filter(
                 platform=platform,
                 product_name=product_name[:255],
-                review_text=cleaned_text
+                review_text=cleaned_text,
+                user=user,
             ).first()
             
             if existing_review:
@@ -691,9 +700,8 @@ def extension_predict(request):
             else:
                 logger.info(f"NEW EXTENSION REVIEW: Saving cleaned text to database")
                 
-                
                 review = Review.objects.create(
-                    user=None,
+                    user=user,  # Now associates with user if logged in
                     product_name=product_name[:255],
                     review_text=cleaned_text,
                     platform=platform,
@@ -731,7 +739,7 @@ def extension_predict(request):
                     created_at=timezone.now()
                 )
                 
-                logger.info(f"SAVED: Extension review {review.id} with cleaned text and analysis {analysis.id}")
+                logger.info(f"SAVED: Extension review {review.id} with cleaned text and analysis {analysis.id} for user {user.username if user else 'Anonymous'}")
             
         except Exception as save_error:
             logger.error(f"Extension database save failed: {save_error}")
@@ -742,7 +750,8 @@ def extension_predict(request):
             'probabilities': result['probabilities'],
             'individual_predictions': result.get('individual_predictions'),
             'cleaned_text': result.get('cleaned_text'),
-            'link': link 
+            'link': link,
+            'user_logged_in': user is not None
         })
         
     except Exception as e:
@@ -754,7 +763,6 @@ def extension_predict(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def extension_batch_predict(request):
-    
     try:
         data = json.loads(request.body)
         reviews = data.get('reviews', [])
@@ -765,14 +773,19 @@ def extension_batch_predict(request):
                 'error': f'Invalid number of reviews (1-{batch_limit} allowed)'
             }, status=400)
 
+        # Get user from token (new)
+        token = data.get('token')
+        user = get_user_from_token(token) if token else None
+
         detector_instance = get_detector()
         results = []
         
         platform = data.get('platform_name', 'extension')
         default_product = data.get('product_name', 'Unknown Product').strip()
-        default_link = data.get('link', '').strip() or None  #default link
+        default_link = data.get('link', '').strip() or None
 
         logger.info(f"Starting batch analysis for platform: {platform}, {len(reviews)} reviews")
+        logger.info(f"User: {user.username if user else 'Anonymous'}")
         
         for i, review_data in enumerate(reviews):
             try:
@@ -780,11 +793,10 @@ def extension_batch_predict(request):
                     review_text = review_data.strip()
                     product_name = default_product
                     link = default_link
-
                 else:
                     review_text = review_data.get('text', '').strip()
                     product_name = review_data.get('product_name', default_product).strip()
-                    link = review_data.get('link', default_link)  # ✅ individual link
+                    link = review_data.get('link', default_link)
 
                 logger.info(f"Batch #{i+1}: Processing review: '{review_text[:50]}...'")
                 
@@ -797,7 +809,8 @@ def extension_batch_predict(request):
                     existing_review = Review.objects.filter(
                         platform=platform,
                         product_name=product_name[:255],
-                        review_text=cleaned_text
+                        review_text=cleaned_text,
+                        user=user
                     ).first()
                     
                     if existing_review:
@@ -805,10 +818,9 @@ def extension_batch_predict(request):
                     else:
                         logger.info(f"Batch #{i+1}: NEW REVIEW - Saving cleaned text to database")
                         
-                        
                         # Save cleaned text
                         review = Review.objects.create(
-                            user=None,
+                            user=user,  # Now associates with user if logged in
                             product_name=product_name[:255],
                             review_text=cleaned_text,
                             platform=platform,
@@ -846,7 +858,7 @@ def extension_batch_predict(request):
                             created_at=timezone.now()
                         )
                         
-                        logger.info(f"Batch #{i+1}: SAVED - Review {review.id} with cleaned text")
+                        logger.info(f"Batch #{i+1}: SAVED - Review {review.id} with cleaned text for user {user.username if user else 'Anonymous'}")
                     
                 except Exception as save_error:
                     logger.warning(f"Batch extension save failed for review {i}: {save_error}")
@@ -868,7 +880,11 @@ def extension_batch_predict(request):
                 })
         
         logger.info(f"Batch processing completed. {len(results)} results generated.")
-        return JsonResponse(results, safe=False)
+        return JsonResponse({
+            'results': results,
+            'user_logged_in': user is not None,
+            'total_processed': len(results)
+        }, safe=False)
         
     except Exception as e:
         logger.error(f"Extension batch prediction error: {str(e)}")
@@ -914,19 +930,112 @@ def get_batch_limit(request):
     batch_limit = getattr(settings, 'REVIEWAI_BATCH_LIMIT', 20)
     return JsonResponse({'batch_limit': batch_limit})
 
-# def model_info(request):
-#     try:
-#         detector_instance = get_detector()
-#         info = detector_instance.get_model_info()
+def get_user_from_token(token):
+    if not token:
+        return None
+    try:
+        token_obj = Token.objects.get(key=token)
+        return token_obj.user
+    except Token.DoesNotExist:
+        return None
+
+# Add API login endpoint
+@csrf_exempt
+@require_http_methods(["POST"])
+def extension_login(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
         
-#         return JsonResponse({
-#             'success': True,
-#             'model_info': info
-#         })
+        if not username or not password:
+            return JsonResponse({
+                'success': False,
+                'error': 'Username and password are required'
+            }, status=400)
         
-#     except Exception as e:
-#         logger.error(f"Model info error: {str(e)}")
-#         return JsonResponse({
-#             'success': False,
-#             'error': str(e)
-#         }, status=500)
+        user = authenticate(username=username, password=password)
+        if user and user.is_active:
+            token, created = Token.objects.get_or_create(user=user)
+            return JsonResponse({
+                'success': True,
+                'token': token.key,
+                'username': user.username,
+                'message': 'Login successful'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid username or password'
+            }, status=401)
+            
+    except Exception as e:
+        logger.error(f"API login error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Login failed'
+        }, status=500)
+
+# Add API logout endpoint
+@csrf_exempt
+@require_http_methods(["POST"])
+def extension_logout(request):
+    try:
+        data = json.loads(request.body)
+        token = data.get('token')
+        
+        if token:
+            try:
+                token_obj = Token.objects.get(key=token)
+                token_obj.delete()
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Logged out successfully'
+                })
+            except Token.DoesNotExist:
+                pass
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Logged out'
+        })
+        
+    except Exception as e:
+        logger.error(f"API logout error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Logout failed'
+        }, status=500)
+
+# Add API user info endpoint
+@csrf_exempt
+@require_http_methods(["GET"])
+def extension_user_info(request):
+    try:
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        if auth_header.startswith('Token '):
+            token = auth_header.split(' ')[1]
+            user = get_user_from_token(token)
+            
+            if user:
+                return JsonResponse({
+                    'success': True,
+                    'user': {
+                        'username': user.username,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                    }
+                })
+        
+        return JsonResponse({
+            'success': False,
+            'error': 'Authentication required'
+        }, status=401)
+        
+    except Exception as e:
+        logger.error(f"API user info error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to get user info'
+        }, status=500)

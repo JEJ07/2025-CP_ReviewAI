@@ -32,4 +32,8 @@ urlpatterns = [
     path('api/analyze-batch-reviews/', views.extension_batch_predict, name='extension_batch'),
     path('api/quick-analyze/', views.extension_quick_analyze, name='extension_quick_analyze'),
     path('api/get-batch-limit/', views.get_batch_limit, name='get_batch_limit'),
+
+    path('api/login/', views.extension_login, name='api_login'),
+    path('api/logout/', views.extension_logout, name='api_logout'),
+    path('api/user-info/', views.extension_user_info, name='api_user_info'),
 ]
