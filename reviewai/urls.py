@@ -19,6 +19,8 @@ urlpatterns = [
 
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-history/', views.admin_history, name='admin_history'),
+    path('admin-activity-log/', views.admin_activity_log, name='admin_activity_log'),
+
     ###### ROUTES FOR PLATFORMS ###########
     path('admin-lazada/', views.admin_lazada, name='admin_lazada'),
     path('admin-shopee/', views.admin_shopee, name='admin_shopee'),

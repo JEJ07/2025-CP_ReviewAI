@@ -4,6 +4,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from reviewai.views import log_activity
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -16,6 +17,14 @@ def register_view(request):
             username = form.cleaned_data.get('username')
             login(request, user)
             messages.success(request, f'Welcome, {username}! Your account was created successfully.')
+
+            log_activity(
+                user=user,
+                action='user_register',
+                description='User registered via web app',
+                request=request
+            )
+
             return redirect('reviewai:analyze')
     else:
         form = UserCreationForm()
@@ -34,6 +43,13 @@ def login_view(request):
             login(request, user)
             messages.success(request, f'Welcome back, {user.username}!')
             
+            log_activity(
+                user=user,
+                action='login',
+                description='User logged in via web app',
+                request=request
+            )
+
             if user.is_staff or user.is_superuser:
                 return redirect('reviewai:admin_dashboard')
             else:
@@ -46,6 +62,14 @@ def login_view(request):
 @login_required
 def logout_view(request):
     username = request.user.username
+
+    log_activity(
+        user=request.user,
+        action='logout',
+        description='User logged out via web app',
+        request=request
+    )
+
     logout(request)
     messages.info(request, f'You have been logged out. See you later, {username}!')
     return redirect('reviewai:analyze')
@@ -73,6 +97,13 @@ def edit_profile_view(request):
         user.last_name = last_name
         user.email = email
         user.save()
+
+        log_activity(
+            user=user,
+            action='edit_profile',
+            description='User updated profile information',
+            request=request
+        )
         
         messages.success(request, 'Your profile has been updated successfully!')
         return redirect('users:profile')

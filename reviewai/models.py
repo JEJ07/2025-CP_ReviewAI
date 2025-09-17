@@ -62,3 +62,29 @@ class ReviewAnalysis(models.Model):
     @property
     def confidence_percentage(self):
         return f"{self.confidence_score * 100:.1f}%"
+    
+class ActivityLog(models.Model):
+    ACTION_CHOICES = [
+        ('login', 'Login'),
+        ('logout', 'Logout'),
+        ('review_create', 'Review Created'),
+        ('review_update', 'Review Updated'),
+        ('review_delete', 'Review Deleted'),
+        ('analysis', 'Review Analyzed'),
+        ('batch_analysis', 'Batch Analysis'),
+        ('user_register', 'User Registered'),
+        ('user_update', 'User Updated'),
+        ('user_delete', 'User Deleted'),
+        ('other', 'Other'),
+    ]
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    action = models.CharField(max_length=32, choices=ACTION_CHOICES)
+    description = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'activity_log'
+        
+    def __str__(self):
+        return f"{self.user or 'Anonymous'} - {self.action} at {self.timestamp}"
