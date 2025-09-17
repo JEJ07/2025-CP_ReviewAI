@@ -1555,3 +1555,218 @@
 .reviewai-selection-toast.fadeout {
   animation: reviewai-toast-appear 0.3s ease-out reverse !important;
 }
+
+.reviewai-account-section {
+  padding: 20px;
+}
+
+/* Login Form Styles */
+.reviewai-login-form h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.reviewai-login-desc {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.reviewai-form-group {
+  margin-bottom: 16px;
+}
+
+.reviewai-form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.reviewai-form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.reviewai-form-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.reviewai-form-actions {
+  margin: 20px 0 16px 0;
+}
+
+.reviewai-login-help {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.reviewai-login-help p {
+  margin: 8px 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.reviewai-login-help a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.reviewai-login-help a:hover {
+  text-decoration: underline;
+}
+
+/* Account Info Styles */
+.reviewai-account-info h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.reviewai-user-details {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8faff;
+  border-radius: 8px;
+  border: 1px solid #e0e7ff;
+}
+
+.reviewai-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.reviewai-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.reviewai-detail-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.reviewai-detail-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.reviewai-account-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.reviewai-account-actions a {
+  display: inline-block;
+  text-align: center;
+  padding: 10px 20px;
+  background: #f8f9fa;
+  color: #495057;
+  text-decoration: none;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.reviewai-account-actions a:hover {
+  background: #e9ecef;
+  border-color: #1e3a8a;
+}
+
+.reviewai-account-note {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f0f9ff;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+}
+
+.reviewai-account-note p {
+  margin: 0;
+  font-size: 12px;
+  color: #1e40af;
+  line-height: 1.4;
+}
+
+/* Status Messages */
+.reviewai-status {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.reviewai-status.reviewai-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.reviewai-status.reviewai-success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.reviewai-status.reviewai-warning {
+  background: #fefce8;
+  color: #ca8a04;
+  border: 1px solid #fef08a;
+}
+
+/* Header Login Status Styles */
+.reviewai-user-info {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.reviewai-login-prompt {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* Button Loading State */
+.reviewai-btn-primary:disabled {
+  background: #9ca3af !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Responsive adjustments for login form */
+@media (max-width: 480px) {
+  .reviewai-account-actions {
+    flex-direction: column;
+  }
+  
+  .reviewai-form-group input {
+    font-size: 16px;
+  }
+}

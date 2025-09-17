@@ -6,6 +6,9 @@ class ReviewAIContentScript {
     }
 
     this.isInitialized = false;
+    this.currentUser = null;
+    this.isLoggedIn = false;
+
     this.reviewSelectors = {
       amazon: ['div[data-hook="review-collapsed"]', ".review-text-content"],
       ebay: [".fdbk-container__details__comment"],
@@ -50,6 +53,32 @@ class ReviewAIContentScript {
     this.isInitialized = true;
 
     console.log("ReviewAI Content Script initialized");
+  }
+
+  async checkLoginStatus() {
+    try {
+      const response = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ action: "checkLoginStatus" }, resolve);
+      });
+
+      if (response.success) {
+        this.isLoggedIn = response.isLoggedIn;
+        
+        if (this.isLoggedIn) {
+          const userResponse = await new Promise((resolve) => {
+            chrome.runtime.sendMessage({ action: "getUserInfo" }, resolve);
+          });
+          
+          if (userResponse.success) {
+            this.currentUser = userResponse.data.user;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error checking login status:", error);
+      this.isLoggedIn = false;
+      this.currentUser = null;
+    }
   }
 
   getProductName() {
@@ -158,6 +187,11 @@ class ReviewAIContentScript {
         ? productName.substring(0, 50) + "..."
         : productName;
 
+    // Create login status indicator
+    const loginStatusHTML = this.isLoggedIn 
+      ? `<div class="reviewai-user-info">👤 ${this.currentUser?.username || 'User'}</div>`
+      : `<div class="reviewai-login-prompt">Not logged in</div>`;
+
     const panel = document.createElement("div");
     panel.id = "reviewai-panel";
     panel.className = "reviewai-hidden";
@@ -166,6 +200,7 @@ class ReviewAIContentScript {
       <div class="reviewai-header-content">
         <h3>ReviewAI</h3>
         <div class="reviewai-product-name" title="${productName}">${displayName}</div>
+        ${loginStatusHTML}
       </div>
       <button id="reviewai-close" class="reviewai-close-btn">&times;</button>
     </div>
@@ -174,6 +209,7 @@ class ReviewAIContentScript {
         <button class="reviewai-tab active" data-tab="single">Single Review</button>
         <button class="reviewai-tab" data-tab="batch">Batch Analysis</button>
         <button class="reviewai-tab" data-tab="settings">Settings</button>
+        <button class="reviewai-tab" data-tab="account">Account</button>
       </div>
       
       <div id="reviewai-single-tab" class="reviewai-tab-content active">
@@ -193,7 +229,6 @@ class ReviewAIContentScript {
         <div id="reviewai-batch-result" class="reviewai-result-section"></div>
       </div>
 
-      <!-- NEW: Settings tab with user training option -->
       <div id="reviewai-settings-tab" class="reviewai-tab-content">
         <div class="reviewai-settings-section">          
           <div class="reviewai-setting-item">
@@ -228,6 +263,13 @@ class ReviewAIContentScript {
           </div>
         </div>
       </div>
+
+      <!-- NEW: Account Tab -->
+      <div id="reviewai-account-tab" class="reviewai-tab-content">
+        <div class="reviewai-account-section">
+          ${this.isLoggedIn ? this.createLoggedInAccountHTML() : this.createLoginFormHTML()}
+        </div>
+      </div>
     </div>
     <div class="reviewai-loading" id="reviewai-loading">
       <div class="reviewai-spinner"></div>
@@ -237,6 +279,75 @@ class ReviewAIContentScript {
 
     document.body.appendChild(panel);
     this.setupPanelListeners();
+  }
+
+  createLoginFormHTML() {
+    return `
+      <div class="reviewai-login-form">
+        <h4>Login to ReviewAI</h4>
+        <p class="reviewai-login-desc">Log in to save your review analyses to your account and access them from the web dashboard.</p>
+        
+        <div class="reviewai-form-group">
+          <label for="reviewai-username">Username:</label>
+          <input type="text" id="reviewai-username" placeholder="Enter your username" autocomplete="username">
+        </div>
+        
+        <div class="reviewai-form-group">
+          <label for="reviewai-password">Password:</label>
+          <input type="password" id="reviewai-password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+        
+        <div class="reviewai-form-actions">
+          <button id="reviewai-login-btn" class="reviewai-btn-primary">Login</button>
+        </div>
+        
+        <div id="reviewai-login-status" class="reviewai-status"></div>
+        
+        <div class="reviewai-login-help">
+          <p>Don't have an account? <a href="http://localhost:8000/users/register" target="_blank">Register here</a></p>
+          <p>Visit <a href="http://localhost:8000" target="_blank">ReviewAI Dashboard</a></p>
+        </div>
+      </div>
+    `;
+  }
+
+  // NEW: Create logged in account HTML
+  createLoggedInAccountHTML() {
+    return `
+      <div class="reviewai-account-info">
+        <h4>Account Information</h4>
+        
+        <div class="reviewai-user-details">
+          <div class="reviewai-detail-row">
+            <span class="reviewai-detail-label">Username:</span>
+            <span class="reviewai-detail-value">${this.currentUser?.username || 'N/A'}</span>
+          </div>
+          <div class="reviewai-detail-row">
+            <span class="reviewai-detail-label">Email:</span>
+            <span class="reviewai-detail-value">${this.currentUser?.email || 'N/A'}</span>
+          </div>
+          <div class="reviewai-detail-row">
+            <span class="reviewai-detail-label">Full Name:</span>
+            <span class="reviewai-detail-value">${
+              this.currentUser?.first_name && this.currentUser?.last_name 
+                ? `${this.currentUser.first_name} ${this.currentUser.last_name}`
+                : 'N/A'
+            }</span>
+          </div>
+        </div>
+        
+        <div class="reviewai-account-actions">
+          <button id="reviewai-logout-btn" class="reviewai-btn-danger">Logout</button>
+          <a href="http://localhost:8000/dashboard" target="_blank" class="reviewai-btn-secondary">Open Web Dashboard</a>
+        </div>
+        
+        <div id="reviewai-account-status" class="reviewai-status"></div>
+        
+        <div class="reviewai-account-note">
+          <p>Your extension reviews are being saved to your account and will appear in your web dashboard.</p>
+        </div>
+      </div>
+    `;
   }
 
   setupPanelListeners() {
@@ -290,6 +401,9 @@ class ReviewAIContentScript {
       ?.addEventListener("click", () => {
         this.updatePatternStatus();
       });
+
+
+    this.setupAccountListeners();
   }
 
   setupEventListeners() {
@@ -312,6 +426,150 @@ class ReviewAIContentScript {
         }
       }, 100);
     });
+  }
+
+  setupAccountListeners() {
+    const loginBtn = document.getElementById("reviewai-login-btn");
+    const logoutBtn = document.getElementById("reviewai-logout-btn");
+
+    if (loginBtn) {
+      loginBtn.addEventListener("click", () => {
+        this.handleLogin();
+      });
+
+      // Allow Enter key to submit login
+      const usernameInput = document.getElementById("reviewai-username");
+      const passwordInput = document.getElementById("reviewai-password");
+      
+      [usernameInput, passwordInput].forEach(input => {
+        if (input) {
+          input.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+              this.handleLogin();
+            }
+          });
+        }
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        this.handleLogout();
+      });
+    }
+  }
+
+  // NEW: Handle login
+  async handleLogin() {
+    const usernameInput = document.getElementById("reviewai-username");
+    const passwordInput = document.getElementById("reviewai-password");
+    const loginBtn = document.getElementById("reviewai-login-btn");
+    const statusDiv = document.getElementById("reviewai-login-status");
+
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!username || !password) {
+      statusDiv.textContent = "Please enter both username and password";
+      statusDiv.className = "reviewai-status reviewai-error";
+      return;
+    }
+
+    // Show loading state
+    loginBtn.textContent = "Logging in...";
+    loginBtn.disabled = true;
+    statusDiv.textContent = "Connecting...";
+    statusDiv.className = "reviewai-status";
+
+    try {
+      const response = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({
+          action: "login",
+          username: username,
+          password: password
+        }, resolve);
+      });
+
+      if (response.success) {
+        // Login successful
+        statusDiv.textContent = "Login successful! Refreshing...";
+        statusDiv.className = "reviewai-status reviewai-success";
+
+        // Update local state
+        this.isLoggedIn = true;
+        this.currentUser = { username: response.data.username };
+
+        // Refresh the panel
+        setTimeout(() => {
+          this.refreshPanel();
+          this.switchTab("account");
+        }, 1000);
+
+      } else {
+        statusDiv.textContent = response.error || "Login failed";
+        statusDiv.className = "reviewai-status reviewai-error";
+        loginBtn.textContent = "Login";
+        loginBtn.disabled = false;
+      }
+    } catch (error) {
+      statusDiv.textContent = "Connection failed. Please try again.";
+      statusDiv.className = "reviewai-status reviewai-error";
+      loginBtn.textContent = "Login";
+      loginBtn.disabled = false;
+    }
+  }
+
+  // NEW: Handle logout
+  async handleLogout() {
+    const logoutBtn = document.getElementById("reviewai-logout-btn");
+    const statusDiv = document.getElementById("reviewai-account-status");
+
+    // Show loading state
+    logoutBtn.textContent = "Logging out...";
+    logoutBtn.disabled = true;
+    statusDiv.textContent = "Disconnecting...";
+    statusDiv.className = "reviewai-status";
+
+    try {
+      const response = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ action: "logout" }, resolve);
+      });
+
+      // Update local state regardless of API response
+      this.isLoggedIn = false;
+      this.currentUser = null;
+
+      statusDiv.textContent = "Logged out successfully! Refreshing...";
+      statusDiv.className = "reviewai-status reviewai-success";
+
+      // Refresh the panel
+      setTimeout(() => {
+        this.refreshPanel();
+        this.switchTab("account");
+      }, 1000);
+
+    } catch (error) {
+      // Still logout locally even if API call fails
+      this.isLoggedIn = false;
+      this.currentUser = null;
+      
+      statusDiv.textContent = "Logged out (connection error)";
+      statusDiv.className = "reviewai-status reviewai-warning";
+      
+      setTimeout(() => {
+        this.refreshPanel();
+        this.switchTab("account");
+      }, 1000);
+    }
+  }
+
+  // NEW: Refresh panel after login/logout
+  refreshPanel() {
+    const panel = document.getElementById("reviewai-panel");
+    if (panel) {
+      panel.remove();
+    }
+    this.createAnalysisPanel();
   }
 
   // addAnalyzeButtons() {
@@ -1244,6 +1502,13 @@ class ReviewAIContentScript {
           }
 
           this.displaySingleResult(response.data);
+
+          // Show save status
+          if (response.data.user_logged_in) {
+            this.showTempMessage("✅ Review saved to your account!");
+          } else {
+            this.showTempMessage("ℹ️ Review analyzed but not saved (not logged in)");
+          }
         } else {
           this.showError(`Analysis failed: ${response.error}`);
         }
@@ -1300,7 +1565,7 @@ class ReviewAIContentScript {
 
     const reviewObjects = reviews.slice(0, batchLimit).map((review) => ({
       text: this.extractReviewText(review),
-      link: window.location.href   // ✅ product page link for each review
+      link: window.location.href
     }));
 
     const statusEl = document.getElementById("reviewai-scrape-status");
@@ -1308,7 +1573,6 @@ class ReviewAIContentScript {
 
     this.showLoading();
 
-    // Send batch analysis request
     chrome.runtime.sendMessage(
       {
         action: "analyzeBatchReviews",
@@ -1325,6 +1589,13 @@ class ReviewAIContentScript {
         if (response.success) {
           const results = response.data.results || response.data;
           this.displayBatchResults(results);
+
+          // Show save status
+          if (response.data.user_logged_in) {
+            this.showTempMessage("✅ Batch reviews saved to your account!");
+          } else {
+            this.showTempMessage("ℹ️ Reviews analyzed but not saved (not logged in)");
+          }
         } else {
           this.showError(`Batch analysis failed: ${response.error}`);
         }

@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'reviewai',
     'users',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +59,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authtoken.authentication.TokenAuthentication',
+    ],
+}
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # For development only
