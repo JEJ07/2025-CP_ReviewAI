@@ -95,11 +95,11 @@
                             </td>
                             <td class="px-6 py-4">{{ review.review_text|truncatewords:15 }}</td>
                             <td class="px-6 py-4">
-                                <span class="capitalize px-2 py-1 rounded-full text-xs 
+                                <span class="capitalize px-2 py-1 rounded-full text-xs whitespace-nowrap font-semibold
                                     {% if analysis.result == 'genuine' %}bg-green-100 text-green-800
                                     {% elif analysis.result == 'fake' %}bg-red-100 text-red-800
                                     {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                    {{ analysis.result }}
+                                    {{ analysis.get_result_display }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
@@ -149,12 +149,18 @@
             console.error("Canvas not found!");
             return;
         }
-        
+
         const ctx = canvas.getContext('2d');
 
         const labels = [
             {% for stat in analysis_stats %}
-                "{{ stat.result|capfirst }}",
+                "{{ stat.result }}",
+            {% endfor %}
+        ];
+
+        const codes = [
+            {% for stat in analysis_stats %}
+                "{{ stat.code }}",
             {% endfor %}
         ];
 
@@ -165,19 +171,19 @@
         ];
 
         const colorMap = {
-            Genuine: '#22c55e',
-            Fake: '#ef4444',
-            "Likely_genuine": '#4ade80',
-            "Likely_fake": '#f97316',
-            "Possibly_genuine": '#10b981',
-            "Possibly_fake": '#f59e0b',
-            Uncertain: '#6b7280'
+            genuine: '#22c55e',
+            likely_genuine: '#4ade80',
+            possibly_genuine: '#86efac',
+            fake: '#ef4444',
+            likely_fake: '#f97316',
+            possibly_fake: '#fbbf24',
+            uncertain: '#6b7280'
         };
 
-        const backgroundColors = labels.map(label => colorMap[label] || '#9ca3af');
+        const backgroundColors = codes.map(code => colorMap[code] || '#9ca3af');
 
         new Chart(ctx, {
-            type: 'doughnut', 
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
@@ -191,7 +197,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { 
+                    legend: {
                         position: 'bottom',
                         labels: {
                             boxWidth: 12,
