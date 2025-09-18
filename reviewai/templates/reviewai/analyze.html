@@ -15,42 +15,24 @@
       Let our AI tell you what's real and what's not.
     </p>
 
-    <!--  static platform -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 max-w-3xl mx-auto">
-      <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100 transition-all hover:shadow-lg">
-        <div class="flex items-center justify-center mb-3">
-          <img src="{% static 'reviewai/images/laz.png' %}" alt="Lazada" class="w-12 h-12 object-contain p-1 bg-blue-50 rounded-lg">
+    <!-- platform stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 max-w-3xl mx-auto">
+        {% for s in stats %}
+        <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100 transition-all hover:shadow-lg">
+          <div class="flex items-center justify-center mb-3">
+            <img src="{% static s.logo %}" alt="{{ s.name }}" 
+                  class="w-12 h-12 object-contain p-1 bg-gray-50 rounded-lg">
+          </div>
+          <div class="text-2xl font-bold {{ s.text_color }} mb-1">{{ s.confidence }}%</div>
+          <div class="text-sm font-medium text-gray-500">Confidence Rate</div>
+          <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div class="h-full {{ s.color }} rounded-full" style="width: {{ s.confidence }}%"></div>
+          </div>
         </div>
-        <div class="text-2xl font-bold text-blue-600 mb-1">80%</div>
-        <div class="text-sm font-medium text-gray-500">Confidence Rate</div>
-        <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div class="h-full bg-blue-500 rounded-full" style="width: 80%"></div>
-        </div>
+        {% endfor %}
       </div>
-      
-      <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100 transition-all hover:shadow-lg">
-        <div class="flex items-center justify-center mb-3">
-          <img src="{% static 'reviewai/images/shopee.png' %}" alt="Shopee" class="w-12 h-12 object-contain p-1 bg-orange-50 rounded-lg">
-        </div>
-        <div class="text-2xl font-bold text-orange-600 mb-1">75%</div>
-        <div class="text-sm font-medium text-gray-500">Confidence Rate</div>
-        <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div class="h-full bg-orange-500 rounded-full" style="width: 75%"></div>
-        </div>
-      </div>
-      
-      <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100 transition-all hover:shadow-lg">
-        <div class="flex items-center justify-center mb-3">
-          <img src="{% static 'reviewai/images/amazon.png' %}" alt="Amazon" class="w-12 h-12 object-contain p-1 bg-blue-100 rounded-lg">
-        </div>
-        <div class="text-2xl font-bold text-blue-700 mb-1">82%</div>
-        <div class="text-sm font-medium text-gray-500">Confidence Rate</div>
-        <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div class="h-full bg-blue-700 rounded-full" style="width: 82%"></div>
-        </div>
-      </div>
-    </div>
-    <!-- end div static platform card -->
+
+    <!-- end div platform stats -->
 
 
     <form id="reviewForm" class="flex gap-3 justify-center mb-4">
