@@ -35,7 +35,44 @@ from .utils.timezone_utils import convert_to_user_timezone, get_current_user_tim
 logger = logging.getLogger(__name__)
 
 def analyze_view(request):
-    return render(request, 'reviewai/analyze.html')
+    platform_stats = (
+        ReviewAnalysis.objects
+        .values("review__platform")  
+        .annotate(avg_conf=Avg("confidence_score"))
+    )
+    
+    platform_meta = {
+        "lazada": {
+            "logo": "reviewai/images/laz.png",
+            "color": "bg-blue-500",
+            "text_color": "text-blue-600",
+        },
+        "shopee": {
+            "logo": "reviewai/images/shopee.png",
+            "color": "bg-orange-500",
+            "text_color": "text-orange-600",
+        },
+        "amazon": {
+            "logo": "reviewai/images/amazon.png",
+            "color": "bg-blue-700",
+            "text_color": "text-blue-700",
+        },
+        # add lng other platforms here if ok
+    }
+    
+    stats = []
+    for p in platform_stats:
+        code = p["review__platform"]
+        if code in platform_meta:
+            stats.append({
+                "name": code.capitalize(),
+                "logo": platform_meta[code]["logo"],
+                "confidence": round(p["avg_conf"] * 100, 1),  # % format
+                "color": platform_meta[code]["color"],
+                "text_color": platform_meta[code]["text_color"],
+            })
+
+    return render(request, 'reviewai/analyze.html', {"stats": stats})
 
 # api for review count ajax
 def review_count(request):
