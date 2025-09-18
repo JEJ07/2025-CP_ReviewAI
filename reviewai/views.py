@@ -257,12 +257,22 @@ def admin_lazada(request):
     page_number = request.GET.get("page")
     reviews = paginator.get_page(page_number)
 
-    # Stats
-    analysis_stats = (
+
+    
+    raw_stats = (
         ReviewAnalysis.objects.filter(review__platform="lazada")
         .values("result")
         .annotate(count=Count("id"))
     )
+    
+    analysis_stats = []
+    for stat in raw_stats:
+        temp = ReviewAnalysis(result=stat["result"])
+        analysis_stats.append({
+            "result": temp.get_result_display(),  # Human-readable Likely Genuine
+            "code": stat["result"],               # Raw code likely_genuine
+            "count": stat["count"],
+        })
     
 
     genuine_count = ReviewAnalysis.objects.filter(
