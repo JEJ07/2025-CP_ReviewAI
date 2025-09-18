@@ -504,7 +504,7 @@ def admin_dashboard(request):
     #call lng ung function to generate wordcloud
     wordcloud_image = generate_wordcloud(fake_reviews)
 
-    #DEBUG PURPOSE LNG TO IDELETE LNG
+    ##########DEBUG PURPOSE LNG TO IDELETE LNG #############
     if wordcloud_image:
         print("[DEBUG] WordCloud image generated successfully.")
     else:
