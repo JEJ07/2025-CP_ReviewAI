@@ -1463,6 +1463,7 @@ class ReviewAIContentScript {
     if (hostname.includes("lazada.")) return "lazada";
     if (hostname.includes("flipkart.")) return "flipkart";
     if (hostname.includes("alibaba.") || hostname.includes("alibaba.")) return "alibaba";
+    if (hostname.includes("shein.")) return "shein";
     if (hostname.includes("walmart.")) return "walmart";
     if (hostname.includes("newegg.")) return "newegg";
     if (hostname.includes("temu.")) return "temu";
