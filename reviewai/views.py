@@ -208,6 +208,7 @@ def admin_history(request):
     
     result_filter = request.GET.get('result')
     confidence_filter = request.GET.get('confidence')
+    platform_filter = request.GET.get('platform')
     
     all_reviews = Review.objects.select_related('user').prefetch_related('analyses').order_by('-created_at')
     
@@ -223,7 +224,12 @@ def admin_history(request):
             #print("Count after filter:", all_reviews.count())  # DEBUG
         except ValueError:
             pass
-    
+        
+        
+    if platform_filter:
+        all_reviews = all_reviews.filter(platform=platform_filter)
+        
+        
     paginator = Paginator(all_reviews, 25)
     page_number = request.GET.get('page')
     reviews = paginator.get_page(page_number)
@@ -236,6 +242,9 @@ def admin_history(request):
     context = {
         'reviews': reviews,
         'total_reviews': all_reviews.count(),
+        'platform_choices': Review.PLATFORM_CHOICES, 
+        "selected_platform": platform_filter, 
+        
     }
     
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':

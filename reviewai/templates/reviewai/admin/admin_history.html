@@ -33,10 +33,19 @@
             <option value="possibly_genuine">Possibly Genuine</option>
             <option value="uncertain">Uncertain</option>
         </select>
+
+        <!-- Platform filter -->
+        <select id="platform" class="rounded border-gray-300">
+            <option value="">All Platforms</option>
+            {% for value, label in platform_choices %}
+            <option value="{{ value }}" {% if selected_platform == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
         <button onclick="resetFilters()" 
                 class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors text-sm">
             Reset Filters
         </button>
+        
         {% comment %} CONFIDENCE FILTERING {% endcomment %}
         {% comment %} <select id="filter-confidence" class="border rounded px-3 py-2 text-sm" aria-label="Filter by confidence">
             <option value="">All Confidence</option>
@@ -74,16 +83,17 @@
 <script>
 $(function() {
     function loadReviews(page=1) {
-        let result = $('#filter-result').val();
-        let confidence = $('#filter-confidence').val();
+        let data = {
+            page: page,
+            result: $('#filter-result').val(),
+            confidence: $('#filter-confidence').val(),
+            platform: $('#platform').val()
+        };
 
         $.ajax({
             url: "?page=" + page,
             type: "GET",
-            data: {
-                result: result,
-                confidence: confidence
-            },
+            data: data,
             beforeSend: function() {
                 $('#reviews-table-wrapper').html(
                     '<p class="text-gray-500 text-center py-4">Loading...</p>'
@@ -100,12 +110,19 @@ $(function() {
         });
     }
 
-    // Handle filter changes
-    $('#filter-result, #filter-confidence').on('change', function() {
-        loadReviews();
+    window.resetFilters = function() {
+        $('#filter-result').val('');
+        $('#filter-confidence').val('');
+        $('#platform').val('');
+        loadReviews(1);
+    }
+
+    // filter triggers reload
+    $('#filter-result, #filter-confidence, #platform').on('change', function() {
+        loadReviews(1);
     });
 
-    // pagination click inside AJAX
+    // Pagination
     $(document).on('click', '#reviews-table-wrapper .pagination a', function(e) {
         e.preventDefault();
         let href = $(this).attr('href');
@@ -114,12 +131,6 @@ $(function() {
             loadReviews(page);
         }
     });
-
-    window.resetFilters = function() {
-        $('#filter-result').val('');
-        $('#filter-confidence').val('');
-        loadReviews(1);
-    }
 });
 </script>
 {% endblock %}
