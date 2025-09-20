@@ -7,7 +7,9 @@ urlpatterns = [
     path('', views.analyze_view, name='analyze'),
     
     path('blueprint', views.blueprint_view, name='blueprint'),
-    path('landing', views.landing_view, name='landing'),
+    path('developer-page', views.developer_page, name='developer_page'),
+    path('blueprintdev', views.blueprint_developer_page, name='blueprintdeveloper_page'),
+
     
     path('predict/', views.predict_review, name='predict'),
     path('history/', views.review_history, name='history'),
