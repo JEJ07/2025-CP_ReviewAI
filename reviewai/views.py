@@ -85,6 +85,13 @@ def blueprint_view(request):
 def landing_view(request):
     return render(request, 'reviewai/landing.html')
 
+
+def developer_page(request):
+    return render(request, 'reviewai/developers_page.html')
+
+def blueprint_developer_page(request):
+    return render(request, 'reviewai/blueprint_developer.html')
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def predict_review(request):
