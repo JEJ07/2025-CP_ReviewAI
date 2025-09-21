@@ -57,6 +57,17 @@
                             </a>
                         </li>
 
+                        <!-- Model Performance -->
+                        <li>
+                            <a href="{% url 'reviewai:admin_model_performance' %}" 
+                               class="{% if request.resolver_match.url_name == 'admin_model_performance' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                </svg>
+                                Model Performance
+                            </a>
+                        </li>
+
                         <!-- Django Admin -->
                         {% comment %} <li>
                             <a href="/admin/" 
