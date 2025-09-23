@@ -153,6 +153,12 @@
         </div>
     </div>
 </div>
+    <div>
+        <button id="exportPdfBtn" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+            Export as PDF
+        </button>
+    </div>
 
 <!--Common words-->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -336,5 +342,23 @@
     </div>
 </div>
 
+<script>
+document.getElementById("exportPdfBtn").addEventListener("click", function() {
+    Swal.fire({
+        title: 'Export Dashboard',
+        text: "Do you want to export this dashboard as PDF?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4F46E5', 
+        cancelButtonColor: '#6B7280', 
+        confirmButtonText: 'Yes, Export',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = "{% url 'reviewai:export_dashboard_pdf' %}";
+        }
+    });
+});
+</script>
 
 {% endblock %}
