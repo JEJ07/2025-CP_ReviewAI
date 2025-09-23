@@ -26,14 +26,196 @@ import io
 import base64
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-
+from reportlab.lib.utils import ImageReader
 from django.conf import settings
 from .models import Review, ReviewAnalysis
 from .utils.timezone_utils import convert_to_user_timezone, get_current_user_time
 from .utils.visualization import create_confusion_matrix_plot, create_performance_comparison_chart
-
+import io
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from matplotlib.figure import Figure
 
 logger = logging.getLogger(__name__)
+
+
+import io
+from django.http import FileResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
+from matplotlib.figure import Figure
+
+from .models import Review
+
+
+import io
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
+from reportlab.lib import colors
+from matplotlib.figure import Figure
+from reviewai.models import Review
+from django.contrib.auth.models import User
+from datetime import datetime
+
+
+import io
+from datetime import datetime
+from django.http import FileResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from matplotlib.figure import Figure
+from django.contrib.auth.models import User
+from .models import Review
+
+@staff_member_required
+def export_dashboard_pdf(request):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    ## Title ##
+    p.setFont("Helvetica-Bold", 20)
+    p.setFillColor(colors.HexColor("#333333"))
+    p.drawCentredString(width / 2, height - 50, "📊 ReviewAI Dashboard Report")
+
+    ### Statss ###
+    total_reviews = Review.objects.count()
+    fake_count = Review.objects.filter(analyses__result__in=["fake", "likely_fake"]).count()
+    genuine_count = Review.objects.filter(analyses__result__in=["genuine", "likely_genuine"]).count()
+    total_users = User.objects.count()
+    guest_reviews = Review.objects.filter(user__isnull=True).count()
+
+    # Platforms
+    extension_reviews = Review.objects.filter(platform="extension").count()
+    web_reviews = Review.objects.filter(platform="web").count()
+    lazada_reviews = Review.objects.filter(platform="lazada").count()
+    shopee_reviews = Review.objects.filter(platform="shopee").count()
+    amazon_reviews = Review.objects.filter(platform="amazon").count()
+
+    stats_left = [
+        f"• Total Reviews: {total_reviews}",
+        f"• Fake Reviews: {fake_count}",
+        f"• Genuine Reviews: {genuine_count}",
+        f"• Active Users: {total_users}",
+    ]
+    stats_right = [
+        f"• Guest Reviews: {guest_reviews}",
+        f"• Web App Reviews: {web_reviews}",
+        f"• Extension Reviews: {extension_reviews}",
+        f"• Lazada Reviews: {lazada_reviews}",
+        f"• Shopee Reviews: {shopee_reviews}",
+        f"• Amazon Reviews: {amazon_reviews}",
+    ]
+
+    p.setFont("Helvetica", 11)
+    p.setFillColor(colors.black)
+
+    y = height - 120
+    for line in stats_left:
+        p.drawString(60, y, line)
+        y -= 18
+
+    y = height - 120
+    for line in stats_right:
+        p.drawString(300, y, line)
+        y -= 18
+
+    ## Charts ##
+    # Classification chart
+    fig1 = Figure(figsize=(3, 2))
+    ax1 = fig1.subplots()
+    bars1 = ax1.bar(
+        ["Genuine", "Fake"],
+        [genuine_count, fake_count],
+        color=["#4CAF50", "#F44336"]
+    )
+    ax1.set_title("Classification Results")
+
+    #  value labels
+    for bar in bars1:
+        height_val = bar.get_height()
+        ax1.text(
+            bar.get_x() + bar.get_width() / 2, height_val + 0.5,
+            f"{height_val}", ha="center", va="bottom", fontsize=8
+        )
+
+    chart_buf1 = io.BytesIO()
+    fig1.savefig(chart_buf1, format="PNG", bbox_inches="tight")
+    chart_buf1.seek(0)
+    chart_img1 = ImageReader(chart_buf1)
+    p.drawImage(chart_img1, 60, height - 380, width=200, height=150)
+
+    # Platforms chart
+    fig2 = Figure(figsize=(3.5, 2.5))  
+    ax2 = fig2.subplots()
+    platforms = ["Web", "Extension", "Lazada", "Shopee", "Amazon"]
+    values = [web_reviews, extension_reviews, lazada_reviews, shopee_reviews, amazon_reviews]
+    colors_list = ["#2196F3", "#FF9800", "#4CAF50", "#9C27B0", "#FF5722"]
+
+    bars2 = ax2.bar(platforms, values, color=colors_list)
+    ax2.set_title("Top Platforms")
+    ax2.set_xticklabels(platforms, rotation=30, ha="right")  
+
+    # Add value labels
+    for bar in bars2:
+        height_val = bar.get_height()
+        ax2.text(
+            bar.get_x() + bar.get_width() / 2, height_val + 0.5,
+            f"{height_val}", ha="center", va="bottom", fontsize=8
+        )
+
+    chart_buf2 = io.BytesIO()
+    fig2.savefig(chart_buf2, format="PNG", bbox_inches="tight")
+    chart_buf2.seek(0)
+    chart_img2 = ImageReader(chart_buf2)
+    p.drawImage(chart_img2, 320, height - 380, width=220, height=160)
+
+    ## Summary ##
+    p.setFont("Helvetica-Bold", 14)
+    p.setFillColor(colors.black)
+    p.drawString(50, height - 430, "Summary")
+
+    p.setFont("Helvetica", 12)
+    p.drawString(70, height - 450, f"✔ {genuine_count} Genuine reviews detected")
+    p.drawString(70, height - 470, f"✘ {fake_count} Fake reviews detected")
+    p.drawString(70, height - 490, f"👥 {guest_reviews} Guest reviews submitted")
+
+    ## Recent Reviews ##
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 520, "Recent Reviews (Last 10)")
+    p.setFont("Helvetica", 10)
+
+    y = height - 540
+    for r in Review.objects.all().order_by("-created_at")[:10]:
+        analysis = r.analyses.first()
+        line = f"{r.product_name[:50]} → {analysis.get_result_display() if analysis else 'N/A'}"
+        p.drawString(70, y, line)
+        y -= 15
+        if y < 60:
+            p.showPage()
+            y = height - 60
+
+    ## FOOTER
+    now = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+    p.setFont("Helvetica-Oblique", 9)
+    p.setFillColor(colors.grey)
+    p.drawCentredString(width / 2, 30, f"Generated on {now} | ReviewAI Dashboard")
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename="dashboard_report.pdf")
+
+
+
+
 
 def analyze_view(request):
     platform_stats = (

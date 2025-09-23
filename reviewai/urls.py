@@ -33,6 +33,9 @@ urlpatterns = [
 
     ###### ENDD ###########
     
+    
+    path('export-dashboard-pdf/', views.export_dashboard_pdf, name='export_dashboard_pdf'),
+
     ###### api routes for extension ###########
     path('api/analyze-review/', views.extension_predict, name='extension_predict'),
     path('api/analyze-batch-reviews/', views.extension_batch_predict, name='extension_batch'),
