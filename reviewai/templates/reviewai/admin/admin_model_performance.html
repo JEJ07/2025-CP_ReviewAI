@@ -87,12 +87,12 @@
         </div>
 
         <!-- Interactive Performance Comparison Chart -->
-        {% comment %} <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
             <h3 class="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 Interactive Performance Comparison
             </h3>
             <div id="performance-comparison-chart" class="w-full h-[400px]"></div>
-        </div> {% endcomment %}
+        </div>
 
         <!-- Static Performance Comparison -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
@@ -154,9 +154,12 @@
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Parse the plotly data from Django context
     const plotlyData = JSON.parse('{{ plotly_data|escapejs }}');
     console.log('Plotly data:', plotlyData);
-    if (Object.keys(plotlyData).length > 0) {
+
+    // Only plot if data is present
+    if (plotlyData && plotlyData.models && plotlyData.models.length > 0) {
         const trace1 = {
             x: plotlyData.models.map(model => model.replace('_', ' ').toUpperCase()),
             y: plotlyData.accuracy,
@@ -209,6 +212,8 @@ document.addEventListener('DOMContentLoaded', function() {
             displaylogo: false
         };
         Plotly.newPlot('performance-comparison-chart', data, layout, config);
+    } else {
+        console.warn('No plotly data found or models array is empty.');
     }
 });
 </script>
