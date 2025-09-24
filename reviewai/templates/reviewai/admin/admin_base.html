@@ -26,7 +26,7 @@
                         <!-- Admin Dashboard -->
                         <li>
                             <a href="{% url 'reviewai:admin_dashboard' %}" 
-                               class="{% if request.resolver_match.url_name == 'admin_dashboard' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                class="{% if request.resolver_match.url_name == 'admin_dashboard' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
                                 <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l-1-3m1 3l-1-3m-16.5-3h16.5" />
                                 </svg>
@@ -37,7 +37,7 @@
                         <!-- All Reviews -->
                         <li>
                             <a href="{% url 'reviewai:admin_history' %}" 
-                               class="{% if request.resolver_match.url_name == 'admin_history' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                class="{% if request.resolver_match.url_name == 'admin_history' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
                                 <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -81,68 +81,36 @@
                             </a>
                         </li> {% endcomment %}
 
-                        <li>
-                            <a href="{% url 'reviewai:admin_lazada' %}"
-                                class="{% if request.resolver_match.url_name == 'admin_lazada' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                <svg xmlns="http://www.w3.org/2000/svg" 
-                                    fill="none" 
-                                    viewBox="0 0 24 24" 
-                                    stroke-width="1.5" 
-                                    stroke="currentColor" 
-                                    class="h-6 w-6 shrink-0">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18l-1.5 12.5a2 2 0 01-2 1.5H6.5a2 2 0 01-2-1.5L3 7z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 7a3 3 0 116 0" />
+                        <!-- dropdown platforms -->
+                        <li x-data="{ open: false }">
+                            <button @click="open = !open" 
+                                class="w-full flex items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md p-2 text-sm leading-6 font-semibold">
+                                <span class="flex items-center gap-x-3">
+                                    <svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" 
+                                            d="M4 6h4V4H4v2zm6 0h4V4h-4v2zm6 0h4V4h-4v2zM4 12h4v-2H4v2zm6 0h4v-2h-4v2zm6 0h4v-2h-4v2zM4 18h4v-2H4v2zm6 0h4v-2h-4v2zm6 0h4v-2h-4v2z"/>
+                                    </svg>
+                                    Platforms
+                                </span>
+                                <svg :class="{'rotate-90': open}" class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                 </svg>
-                                Lazada
-                            </a>
-                        </li>
+                            </button>
 
-                        <li>
-                            <a href="{% url 'reviewai:admin_shopee' %}"
-                                class="{% if request.resolver_match.url_name == 'admin_shopee' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                <svg xmlns="http://www.w3.org/2000/svg" 
-                                    fill="none" 
-                                    viewBox="0 0 24 24" 
-                                    stroke-width="1.5" 
-                                    stroke="currentColor" 
-                                    class="h-6 w-6 shrink-0">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18l-1.5 12.5a2 2 0 01-2 1.5H6.5a2 2 0 01-2-1.5L3 7z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 7a3 3 0 116 0" />
-                                </svg>
-                                Shopee
-                            </a>
-                        </li>
-
-                        <li>
-                            <a href="{% url 'reviewai:admin_amazon' %}"
-                                class="{% if request.resolver_match.url_name == 'admin_amazon' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                <svg xmlns="http://www.w3.org/2000/svg" 
-                                    fill="none" 
-                                    viewBox="0 0 24 24" 
-                                    stroke-width="1.5" 
-                                    stroke="currentColor" 
-                                    class="h-6 w-6 shrink-0">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18l-1.5 12.5a2 2 0 01-2 1.5H6.5a2 2 0 01-2-1.5L3 7z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 7a3 3 0 116 0" />
-                                </svg>
-                                Amazon
-                            </a>
-                        </li>
-
-                        <li>
-                            <a href="{% url 'reviewai:admin_ebay' %}"
-                                class="{% if request.resolver_match.url_name == 'admin_ebay' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% else %}text-gray-700 hover:text-blue-600 hover:bg-gray-50{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                <svg xmlns="http://www.w3.org/2000/svg" 
-                                    fill="none" 
-                                    viewBox="0 0 24 24" 
-                                    stroke-width="1.5" 
-                                    stroke="currentColor" 
-                                    class="h-6 w-6 shrink-0">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18l-1.5 12.5a2 2 0 01-2 1.5H6.5a2 2 0 01-2-1.5L3 7z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 7a3 3 0 116 0" />
-                                </svg>
-                                Ebay
-                            </a>
+                            <ul x-show="open" class="mt-1 ml-8 space-y-1" x-cloak>
+                                <li>
+                                    <a href="{% url 'reviewai:admin_lazada' %}" class="block px-2 py-1 rounded-md text-sm {% if request.resolver_match.url_name == 'admin_lazada' %}text-blue-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">Lazada</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'reviewai:admin_shopee' %}" class="block px-2 py-1 rounded-md text-sm {% if request.resolver_match.url_name == 'admin_shopee' %}text-blue-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">Shopee</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'reviewai:admin_amazon' %}" class="block px-2 py-1 rounded-md text-sm {% if request.resolver_match.url_name == 'admin_amazon' %}text-blue-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">Amazon</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'reviewai:admin_ebay' %}" class="block px-2 py-1 rounded-md text-sm {% if request.resolver_match.url_name == 'admin_ebay' %}text-blue-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">eBay</a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                     
@@ -260,59 +228,108 @@
     </div>
 
     <!-- Mobile Menu Overlay -->
-    <div id="mobile-menu" class="relative z-50 lg:hidden hidden" role="dialog">
-        <div class="fixed inset-0 bg-gray-900/80"></div>
-        <div class="fixed inset-0 flex">
-            <div class="relative mr-16 flex w-full max-w-xs flex-1">
-                <div class="absolute left-full top-0 flex w-16 justify-center pt-5">
-                    <button type="button" class="-m-2.5 p-2.5" onclick="toggleMobileMenu()">
-                        <span class="sr-only">Close sidebar</span>
-                        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
-                    <div class="flex h-16 shrink-0 items-center border-b border-gray-200">
-                        <h1 class="text-xl font-bold text-gray-800">ReviewAI</h1>
+        <div id="mobile-menu" class="relative z-50 lg:hidden hidden" role="dialog">
+            <div class="fixed inset-0 bg-gray-900/80"></div>
+            <div class="fixed inset-0 flex">
+                <div class="relative mr-16 flex w-full max-w-xs flex-1">
+                    <!-- close btn -->
+                    <div class="absolute left-full top-0 flex w-16 justify-center pt-5">
+                        <button type="button" class="-m-2.5 p-2.5" onclick="toggleMobileMenu()">
+                            <span class="sr-only">Close sidebar</span>
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                    <nav class="flex flex-1 flex-col">
-                        <ul role="list" class="flex flex-1 flex-col gap-y-2">
-                            <li>
-                                <a href="{% url 'reviewai:admin_dashboard' %}" 
-                                   class="{% if request.resolver_match.url_name == 'admin_dashboard' %}bg-blue-50 text-blue-600{% else %}text-gray-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l-1-3m1 3l-1-3m-16.5-3h16.5" />
-                                    </svg>
-                                    Dashboard
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'reviewai:admin_history' %}" 
-                                   class="{% if request.resolver_match.url_name == 'admin_history' %}bg-blue-50 text-blue-600{% else %}text-gray-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                    <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    All Reviews
-                                </a>
-                            </li>
 
-                            {% comment %} <li>
-                                <a href="/admin/" 
-                                   class="text-gray-700 hover:text-blue-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
+                        <div class="flex h-16 shrink-0 items-center border-b border-gray-200">
+                            <h1 class="text-xl font-bold text-gray-800">ReviewAI</h1>
+                        </div>
+
+                        <nav class="flex flex-1 flex-col">
+                            <ul role="list" class="flex flex-1 flex-col gap-y-2">
+
+                                <li>
+                                    <a href="{% url 'reviewai:admin_dashboard' %}" 
+                                    class="{% if request.resolver_match.url_name == 'admin_dashboard' %}bg-blue-50 text-blue-600{% else %}text-gray-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                        <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l-1-3m1 3l-1-3m-16.5-3h16.5" />
+                                        </svg>
+                                        Dashboard
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="{% url 'reviewai:admin_history' %}" 
+                                    class="{% if request.resolver_match.url_name == 'admin_history' %}bg-blue-50 text-blue-600{% else %}text-gray-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                        <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        All Reviews
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="{% url 'reviewai:admin_activity_log' %}" 
+                                    class="{% if request.resolver_match.url_name == 'admin_activity_log' %}bg-blue-50 text-blue-600{% else %}text-gray-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                        <svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        Activity Log
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="{% url 'reviewai:admin_model_performance' %}" 
+                                    class="{% if request.resolver_match.url_name == 'admin_model_performance' %}bg-blue-50 text-blue-600{% else %}text-gray-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                        <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                        </svg>
+                                        Model Performance
+                                    </a>
+                                </li>
+
+                                <li x-data="{ open: false }">
+                                    <button @click="open = !open" 
+                                        class="w-full flex items-center justify-between text-gray-700 rounded-md p-2 text-sm leading-6 font-semibold">
+                                        <span class="flex items-center gap-x-3">
+                                            <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M3 10h18M3 16h18" />
+                                            </svg>
+                                            Platforms
+                                        </span>
+                                        <svg :class="{'rotate-90': open}" class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                    <ul x-show="open" class="mt-1 ml-6 space-y-1" x-cloak>
+                                        <li><a href="{% url 'reviewai:admin_lazada' %}" class="block px-2 py-1 text-sm {% if request.resolver_match.url_name == 'admin_lazada' %}text-blue-600 bg-blue-50{% else %}text-gray-700{% endif %}">Lazada</a></li>
+                                        <li><a href="{% url 'reviewai:admin_shopee' %}" class="block px-2 py-1 text-sm {% if request.resolver_match.url_name == 'admin_shopee' %}text-blue-600 bg-blue-50{% else %}text-gray-700{% endif %}">Shopee</a></li>
+                                        <li><a href="{% url 'reviewai:admin_amazon' %}" class="block px-2 py-1 text-sm {% if request.resolver_match.url_name == 'admin_amazon' %}text-blue-600 bg-blue-50{% else %}text-gray-700{% endif %}">Amazon</a></li>
+                                        <li><a href="{% url 'reviewai:admin_ebay' %}" class="block px-2 py-1 text-sm {% if request.resolver_match.url_name == 'admin_ebay' %}text-blue-600 bg-blue-50{% else %}text-gray-700{% endif %}">eBay</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+
+                            <div class="mt-auto">
+                                <a href="{% url 'reviewai:analyze' %}" 
+                                class="text-gray-700 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
                                     <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                                     </svg>
-                                    Django Admin
+                                    Back to Main Site
                                 </a>
-                            </li> {% endcomment %}
-                        </ul>
-                    </nav>
+                            </div>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+
+    
 
     <!-- Alpine.js for dropdown functionality -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
