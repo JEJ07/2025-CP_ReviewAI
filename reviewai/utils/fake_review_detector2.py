@@ -56,9 +56,9 @@ class FakeReviewDetector:
 
     def _load_traditional_models(self):
         try:
-            svm_path = os.path.join(self.model_folder, 'svm_model_new_with_extra.pkl')
-            rf_path = os.path.join(self.model_folder, 'rf_model_new_with_extra.pkl')
-            tfidf_path = os.path.join(self.model_folder, 'tfidf_vectorizer_new_length.pkl')
+            svm_path = os.path.join(self.model_folder, 'svm_model_significant.pkl')
+            rf_path = os.path.join(self.model_folder, 'rf_model_significant.pkl')
+            tfidf_path = os.path.join(self.model_folder, 'tfidf_vectorizer_new_length_2.pkl')
 
             for path, name in [(svm_path, 'SVM'), (rf_path, 'Random Forest'), (tfidf_path, 'TF-IDF')]:
                 if not os.path.exists(path):
@@ -144,20 +144,11 @@ class FakeReviewDetector:
             length_bucket = 2
         else:
             length_bucket = 3
-        # Emoji count
-        emoji_pattern = re.compile(
-            "[" 
-            "\U0001F600-\U0001F64F"
-            "\U0001F300-\U0001F5FF"
-            "\U0001F680-\U0001F6FF"
-            "\U0001F1E0-\U0001F1FF"
-            "]+", flags=re.UNICODE
-        )
-        emoji_count = len(emoji_pattern.findall(raw_text))
-        # Keyword flags
-        keyword_flags = [1 if kw in processed_text else 0 for kw in self.keywords]
-        # Stack features in correct order
-        extra_features = np.array([review_length, sentiment, length_bucket, emoji_count] + keyword_flags).reshape(1, -1)
+        # Only keep significant keywords
+        significant_keywords = ['fast', 'recommended', 'bad', 'fake', 'original', 'authentic']
+        keyword_flags = [1 if kw in processed_text else 0 for kw in significant_keywords]
+        # Stack features
+        extra_features = np.array([review_length, sentiment, length_bucket] + keyword_flags).reshape(1, -1)
         return extra_features
 
     def predict_single_review(self, review_text):
@@ -249,31 +240,31 @@ class FakeReviewDetector:
     
     def get_model_performance(self):
         """
-        Returns performance metrics for all models and ensemble
+        Returns updated performance metrics for all models and ensemble
         """
         return {
             'ensemble': {
-                'accuracy': 0.95,
-                'precision': 0.95,
-                'recall': 0.95,
-                'f1_score': 0.95,
+                'accuracy': 0.94,
+                'precision': 0.94,
+                'recall': 0.94,
+                'f1_score': 0.94,
                 'support': 3000,
-                'confusion_matrix': [[1399, 101], [54, 1446]],
+                'confusion_matrix': [[1384, 116], [75, 1425]],
                 'classification_report': {
-                    'genuine': {'precision': 0.96, 'recall': 0.93, 'f1-score': 0.95, 'support': 1500},
-                    'fake': {'precision': 0.93, 'recall': 0.96, 'f1-score': 0.95, 'support': 1500}
+                    'genuine': {'precision': 0.95, 'recall': 0.92, 'f1-score': 0.94, 'support': 1500},
+                    'fake': {'precision': 0.92, 'recall': 0.95, 'f1-score': 0.94, 'support': 1500}
                 }
             },
             'svm': {
-                'accuracy': 0.85,
-                'precision': 0.85,
-                'recall': 0.85,
-                'f1_score': 0.85,
+                'accuracy': 0.87,
+                'precision': 0.87,
+                'recall': 0.87,
+                'f1_score': 0.87,
                 'support': 3000,
-                'confusion_matrix': [[1160, 340], [119, 1381]],
+                'confusion_matrix': [[1320, 180], [196, 1304]],
                 'classification_report': {
-                    'genuine': {'precision': 0.91, 'recall': 0.77, 'f1-score': 0.83, 'support': 1500},
-                    'fake': {'precision': 0.80, 'recall': 0.92, 'f1-score': 0.86, 'support': 1500}
+                    'genuine': {'precision': 0.87, 'recall': 0.88, 'f1-score': 0.88, 'support': 1500},
+                    'fake': {'precision': 0.88, 'recall': 0.87, 'f1-score': 0.87, 'support': 1500}
                 }
             },
             'random_forest': {
@@ -282,22 +273,22 @@ class FakeReviewDetector:
                 'recall': 0.93,
                 'f1_score': 0.93,
                 'support': 3000,
-                'confusion_matrix': [[1415, 85], [123, 1377]],
+                'confusion_matrix': [[1467, 33], [183, 1317]],
                 'classification_report': {
-                    'genuine': {'precision': 0.92, 'recall': 0.94, 'f1-score': 0.93, 'support': 1500},
-                    'fake': {'precision': 0.94, 'recall': 0.92, 'f1-score': 0.93, 'support': 1500}
+                    'genuine': {'precision': 0.89, 'recall': 0.98, 'f1-score': 0.93, 'support': 1500},
+                    'fake': {'precision': 0.98, 'recall': 0.88, 'f1-score': 0.92, 'support': 1500}
                 }
             },
             'distilbert': {
-                'accuracy': 0.95,
-                'precision': 0.95,
-                'recall': 0.95,
-                'f1_score': 0.95,
+                'accuracy': 0.93,
+                'precision': 0.93,
+                'recall': 0.93,
+                'f1_score': 0.93,
                 'support': 3000,
-                'confusion_matrix': [[1395, 105], [56, 1444]],
+                'confusion_matrix': [[1377, 123], [74, 1426]],
                 'classification_report': {
-                    'genuine': {'precision': 0.96, 'recall': 0.93, 'f1-score': 0.95, 'support': 1500},
-                    'fake': {'precision': 0.93, 'recall': 0.96, 'f1-score': 0.95, 'support': 1500}
+                    'genuine': {'precision': 0.95, 'recall': 0.92, 'f1-score': 0.93, 'support': 1500},
+                    'fake': {'precision': 0.92, 'recall': 0.95, 'f1-score': 0.94, 'support': 1500}
                 }
             }
         }
@@ -309,14 +300,17 @@ class FakeReviewDetector:
         return {
             'ensemble_config': self.config,
             'model_versions': {
-                'svm': 'SVM with RBF kernel (new_with_extra)',
-                'random_forest': 'Random Forest 100 estimators (new_with_extra)',
+                'svm': 'SVM with RBF kernel',
+                'random_forest': 'Random Forest 500 estimators',
                 'distilbert': 'Fine-tuned DistilBERT for fake review detection',
-                'tfidf': 'TF-IDF Vectorizer (new_length)'
+                'tfidf': 'TF-IDF Vectorizer (7500 features)'
             },
-            'training_data_size': 3000,
+            'training_data_size': 15000,
             'test_data_size': 3000,
-            'features_used': ['text_length', 'word_count', 'avg_word_length', 'exclamation_count', 'question_count']
+            'features_used': [
+                'review_length', 'sentiment', 'length_bucket',
+                'kw_fast', 'kw_recommended', 'kw_bad', 'kw_fake', 'kw_original', 'kw_authentic'
+            ]
         }
 
 _detector_instance = None
