@@ -1274,11 +1274,11 @@ def admin_model_performance(request):
 
         # Prepare data for Plotly charts
         plotly_data = {
-            "models": ["ensemble", "svm", "random_forest", "distilbert"],
-            "accuracy": [0.95, 0.85, 0.93, 0.95],
-            "precision": [0.95, 0.85, 0.93, 0.95],
-            "recall": [0.95, 0.85, 0.93, 0.95],
-            "f1_score": [0.95, 0.85, 0.93, 0.95]
+            "models": list(performance_data.keys()),
+            "accuracy": [performance_data[m]["accuracy"] for m in performance_data],
+            "precision": [performance_data[m]["precision"] for m in performance_data],
+            "recall": [performance_data[m]["recall"] for m in performance_data],
+            "f1_score": [performance_data[m]["f1_score"] for m in performance_data],
         }
 
         context = {
