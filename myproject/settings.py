@@ -28,6 +28,31 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+# =====================
+# Session & Authentication Settings
+# =====================
+
+# Default: session expires when the user closes the browser
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  
+
+# Default session age (2 weeks) – used when "Remember Me" is checked
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+# Session optimization - only save when modified
+SESSION_SAVE_EVERY_REQUEST = False
+
+# Security settings
+SESSION_COOKIE_HTTPONLY = True  # Prevent XSS access to session cookies
+SESSION_COOKIE_SECURE = not DEBUG  # Use HTTPS for cookies in production
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+
+# CSRF protection
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True
+
+# Rate limiting settings
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_TIME = 300  # 5 minutes in seconds
+
 
 # EXTENTION BATCH LIMIT
 REVIEWAI_BATCH_LIMIT = 20
