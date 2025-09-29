@@ -225,7 +225,13 @@
                         <div class="border-l-4 {% if analysis.result == 'fake' or analysis.result == 'likely_fake' %}border-red-400{% elif analysis.result == 'genuine' or analysis.result == 'likely_genuine' %}border-green-400{% else %}border-yellow-400{% endif %} pl-4 py-2">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
-                                    <h4 class="text-sm font-medium text-gray-900">{{ review.product_name }}</h4>
+                                    {% if review.link %}
+                                    <a href="{{ review.link }}" target="_blank" class="text-black hover:underline">
+                                        {{ review.product_name|truncatechars:30 }}
+                                    </a>
+                                    {% else %}
+                                        {{ review.product_name|truncatechars:30 }}
+                                    {% endif %}
                                     <p class="text-sm text-gray-600 mt-1">{{ review.review_text|truncatechars:100 }}</p>
                                     <div class="flex items-center mt-2 space-x-4">
                                         {% if analysis %}
