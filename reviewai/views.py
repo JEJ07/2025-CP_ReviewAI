@@ -808,6 +808,11 @@ def user_dashboard(request):
     user_reviews = Review.objects.filter(user=request.user)
     total_user_reviews = user_reviews.count()
     
+    user_fake_analyses = ReviewAnalysis.objects.filter(
+        review__user=request.user,
+        result__in=['fake', 'likely_fake', 'possibly_fake']
+    ).select_related('review')
+    
     user_fake_count = ReviewAnalysis.objects.filter(
         review__user=request.user,
         result__in=['fake', 'likely_fake', 'possibly_fake']
@@ -822,6 +827,10 @@ def user_dashboard(request):
     recent_reviews = user_reviews.filter(created_at__gte=thirty_days_ago).count()
     
     user_fake_word_frequency = get_fake_review_word_frequency(user=request.user, limit=10)
+    
+    #wordcloud img for specific user
+    user_wordcloud_image = generate_wordcloud(user_fake_analyses)
+
     
     daily_data = []
     if total_user_reviews > 0:
@@ -873,7 +882,8 @@ def user_dashboard(request):
         'top_products': top_products,
         'recent_user_reviews': recent_user_reviews,
         'username': request.user.username,
-        'user_fake_word_frequency': user_fake_word_frequency,
+    ##    'user_fake_word_frequency': user_fake_word_frequency, ## OPTIONAL NA
+        'user_wordcloud_image': user_wordcloud_image,
         'current_user_time': get_current_user_time(request.user),
     }
     
