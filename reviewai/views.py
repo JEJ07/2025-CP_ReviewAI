@@ -940,9 +940,16 @@ def extension_predict(request):
         result = detector_instance.predict_single_review(review_text)
         
         try:
-            product_name = data.get('product_name', 'Unknown Product').strip()
+            raw_product = data.get('product_name', 'Unknown Product')
+            product_name = str(raw_product).strip() if raw_product else 'Unknown Product'
+            
             platform = data.get('platform_name', 'extension')
-            link = data.get('link', '').strip() or None
+            
+            # Initialize link variable properly
+            raw_link = data.get('link', '')
+            link = str(raw_link).strip() if raw_link else None
+            if link == '':
+                link = None
             
             # Get the ML-cleaned text from the result
             cleaned_text = result.get('cleaned_text', review_text)
@@ -1065,14 +1072,42 @@ def extension_batch_predict(request):
                     review_text = review_data.strip()
                     product_name = default_product
                     link = default_link
-                else:
-                    review_text = review_data.get('text', '').strip()
-                    product_name = review_data.get('product_name', default_product).strip()
+                elif isinstance(review_data, dict):
+                    raw_text = review_data.get('text', '')
+                    if not isinstance(raw_text, str):
+                        logger.error(f"Batch #{i+1}: 'text' field is not a string: {type(raw_text)} - {raw_text}")
+                        results.append({
+                            'error': f'Invalid text format at review {i+1}',
+                            'prediction': 'error'
+                        })
+                        continue
+                    
+                    review_text = raw_text.strip()
+                    
+                    raw_product = review_data.get('product_name', default_product)
+                    product_name = str(raw_product).strip() if raw_product else default_product
+                    
                     link = review_data.get('link', default_link)
+                else:
+                    logger.error(f"Batch #{i+1}: Invalid review_data type: {type(review_data)}")
+                    results.append({
+                        'error': f'Invalid data format at review {i+1}',
+                        'prediction': 'error'
+                    })
+                    continue
+
+                if not review_text or len(review_text) < 5:
+                    logger.warning(f"Batch #{i+1}: Empty or too short review text")
+                    results.append({
+                        'error': f'Empty review text at review {i+1}',
+                        'prediction': 'error'
+                    })
+                    continue
 
                 logger.info(f"Batch #{i+1}: Processing review: '{review_text[:50]}...'")
                 
                 result = detector_instance.predict_single_review(review_text)
+                
                 
                 try:
                     cleaned_text = result.get('cleaned_text', review_text)

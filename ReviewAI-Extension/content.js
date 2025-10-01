@@ -51,6 +51,7 @@ class ReviewAIContentScript {
     this.createAnalysisPanel();
     this.setupEventListeners();
     this.updateBatchLimitDisplay();
+    this.setupNavigationWatcher();
     this.isInitialized = true;
 
     console.log("ReviewAI Content Script initialized");
@@ -82,10 +83,38 @@ class ReviewAIContentScript {
     }
   }
 
-  getProductName() {
-    const hostname = window.location.hostname.toLowerCase();
-
+  setupNavigationWatcher() {
+    let currentUrl = window.location.href;
     
+    const observer = new MutationObserver(async () => {
+      if (window.location.href !== currentUrl) {
+        currentUrl = window.location.href;
+        console.log("🔄 Navigation detected, updating product name...");
+        
+        setTimeout(async () => {
+          const panel = document.getElementById("reviewai-panel");
+          if (panel) {
+            const productName = await this.getProductName();
+            const displayName = productName.length > 50 
+              ? productName.substring(0, 50) + "..." 
+              : productName;
+              
+            const productNameEl = panel.querySelector(".reviewai-product-name");
+            if (productNameEl) {
+              productNameEl.textContent = displayName;
+              productNameEl.title = productName;
+              console.log("✅ Product name updated after navigation:", productName);
+            }
+          }
+        }, 1000);
+      }
+    });
+    
+    observer.observe(document, { childList: true, subtree: true });
+  }
+
+  async getProductName() {
+    const hostname = window.location.hostname.toLowerCase();
 
     if (hostname.includes("amazon.com") || hostname.includes("amazon.")) {
       const selectors = [
@@ -104,41 +133,34 @@ class ReviewAIContentScript {
       }
     } else if (hostname.includes("shopee.ph") || hostname.includes("shopee.")) {
       const selectors = [
-        "h1.vR6K3w",
-        ".vR6K3w",
-        ".WBVL_7 vR6K3w",
         "h1",
+        ".vR6K3w", 
+        "[data-testid='pdp-product-title']",
+        ".page-product-detail__header h1",
+        "h1.vR6K3w",
         ".WBVL_7",
+        ".pdp-product-title",
+        "[class*='product-title']",
+        "[class*='product-name']"
       ];
 
-      console.log(
-        "🔍 SHOPEE: Available H1 elements:",
-        document.querySelectorAll("h1").length
-      );
-      const currentLink = window.location.href;   // ✅ Capture product link
-
-      console.log("🔗 PRODUCT LINK:", currentLink);  // ✅ Always log link
+      console.log("🔍 SHOPEE: Starting product name detection...");
 
       for (const selector of selectors) {
         const element = document.querySelector(selector);
-        console.log(
-          `🔍 SHOPEE: Trying "${selector}":`,
-          element ? "Found" : "Not found"
-        );
-
         if (element && element.textContent.trim()) {
           const title = element.textContent.trim();
-          console.log(
-            `✅ SHOPEE: SUCCESS with "${selector}": "${title.substring(
-              0,
-              50
-            )}..."`
-          );
+          console.log(`✅ SHOPEE: Immediate success with "${selector}"`);
           return title;
         }
       }
 
-      console.log("❌ SHOPEE: All selectors failed");
+      console.log("🔍 SHOPEE: Waiting for dynamic content...");
+      const title = await this.waitForShopeeProductTitle(selectors);
+      if (title) {
+        console.log(`✅ SHOPEE: Dynamic success`);
+        return title;
+      }
     } else if (
       hostname.includes("lazada.com.ph") ||
       hostname.includes("lazada.")
@@ -181,8 +203,38 @@ class ReviewAIContentScript {
     return "Product Page";
   }
 
-  createAnalysisPanel() {
-    const productName = this.getProductName();
+  async waitForShopeeProductTitle(selectors, maxWait = 5000) {
+    return new Promise((resolve) => {
+      let attempts = 0;
+      const maxAttempts = maxWait / 200;
+      
+      const checkForTitle = () => {
+        attempts++;
+        
+        for (const selector of selectors) {
+          const element = document.querySelector(selector);
+          if (element && element.textContent.trim()) {
+            const title = element.textContent.trim();
+            console.log(`✅ SHOPEE: Found title after ${attempts * 200}ms`);
+            resolve(title);
+            return;
+          }
+        }
+        
+        if (attempts < maxAttempts) {
+          setTimeout(checkForTitle, 200);
+        } else {
+          console.log("❌ SHOPEE: Timeout after 5 seconds");
+          resolve(null);
+        }
+      };
+      
+      setTimeout(checkForTitle, 200);
+    });
+  }
+
+  async createAnalysisPanel() {
+    const productName = await this.getProductName(); 
     const displayName =
       productName.length > 50
         ? productName.substring(0, 50) + "..."
@@ -1424,8 +1476,20 @@ class ReviewAIContentScript {
     }
   }
 
-  showPanel() {
+  async showPanel() {
     const panel = document.getElementById("reviewai-panel");
+    
+    const productName = await this.getProductName();
+    const displayName = productName.length > 50 
+      ? productName.substring(0, 50) + "..." 
+      : productName;
+      
+    const productNameEl = panel.querySelector(".reviewai-product-name");
+    if (productNameEl) {
+      productNameEl.textContent = displayName;
+      productNameEl.title = productName;
+    }
+    
     panel.classList.remove("reviewai-hidden");
   }
 
@@ -1488,13 +1552,23 @@ class ReviewAIContentScript {
     const inputField = document.getElementById("reviewai-text-input");
     inputField.value = originalText;
 
+    this.sendAnalysisRequest(originalText);
+  }
+
+  // Separate async method
+  async sendAnalysisRequest(originalText) {
+    const inputField = document.getElementById("reviewai-text-input");
+    
+    const productName = await this.getProductName();
+    
     chrome.runtime.sendMessage(
       {
         action: "analyzeReview",
         reviewText: originalText,
         platformName: this.getPlatformCode(),
-        productName: this.getProductName(),
+        productName: productName,
         pageUrl: window.location.href,
+        link: window.location.href,
         analysisType: "single"
       },
       (response) => {
@@ -1588,13 +1662,27 @@ class ReviewAIContentScript {
 
     const batchLimit = await this.fetchBatchLimit();
 
-    const reviewObjects = reviews.slice(0, batchLimit).map((review) => ({
-      text: this.extractReviewText(review),
-      link: window.location.href
-    }));
+    const reviewObjects = reviews.slice(0, batchLimit).map((review) => {
+      const extractedText = this.extractReviewText(review);
+      
+      if (typeof extractedText !== 'string' || extractedText.trim().length === 0) {
+        console.warn("Invalid review text extracted:", extractedText);
+        return null;
+      }
+
+      return {
+        text: extractedText.trim(),
+        link: window.location.href
+      };
+    }).filter(review => review !== null);
+
+    if (reviewObjects.length === 0) {
+      this.showError("No valid review text could be extracted from detected reviews.");
+      return;
+    }
 
     const statusEl = document.getElementById("reviewai-scrape-status");
-    statusEl.textContent = `Found ${reviewObjects.length} reviews. Analyzing...`;
+    statusEl.textContent = `Found ${reviewObjects.length} valid reviews. Analyzing...`;
 
     this.showLoading();
 
@@ -1603,7 +1691,7 @@ class ReviewAIContentScript {
         action: "analyzeBatchReviews",
         reviews: reviewObjects,
         platformName: this.getPlatformCode(),
-        productName: this.getProductName(),
+        productName: await this.getProductName(),
         pageUrl: window.location.href,
         analysisType: "batch"
       },

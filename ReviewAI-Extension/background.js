@@ -6,9 +6,9 @@ class ReviewAPIService {
       analyzeBatch: "/api/analyze-batch-reviews/",
       analyzeQuick: "/api/quick-analyze/",
       batchLimit: "/api/get-batch-limit/",
-      login: "/api/login/",              // NEW
-      logout: "/api/logout/",            // NEW
-      userInfo: "/api/user-info/",       // NEW
+      login: "/api/login/",
+      logout: "/api/logout/",
+      userInfo: "/api/user-info/",
     };
   }
 
@@ -141,7 +141,6 @@ class ReviewAPIService {
   // UPDATED: Include token in review analysis
   async analyzeReview(reviewText, metadata = {}) {
     try {
-      // Get auth token from storage
       const { authToken } = await chrome.storage.local.get(['authToken']);
       
       const requestBody = {
@@ -149,6 +148,7 @@ class ReviewAPIService {
         platform_name: metadata.platformName || 'extension',
         product_name: metadata.productName || 'Unknown Product',
         page_url: metadata.pageUrl || '',
+        link: metadata.link || '', 
         analysis_type: metadata.analysisType || 'single'
       };
 
@@ -355,12 +355,12 @@ function analyzeSelectedText(selectedText) {
 
 // UPDATED: Handle messages from content scripts (including new auth actions)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // Existing analyze actions...
   if (request.action === "analyzeReview") {
     const metadata = {
       platformName: request.platformName,
       productName: request.productName,
       pageUrl: request.pageUrl,
+      link: request.link,
       analysisType: request.analysisType
     };
     
