@@ -60,9 +60,11 @@
 }
 
 .reviewai-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: white !important;
+
 }
 
 .reviewai-close-btn {
@@ -171,17 +173,17 @@
 }
 
 .reviewai-btn-secondary {
-  background: #f8f9fa;
-  color: #495057;
-  border: 2px solid #e0e0e0;
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  width: 100%;
-  margin-bottom: 10px;
+  background: #f8f9fa !important;
+  color: #495057 !important;
+  border: 2px solid #e0e0e0 !important;
+  padding: 10px 20px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  margin-bottom: 10px !important;
 }
 
 .reviewai-btn-secondary:hover {
@@ -997,103 +999,103 @@
 }
 
 .reviewai-settings-section {
-  padding: 20px;
+  padding: 20px !important;
 }
 
 .reviewai-settings-section h4 {
-  margin: 0 0 20px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1e3a8a;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 8px;
+  margin: 0 0 20px 0 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #1e3a8a !important;
+  border-bottom: 2px solid #e0e0e0 !important;
+  padding-bottom: 8px !important;
 }
 
 .reviewai-setting-item {
-  margin-bottom: 20px;
-  padding: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: #fafbfc;
-  transition: all 0.2s ease;
+  margin-bottom: 20px !important;
+  padding: 16px !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  background: #fafbfc !important;
+  transition: all 0.2s ease !important;
 }
 
 .reviewai-setting-item:hover {
-  border-color: #3b82f6;
-  background: #f8faff;
+  border-color: #3b82f6 !important;
+  background: #f8faff !important;
 }
 
 .reviewai-setting-desc {
-  margin: 8px 0 0 0;
-  color: #6b7280;
-  font-size: 13px;
-  line-height: 1.4;
+  margin: 8px 0 0 0 !important;
+  color: #6b7280 !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
 }
 
-/* Button Styles - Match Main Panel */
-.reviewai-btn-danger {
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  font-size: 13px;
-  transition: transform 0.2s ease;
-  width: 100%;
-}
-
-.reviewai-btn-danger:hover {
-  transform: translateY(-1px);
-}
-
-/* Pattern Status */
 .reviewai-pattern-status {
-  margin-top: 20px;
+  margin-top: 20px !important;
 }
 
 .reviewai-pattern-status h5 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #495057;
+  margin: 0 0 12px 0 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #495057 !important;
 }
 
 .reviewai-status-item {
-  padding: 12px;
-  border-radius: 6px;
-  margin: 8px 0;
-  font-size: 13px;
+  padding: 12px !important;
+  border-radius: 6px !important;
+  margin: 8px 0 !important;
+  font-size: 13px !important;
 }
 
 .reviewai-status-item strong {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 13px;
+  display: block !important;
+  margin-bottom: 4px !important;
+  font-size: 13px !important;
 }
 
 .reviewai-status-item small {
-  color: #6b7280;
-  font-size: 12px;
+  color: #6b7280 !important;
+  font-size: 12px !important;
 }
 
 .reviewai-status-success {
-  background: #dcfce7;
-  border: 1px solid #22c55e;
-  color: #15803d;
+  background: #dcfce7 !important;
+  border: 1px solid #22c55e !important;
+  color: #15803d !important;
 }
 
 .reviewai-status-warning {
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-  color: #a16207;
+  background: #fef3c7 !important;
+  border: 1px solid #f59e0b !important;
+  color: #a16207 !important;
 }
 
 .reviewai-status-neutral {
-  background: #f3f4f6;
-  border: 1px solid #9ca3af;
-  color: #374151;
+  background: #f3f4f6 !important;
+  border: 1px solid #9ca3af !important;
+  color: #374151 !important;
+}
+
+/* Button Styles for Settings */
+.reviewai-btn-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  transition: transform 0.2s ease !important;
+  width: 100% !important;
+}
+
+.reviewai-btn-danger:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%) !important;
+  transform: translateY(-1px) !important;
 }
 
 /* User Selection Modal - Professional Style */
@@ -1557,7 +1559,7 @@
 }
 
 .reviewai-account-section {
-  padding: 20px;
+  padding: 20px !important;
 }
 
 /* Login Form Styles */
@@ -1668,29 +1670,53 @@
 }
 
 .reviewai-account-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  margin-bottom: 16px !important;
 }
 
-.reviewai-account-actions a {
-  display: inline-block;
-  text-align: center;
-  padding: 10px 20px;
-  background: #f8f9fa;
-  color: #495057;
-  text-decoration: none;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+/* .reviewai-account-actions a {
+  display: inline-block !important;
+  text-align: center !important;
+  padding: 10px 20px !important;
+  background: #f8f9fa !important;
+  color: #495057 !important;
+  text-decoration: none !important;
+  border: 2px solid #e0e0e0 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
 }
 
 .reviewai-account-actions a:hover {
   background: #e9ecef;
   border-color: #1e3a8a;
+} */
+
+/* Make account panel buttons consistent */
+.reviewai-account-actions a,
+.reviewai-account-actions .reviewai-btn-secondary {
+  display: block !important;
+  width: 100% !important;
+  padding: 10px 20px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  background: #f8f9fa !important;
+  color: #495057 !important;
+  border: 2px solid #e0e0e0 !important;
+  text-align: center !important;
+  margin-bottom: 0 !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.reviewai-account-actions a:hover,
+.reviewai-account-actions .reviewai-btn-secondary:hover {
+  background: #e9ecef !important;
+  border-color: #1e3a8a !important;
 }
 
 .reviewai-account-note {

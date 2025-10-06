@@ -19,16 +19,9 @@ class ReviewAIContentScript {
       ],
       lazada: [".content", ".item-content-main-content"],
       temu: ["._2EO0yd2j"],
-      shein: [
-        // ".rate-des",
-        // ".comment-tag-box",
-        ".common-reviews-new__middle-text",
-      ],
+      shein: [".rate-des"],
       alibaba: [
         "div.r-relative.r-mt-\\[4px\\].r-overflow-hidden.r-whitespace-normal.r-text-\\[14px\\].r-font-normal.r-leading-\\[18px\\].r-tracking-\\[0\\%\\].r-text-\\[\\#222\\].r-mb-\\[12px\\]",
-      ],
-      aliexpress: [
-        ".list--itemReview--d9Z9Z5Z",
       ],
       newegg: [".comments-content"],
       general: [
@@ -99,14 +92,13 @@ class ReviewAIContentScript {
         console.log("🔄 Navigation detected, updating product name...");
         
         setTimeout(async () => {
-          const panel = document.getElementById("reviewai-panel");
-          if (panel) {
+          if (this.shadow) {
             const productName = await this.getProductName();
             const displayName = productName.length > 50 
               ? productName.substring(0, 50) + "..." 
               : productName;
               
-            const productNameEl = panel.querySelector(".reviewai-product-name");
+            const productNameEl = this.shadow.querySelector(".reviewai-product-name");
             if (productNameEl) {
               productNameEl.textContent = displayName;
               productNameEl.title = productName;
@@ -187,25 +179,6 @@ class ReviewAIContentScript {
       }
     }
 
-    if (hostname.includes("aliexpress.com") || hostname.includes("aliexpress.")) {
-      const aliSelectors = [
-        "h1.product-title",
-        ".product-title",
-        "title"
-      ];
-
-      for (const selector of aliSelectors) {
-        const element = document.querySelector(selector);
-        if (element && element.textContent.trim()) {
-          let title = element.textContent.trim();
-          title = title.replace(/\s*[-|]\s*.*/g, "");
-          if (title.length > 10) {
-            return title;
-          }
-        }
-      }
-    }
-
     const genericSelectors = [
       "h1",
       ".product-title",
@@ -259,105 +232,1932 @@ class ReviewAIContentScript {
     });
   }
 
-  async createAnalysisPanel() {
-    const productName = await this.getProductName(); 
-    const displayName =
-      productName.length > 50
-        ? productName.substring(0, 50) + "..."
-        : productName;
+  async loadShadowStyles() {
+    // Your complete CSS content - paste your entire styles.css content here
+    return `
+      /* Reset only for panel elements */
+      #reviewai-panel,
+      #reviewai-panel * {
+        box-sizing: border-box;
+      }
+      
+      #reviewai-panel {
+        margin: 0;
+        padding: 0;
+      }
 
-    // Create login status indicator
+      #reviewai-panel,
+      #reviewai-panel * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      }
+
+      #reviewai-panel input,
+      #reviewai-panel textarea {
+        background: white !important;
+        color: #374151 !important;
+        border: 2px solid #e0e0e0 !important;
+      }
+
+      /* Force override dark themes */
+      [data-theme="dark"] #reviewai-panel,
+      .dark #reviewai-panel,
+      [class*="dark"] #reviewai-panel {
+        background: white !important;
+        color: #374151 !important;
+      }
+
+      [data-theme="dark"] #reviewai-panel input,
+      .dark #reviewai-panel textarea,
+      [class*="dark"] #reviewai-panel input {
+        background: white !important;
+        color: #374151 !important;
+      }
+
+      #reviewai-panel {
+        position: fixed !important;
+        top: 20px;
+        right: 20px;
+        width: 400px;
+        z-index: 2147483647 !important;
+        max-height: 80vh;
+        background: #ffffff;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        z-index: 2147483647;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+      }
+
+      #reviewai-panel.reviewai-hidden {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.2s;
+      }
+
+      /* Header Styles */
+      .reviewai-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .reviewai-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .reviewai-close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s ease;
+      }
+
+      .reviewai-close-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Content Styles */
+      .reviewai-content {
+        max-height: calc(80vh - 70px);
+        overflow-y: auto;
+      }
+
+      /* Tab Styles */
+      .reviewai-tabs {
+        display: flex;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .reviewai-tab {
+        flex: 1;
+        padding: 12px 16px;
+        background: #f8f9fa;
+        color: #000000;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .reviewai-tab:hover {
+        background: #e9ecef;
+      }
+
+      .reviewai-tab.active {
+        background: white;
+        border-bottom-color: #3b82f6;
+        color: #3b82f6;
+      }
+
+      /* Tab Content */
+      .reviewai-tab-content {
+        display: none;
+        padding: 20px;
+      }
+
+      .reviewai-tab-content.active {
+        display: block;
+      }
+
+      /* Input Section */
+      .reviewai-input-section {
+        margin-bottom: 20px;
+      }
+
+      #reviewai-text-input {
+        width: 100%;
+        height: 100px;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        resize: vertical;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+      }
+
+      #reviewai-text-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      /* Button Styles */
+      .reviewai-btn-primary {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: transform 0.2s ease;
+        width: 100%;
+      }
+
+      .reviewai-btn-primary:hover {
+        transform: translateY(-1px);
+      }
+
+      .reviewai-btn-secondary {
+        background: #f8f9fa;
+        color: #495057;
+        border: 2px solid #e0e0e0;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .reviewai-btn-secondary:hover {
+        background: #e9ecef;
+        border-color: #1e3a8a;
+      }
+
+      .reviewai-btn-small {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      /* Result Styles */
+      .reviewai-result-section {
+        min-height: 0px;
+      }
+
+      .reviewai-result-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+
+      .reviewai-result-card.reviewai-fake {
+        border-color: #dc3545;
+      }
+
+      .reviewai-result-card.reviewai-genuine {
+        border-color: #28a745;
+      }
+
+      .reviewai-result-card.reviewai-medium {
+        border-color: #f59e0b;
+      }
+
+      .reviewai-result-card.reviewai-uncertain {
+        border-color: #6b7280;
+      }
+
+      .reviewai-result-header {
+        padding: 12px 16px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .reviewai-result-header h4 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .reviewai-status-icon {
+        font-size: 16px;
+      }
+
+      .reviewai-main-result {
+        padding: 16px;
+        display: flex;
+        align-items: center;
+      }
+
+      /* Circular Progress */
+      .reviewai-circular-progress {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 2rem;
+      }
+
+      .reviewai-progress-circle {
+        position: relative;
+        width: 120px;
+        height: 120px;
+      }
+
+      .reviewai-progress-svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+
+      .reviewai-progress-bar {
+        transition: stroke-dashoffset 1s ease-out;
+      }
+
+      .reviewai-progress-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .reviewai-percentage {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1f2937;
+      }
+
+      .reviewai-conf-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 2px;
+      }
+
+      /* Prediction Details */
+      .reviewai-prediction-details {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .reviewai-prediction {
+        margin-bottom: 12px;
+      }
+
+      .reviewai-confidence-desc {
+        margin-bottom: 8px;
+      }
+
+      .reviewai-prediction .reviewai-value {
+        display: block;
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+
+      .reviewai-prediction .reviewai-value.reviewai-fake {
+        color: #ef4444;
+        font-weight: 600;
+      }
+
+      .reviewai-prediction .reviewai-value.reviewai-genuine {
+        color: #28a745;
+        font-weight: 600;
+      }
+
+      .reviewai-prediction .reviewai-value.reviewai-medium {
+        color: #f59e0b;
+        font-weight: 600;
+      }
+
+      .reviewai-prediction .reviewai-value.reviewai-uncertain {
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      .reviewai-label {
+        font-weight: 500;
+        color: #6c757d;
+      }
+
+      .reviewai-value {
+        font-weight: 600;
+        margin-left: 8px;
+      }
+
+      /* Probability Bars */
+      .reviewai-probabilities {
+        padding: 0 16px 16px;
+      }
+
+      .reviewai-probabilities h5 {
+        margin: 0 0 12px 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .reviewai-prob-item {
+        margin-bottom: 8px;
+      }
+
+      .reviewai-prob-item span {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6c757d;
+      }
+
+      .reviewai-bar {
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 4px;
+      }
+
+      .reviewai-bar-fill {
+        height: 100%;
+        transition: width 0.5s ease;
+      }
+
+      .reviewai-bar-fill.reviewai-genuine {
+        background: #28a745;
+      }
+
+      .reviewai-bar-fill.reviewai-fake {
+        background: #dc3545;
+      }
+
+      /* Low Confidence Warning */
+      .reviewai-low-confidence-warning {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background-color: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 0.5rem;
+      }
+
+      .reviewai-warning-content {
+        display: flex;
+        align-items: center;
+      }
+
+      .reviewai-warning-icon {
+        color: #d97706;
+        font-size: 1.125rem;
+        margin-right: 0.5rem;
+      }
+
+      .reviewai-warning-title {
+        font-weight: 600;
+        color: #92400e;
+        font-size: 13px;
+      }
+
+      .reviewai-warning-text {
+        font-size: 0.875rem;
+        color: #a16207;
+        margin-top: 2px;
+      }
+
+      /* Individual Predictions */
+      .reviewai-individual-predictions {
+        padding: 0 16px 16px;
+        border-top: 1px solid #e0e0e0;
+        margin-top: 12px;
+        padding-top: 12px;
+      }
+
+      .reviewai-individual-predictions h5 {
+        margin: 0 0 12px 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .reviewai-model-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 12px;
+      }
+
+      .reviewai-model-name {
+        font-weight: 500;
+        color: #6c757d;
+      }
+
+      .reviewai-model-fake {
+        font-weight: 500;
+        color: #dc3545;
+      }
+
+      /* Batch Analysis */
+      /* .reviewai-batch-controls {
+        margin-bottom: 20px;
+      } */
+
+      .reviewai-status {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #6c757d;
+        font-style: italic;
+      }
+
+      .reviewai-batch-summary {
+        margin-bottom: 20px;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .reviewai-batch-summary h4 {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .reviewai-batch-limit-note {
+        font-size: 12px;
+        color: #6b7280;
+        margin: 4px;
+      }
+
+      .reviewai-summary-stats {
+        display: flex;
+        gap: 16px;
+      }
+
+      .reviewai-stat {
+        text-align: center;
+        flex: 1;
+      }
+
+      .reviewai-stat-number {
+        display: block;
+        font-size: 20px;
+        font-weight: 700;
+        color: #495057;
+      }
+
+      .reviewai-stat.reviewai-fake .reviewai-stat-number {
+        color: #ef4444;
+      }
+
+      .reviewai-stat.reviewai-genuine .reviewai-stat-number {
+        color: #28a745;
+      }
+
+      .reviewai-stat-label {
+        display: block;
+        font-size: 11px;
+        color: #6c757d;
+        font-weight: 500;
+        margin-top: 4px;
+      }
+
+      .reviewai-batch-results h5 {
+        margin: 0 0 12px 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .reviewai-batch-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        padding: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .reviewai-batch-item:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .reviewai-batch-item.reviewai-fake {
+        border-left: 4px solid #ef4444;
+      }
+
+      .reviewai-batch-item.reviewai-genuine {
+        border-left: 4px solid #28a745;
+      }
+
+      .reviewai-batch-item.reviewai-medium {
+        border-left: 4px solid #f59e0b;
+      }
+      .reviewai-batch-item.reviewai-uncertain {
+        border-left: 4px solid #6b7280;
+      }
+
+      .reviewai-batch-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .reviewai-batch-prediction {
+        font-weight: 600;
+        font-size: 12px;
+      }
+
+      .reviewai-batch-confidence {
+        font-size: 12px;
+        color: #6c757d;
+        margin-left: auto;
+      }
+
+      .reviewai-batch-preview {
+        font-size: 11px;
+        color: #6c757d;
+        line-height: 1.4;
+      }
+
+      /* Loading Animation */
+      .reviewai-loading {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+      }
+
+      .reviewai-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e0e0e0;
+        border-top: 4px solid #1e3a8a;
+        border-radius: 50%;
+        animation: reviewai-spin 1s linear infinite;
+        margin-bottom: 12px;
+      }
+
+      @keyframes reviewai-spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .reviewai-loading p {
+        margin: 0;
+        font-size: 13px;
+        color: #6c757d;
+      }
+
+      /* Quick Analyze Buttons */
+      .reviewai-analyze-quick {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 3px 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 500;
+        opacity: 0.7;
+        transition: all 0.2s ease;
+        z-index: 1000;
+      }
+
+      .reviewai-analyze-quick:hover {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+
+      /* Tooltip */
+      .reviewai-tooltip {
+        position: absolute;
+        background: white;
+        border: 2px solid #3b82f6;
+        border-radius: 6px;
+        padding: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 2147483646;
+        animation: reviewai-fadeIn 0.2s ease;
+      }
+
+      @keyframes reviewai-fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Toast */
+      .reviewai-success-toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: #22c55e;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 2147483647;
+        transition: transform 0.3s ease;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      }
+
+      .reviewai-success-toast.reviewai-show {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Warning Toast */
+      .reviewai-warning-toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: #f59e0b;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 2147483647;
+        transition: transform 0.3s ease;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      }
+
+      .reviewai-warning-toast.reviewai-show {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Update Error Toast for consistency */
+      .reviewai-error-toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: #ef4444;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 2147483647;
+        transition: transform 0.3s ease;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      }
+      /* .reviewai-error-toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: #dc3545;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 2147483647;
+        transition: transform 0.3s ease;
+        max-width: 400px;
+        text-align: center;
+      } */
+
+      .reviewai-error-toast.reviewai-show {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 480px) {
+        #reviewai-panel {
+          width: calc(100vw - 40px);
+          right: 20px;
+          left: 20px;
+        }
+
+        #reviewai-panel.reviewai-hidden {
+          transform: translateY(-100vh);
+        }
+
+        .reviewai-summary-stats {
+          flex-direction: column;
+          gap: 8px;
+        }
+      }
+
+      /* Scrollbar Styling */
+      .reviewai-content::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .reviewai-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      .reviewai-content::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+      }
+
+      .reviewai-content::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+      }
+
+      .reviewai-model-breakdown {
+        font-weight: 500;
+        color: #495057;
+        font-size: 12px;
+      }
+
+      .reviewai-header-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .reviewai-product-name {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 400;
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .reviewai-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 15px 20px;
+      }
+
+      /* Quick Tooltip Styles */
+      .reviewai-quick-tooltip {
+        position: absolute;
+        z-index: 10001;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        border: 1px solid #e5e7eb;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        animation: reviewai-tooltip-appear 0.2s ease-out;
+      }
+
+      .reviewai-analyze-button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: 500;
+        white-space: nowrap;
+        display: block;
+      }
+
+      .reviewai-analyze-button:hover {
+        background: #1e40af;
+      }
+
+      .reviewai-quick-results {
+        padding: 12px;
+      }
+
+      .reviewai-quick-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 20px;
+        color: #6b7280;
+        font-size: 12px;
+      }
+
+      .reviewai-spinner-small {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #e5e7eb;
+        border-top: 2px solid #3b82f6;
+        border-radius: 50%;
+        animation: reviewai-spin 1s linear infinite;
+      }
+
+      .reviewai-compact-result {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0;
+      }
+
+      .reviewai-compact-circle {
+        position: relative;
+        width: 70px;
+        height: 70px;
+        flex-shrink: 0;
+      }
+
+      .reviewai-circle-svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+
+      .reviewai-progress-circle {
+        transition: stroke-dashoffset 0.5s ease;
+      }
+
+      .reviewai-circle-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .reviewai-compact-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .reviewai-prediction-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+
+      .reviewai-icon {
+        font-size: 16px;
+      }
+
+      .reviewai-prediction-text {
+        font-weight: 600;
+        font-size: 1.5em;
+        color: #374151;
+      }
+
+      .reviewai-confidence-line {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 8px;
+      }
+
+      .reviewai-probabilities-compact {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 11px;
+      }
+
+      .reviewai-prob-genuine {
+        color: #28a745;
+        font-weight: 500;
+      }
+
+      .reviewai-prob-fake {
+        color: #ef4444;
+        font-weight: 500;
+      }
+
+      .reviewai-error {
+        text-align: center;
+        padding: 12px;
+      }
+
+      .reviewai-error span {
+        display: block;
+        color: #ef4444;
+        font-weight: 500;
+        margin-bottom: 4px;
+        font-size: 12px;
+      }
+
+      .reviewai-error small {
+        color: #6b7280;
+        font-size: 11px;
+      }
+
+      /* Animation for tooltip */
+      @keyframes reviewai-tooltip-appear {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .reviewai-quick-tooltip .reviewai-circle-center,
+      .reviewai-quick-tooltip .reviewai-percentage {
+        font-size: 18px !important;
+        font-weight: bold;
+        color: #222;
+        line-height: 1;
+      }
+      #reviewai-panel .reviewai-circular-progress {
+        margin-right: 24px !important;
+      }
+
+      #reviewai-panel .reviewai-percentage {
+        font-size: 24px !important;
+        font-weight: bold !important;
+        color: #1f2937 !important;
+        line-height: 1 !important;
+      }
+
+      #reviewai-panel .reviewai-conf-label {
+        font-size: 12px !important;
+        color: #6b7280 !important;
+        margin-top: 2px !important;
+        font-weight: 500 !important;
+      }
+
+      .reviewai-settings-section {
+        padding: 20px !important;
+      }
+
+      .reviewai-settings-section h4 {
+        margin: 0 0 20px 0 !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        color: #1e3a8a !important;
+        border-bottom: 2px solid #e0e0e0 !important;
+        padding-bottom: 8px !important;
+      }
+
+      .reviewai-setting-item {
+        margin-bottom: 20px !important;
+        padding: 16px !important;
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 8px !important;
+        background: #fafbfc !important;
+        transition: all 0.2s ease !important;
+      }
+
+      .reviewai-setting-item:hover {
+        border-color: #3b82f6 !important;
+        background: #f8faff !important;
+      }
+
+      .reviewai-setting-desc {
+        margin: 8px 0 0 0 !important;
+        color: #6b7280 !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+      }
+
+      .reviewai-pattern-status {
+        margin-top: 20px !important;
+      }
+
+      .reviewai-pattern-status h5 {
+        margin: 0 0 12px 0 !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #495057 !important;
+      }
+
+      .reviewai-status-item {
+        padding: 12px !important;
+        border-radius: 6px !important;
+        margin: 8px 0 !important;
+        font-size: 13px !important;
+      }
+
+      .reviewai-status-item strong {
+        display: block !important;
+        margin-bottom: 4px !important;
+        font-size: 13px !important;
+      }
+
+      .reviewai-status-item small {
+        color: #6b7280 !important;
+        font-size: 12px !important;
+      }
+
+      .reviewai-status-success {
+        background: #dcfce7 !important;
+        border: 1px solid #22c55e !important;
+        color: #15803d !important;
+      }
+
+      .reviewai-status-warning {
+        background: #fef3c7 !important;
+        border: 1px solid #f59e0b !important;
+        color: #a16207 !important;
+      }
+
+      .reviewai-status-neutral {
+        background: #f3f4f6 !important;
+        border: 1px solid #9ca3af !important;
+        color: #374151 !important;
+      }
+
+      /* Button Styles for Settings */
+      .reviewai-btn-danger {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+        color: white !important;
+        padding: 10px 20px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        cursor: pointer !important;
+        font-size: 13px !important;
+        transition: transform 0.2s ease !important;
+        width: 100% !important;
+      }
+
+      .reviewai-btn-danger:hover {
+        background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%) !important;
+        transform: translateY(-1px) !important;
+      }
+
+      /* User Selection Modal - Professional Style */
+      #reviewai-selection-prompt {
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        width: 350px !important;
+        z-index: 999999 !important;
+        background: white !important;
+        border: 2px solid #e0e0e0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        animation: reviewai-modal-appear 0.3s ease-out !important;
+      }
+
+      @keyframes reviewai-modal-appear {
+        0% {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes reviewai-modal-disappear {
+        0% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+      }
+
+      .reviewai-prompt-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important;
+        color: white !important;
+        padding: 16px !important;
+        border-radius: 10px 10px 0 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+      }
+
+      .reviewai-prompt-header h3 {
+        margin: 0 !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+      }
+
+      #reviewai-prompt-close {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border: none !important;
+        color: white !important;
+        border-radius: 50% !important;
+        width: 28px !important;
+        height: 28px !important;
+        cursor: pointer !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        transition: background-color 0.2s ease !important;
+      }
+
+      #reviewai-prompt-close:hover {
+        background: rgba(255, 255, 255, 0.3) !important;
+      }
+
+      .reviewai-prompt-content {
+        padding: 20px !important;
+      }
+
+      .reviewai-prompt-content p {
+        margin: 0 0 16px 0 !important;
+        font-size: 14px !important;
+        color: #374151 !important;
+        line-height: 1.4 !important;
+      }
+
+      /* Selection Status Box */
+      #reviewai-selection-status {
+        text-align: center !important;
+        padding: 12px !important;
+        background: #f8f9fa !important;
+        border-radius: 8px !important;
+        margin: 16px 0 !important;
+        font-weight: 600 !important;
+        color: #1f2937 !important;
+        border: 2px solid #e0e0e0 !important;
+        font-size: 13px !important;
+      }
+
+      #reviewai-mode-status {
+        font-weight: 700 !important;
+      }
+
+      /* Button Styles - Match Main Panel */
+      #reviewai-start-selection {
+        padding: 12px 16px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        font-size: 13px !important;
+        width: 100% !important;
+        transition: transform 0.2s ease !important;
+      }
+
+      #reviewai-start-selection:hover {
+        transform: translateY(-1px) !important;
+      }
+
+      #reviewai-finish-selection {
+        padding: 12px 16px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        font-size: 13px !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+        transition: transform 0.2s ease !important;
+      }
+
+      #reviewai-finish-selection:hover:not(:disabled) {
+        transform: translateY(-1px) !important;
+      }
+
+      #reviewai-finish-selection:disabled {
+        background: #9ca3af !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+      }
+
+      #reviewai-cancel-selection {
+        padding: 8px 16px !important;
+        border: 2px solid #ef4444 !important;
+        border-radius: 6px !important;
+        background: white !important;
+        color: #ef4444 !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        font-size: 13px !important;
+        width: 100% !important;
+        transition: all 0.2s ease !important;
+      }
+
+      #reviewai-cancel-selection:hover {
+        background: #fef2f2 !important;
+      }
+
+      #reviewai-close-modal {
+        padding: 8px 16px !important;
+        border: 2px solid #6b7280 !important;
+        border-radius: 6px !important;
+        background: white !important;
+        color: #6b7280 !important;
+        font-weight: 500 !important;
+        cursor: pointer !important;
+        font-size: 12px !important;
+        margin-top: 8px !important;
+        width: 100% !important;
+        transition: all 0.2s ease !important;
+      }
+
+      #reviewai-close-modal:hover {
+        background: #f9fafb !important;
+        border-color: #374151 !important;
+        color: #374151 !important;
+      }
+
+      .reviewai-prompt-actions {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-top: 16px !important;
+      }
+
+      /* Instructions Box */
+      #reviewai-instructions {
+        margin-top: 16px !important;
+        padding: 12px !important;
+        background: #fef3c7 !important;
+        border-radius: 8px !important;
+        border-left: 4px solid #f59e0b !important;
+        font-size: 12px !important;
+        color: #92400e !important;
+        line-height: 1.4 !important;
+      }
+
+      #reviewai-instructions > div {
+        margin-bottom: 2px !important;
+      }
+
+      #reviewai-instructions > div:first-child {
+        font-weight: 600 !important;
+        margin-bottom: 6px !important;
+      }
+
+      /* Selection Mode Styles - Clean and Professional */
+      .reviewai-selection-mode * {
+        cursor: crosshair !important;
+      }
+
+      #reviewai-selection-prompt,
+      #reviewai-selection-prompt * {
+        cursor: default !important;
+      }
+
+      .reviewai-selection-mode
+        *:hover:not(#reviewai-selection-prompt *):not(.reviewai-selected) {
+        background-color: rgba(59, 130, 246, 0.08) !important;
+        outline: 2px dashed #3b82f6 !important;
+        outline-offset: 2px !important;
+        transition: all 0.2s ease !important;
+      }
+
+      .reviewai-selected {
+        background-color: rgba(34, 197, 94, 0.15) !important;
+        outline: 3px solid #22c55e !important;
+        outline-offset: 2px !important;
+        position: relative !important;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3) !important;
+      }
+
+      .reviewai-selected::before {
+        content: "✓" !important;
+        position: absolute !important;
+        top: -15px !important;
+        right: -15px !important;
+        background: #22c55e !important;
+        color: white !important;
+        border-radius: 50% !important;
+        width: 28px !important;
+        height: 28px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 14px !important;
+        font-weight: bold !important;
+        z-index: 10000 !important;
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4) !important;
+        animation: reviewai-checkmark-appear 0.3s ease-out !important;
+      }
+
+      @keyframes reviewai-pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.01);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes reviewai-checkmark-appear {
+        0% {
+          transform: scale(0) rotate(-180deg);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.1) rotate(-90deg);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+        }
+      }
+
+      /* Toast Messages - Professional Style */
+      .reviewai-selection-toast {
+        position: fixed !important;
+        bottom: 30px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        background: #1f2937 !important;
+        color: white !important;
+        padding: 12px 20px !important;
+        border-radius: 8px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        z-index: 1000000 !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+        max-width: 400px !important;
+        text-align: center !important;
+        animation: reviewai-toast-appear 0.3s ease-out !important;
+      }
+
+      @keyframes reviewai-toast-appear {
+        0% {
+          transform: translateX(-50%) translateY(100px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateX(-50%) translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Temp Message Style */
+      #reviewai-temp-message {
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        background: #1f2937 !important;
+        color: white !important;
+        padding: 12px 20px !important;
+        border-radius: 8px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        z-index: 10001 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        animation: reviewai-temp-message-appear 0.3s ease-out !important;
+      }
+
+      @keyframes reviewai-temp-message-appear {
+        0% {
+          transform: translateY(-10px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .reviewai-settings-section {
+        padding: 16px 0;
+      }
+
+      .reviewai-setting-item {
+        margin-bottom: 20px;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .reviewai-setting-item:hover {
+        border-color: #3b82f6;
+        background: #f8faff;
+      }
+
+      .reviewai-setting-desc {
+        margin: 8px 0 0 0;
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .reviewai-pattern-status {
+        margin-top: 20px;
+      }
+
+      .reviewai-status-item {
+        padding: 12px;
+        border-radius: 6px;
+        margin: 8px 0;
+        font-size: 13px;
+      }
+
+      .reviewai-status-item strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+      }
+
+      .reviewai-status-item small {
+        color: #6b7280;
+        font-size: 12px;
+      }
+
+      .reviewai-status-success {
+        background: #dcfce7;
+        border: 1px solid #22c55e;
+        color: #15803d;
+      }
+
+      .reviewai-status-warning {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #a16207;
+      }
+
+      .reviewai-status-neutral {
+        background: #f3f4f6;
+        border: 1px solid #9ca3af;
+        color: #374151;
+      }
+
+      .reviewai-btn-danger {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 13px;
+        transition: transform 0.2s ease;
+        width: 100%;
+      }
+
+      .reviewai-btn-danger:hover {
+        background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+        transform: translateY(-1px);
+      }
+
+      #reviewai-mode-status {
+        font-weight: 700 !important;
+        color: #ef4444 !important;
+      }
+
+      #reviewai-mode-status.active {
+        color: #10b981 !important;
+      }
+
+      #reviewai-selected-count {
+        font-weight: 600;
+        color: #3b82f6;
+      }
+
+      /* Active Controls Styling */
+      #reviewai-active-controls {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+
+      /* Instructions Styling */
+      #reviewai-instructions div:first-child {
+        font-weight: 600 !important;
+        margin-bottom: 6px !important;
+        color: #92400e !important;
+      }
+
+      #reviewai-instructions div:not(:first-child) {
+        margin-bottom: 2px !important;
+        color: #a16207 !important;
+      }
+
+      /* Phase Button States */
+      #reviewai-finish-selection.saving {
+        background: #9ca3af !important;
+        cursor: not-allowed !important;
+      }
+
+      /* Toast Animation Reverse */
+      .reviewai-selection-toast.fadeout {
+        animation: reviewai-toast-appear 0.3s ease-out reverse !important;
+      }
+
+      .reviewai-account-section {
+        padding: 20px;
+      }
+
+      /* Login Form Styles */
+      .reviewai-login-form h4 {
+        margin: 0 0 12px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e3a8a;
+      }
+
+      .reviewai-login-desc {
+        margin: 0 0 16px 0;
+        color: #6b7280;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .reviewai-form-group {
+        margin-bottom: 16px;
+      }
+
+      .reviewai-form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+      }
+
+      .reviewai-form-group input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: inherit;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease;
+      }
+
+      .reviewai-form-group input:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      .reviewai-form-actions {
+        margin: 20px 0 16px 0;
+      }
+
+      .reviewai-login-help {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .reviewai-login-help p {
+        margin: 8px 0;
+        font-size: 12px;
+        color: #6b7280;
+      }
+
+      .reviewai-login-help a {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .reviewai-login-help a:hover {
+        text-decoration: underline;
+      }
+
+      /* Account Info Styles */
+      .reviewai-account-info h4 {
+        margin: 0 0 16px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e3a8a;
+      }
+
+      .reviewai-user-details {
+        margin-bottom: 20px;
+        padding: 16px;
+        background: #f8faff;
+        border-radius: 8px;
+        border: 1px solid #e0e7ff;
+      }
+
+      .reviewai-detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .reviewai-detail-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .reviewai-detail-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+      }
+
+      .reviewai-detail-value {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .reviewai-account-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .reviewai-account-actions a {
+        display: inline-block;
+        text-align: center;
+        padding: 10px 20px;
+        background: #f8f9fa;
+        color: #495057;
+        text-decoration: none;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .reviewai-account-actions a:hover {
+        background: #e9ecef;
+        border-color: #1e3a8a;
+      }
+
+      .reviewai-account-note {
+        margin-top: 16px;
+        padding: 12px;
+        background: #f0f9ff;
+        border-radius: 6px;
+        border-left: 4px solid #3b82f6;
+      }
+
+      .reviewai-account-note p {
+        margin: 0;
+        font-size: 12px;
+        color: #1e40af;
+        line-height: 1.4;
+      }
+
+      /* Status Messages */
+      .reviewai-status {
+        margin-top: 12px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .reviewai-status.reviewai-error {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+
+      .reviewai-status.reviewai-success {
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+      }
+
+      .reviewai-status.reviewai-warning {
+        background: #fefce8;
+        color: #ca8a04;
+        border: 1px solid #fef08a;
+      }
+
+      /* Header Login Status Styles */
+      .reviewai-user-info {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin-top: 4px;
+        display: inline-block;
+      }
+
+      .reviewai-login-prompt {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+        font-style: italic;
+        margin-top: 4px;
+      }
+
+      /* Button Loading State */
+      .reviewai-btn-primary:disabled {
+        background: #9ca3af !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+      }
+
+      /* Responsive adjustments for login form */
+      @media (max-width: 480px) {
+        .reviewai-account-actions {
+          flex-direction: column;
+        }
+        
+        .reviewai-form-group input {
+          font-size: 16px;
+        }
+      }
+    `;
+  }
+
+  async createAnalysisPanel() {
+    // Remove any existing panel
+    const existingHost = document.getElementById("reviewai-panel-host");
+    if (existingHost) existingHost.remove();
+
+    // Create the shadow host element
+    const panelHost = document.createElement("div");
+    panelHost.id = "reviewai-panel-host";
+    
+    // Apply minimal host styles (these won't be isolated)
+    panelHost.style.cssText = `
+      position: fixed !important;
+      top: 20px !important;
+      right: 20px !important;
+      z-index: 2147483647 !important;
+      width: 400px !important;
+      max-height: 80vh !important;
+      pointer-events: auto !important;
+    `;
+
+    // Create shadow root with open mode
+    const shadow = panelHost.attachShadow({ mode: "open" });
+
+    // Load CSS into shadow DOM
+    const style = document.createElement("style");
+    style.textContent = await this.loadShadowStyles();
+
+    // Get dynamic content
+    const productName = await this.getProductName();
+    const displayName = productName.length > 50 
+      ? productName.substring(0, 50) + "..." 
+      : productName;
+
     const loginStatusHTML = this.isLoggedIn 
       ? `<div class="reviewai-user-info">👤 ${this.currentUser?.username || 'User'}</div>`
       : `<div class="reviewai-login-prompt">Not logged in</div>`;
 
-    const panel = document.createElement("div");
-    panel.id = "reviewai-panel";
-    panel.className = "reviewai-hidden";
-    panel.innerHTML = `
-    <div class="reviewai-header">
-      <div class="reviewai-header-content">
-        <h3>ReviewAI</h3>
-        <div class="reviewai-product-name" title="${productName}">${displayName}</div>
-        ${loginStatusHTML}
-      </div>
-      <button id="reviewai-close" class="reviewai-close-btn">&times;</button>
-    </div>
-    <div class="reviewai-content">
-      <div class="reviewai-tabs">
-        <button class="reviewai-tab active" data-tab="single">Single Review</button>
-        <button class="reviewai-tab" data-tab="batch">Batch Analysis</button>
-        <button class="reviewai-tab" data-tab="settings">Settings</button>
-        <button class="reviewai-tab" data-tab="account">Account</button>
-      </div>
-      
-      <div id="reviewai-single-tab" class="reviewai-tab-content active">
-        <div class="reviewai-input-section">
-          <textarea id="reviewai-text-input" placeholder="Paste review text here or select text on the page..."></textarea>
-          <button id="reviewai-analyze-btn" class="reviewai-btn-primary">Analyze Review</button>
+    // Create panel HTML inside shadow DOM
+    const panelContainer = document.createElement("div");
+    panelContainer.innerHTML = `
+      <div id="reviewai-panel" class="reviewai-hidden">
+        <div class="reviewai-header">
+          <div class="reviewai-header-content">
+            <h3>ReviewAI</h3>
+            <div class="reviewai-product-name" title="${productName}">${displayName}</div>
+            ${loginStatusHTML}
+          </div>
+          <button id="reviewai-close" class="reviewai-close-btn">&times;</button>
         </div>
-        <div id="reviewai-single-result" class="reviewai-result-section"></div>
-      </div>
-      
-      <div id="reviewai-batch-tab" class="reviewai-tab-content">
-        <div class="reviewai-batch-controls">
-          <button id="reviewai-scrape-btn" class="reviewai-btn-secondary">Scrape Reviews</button>
-          <div id="reviewai-scrape-status" class="reviewai-status"></div>
-          <div class="reviewai-batch-limit-note" id="reviewai-batch-limit-display">Up to 20 reviews per batch</div>
-        </div>
-        <div id="reviewai-batch-result" class="reviewai-result-section"></div>
-      </div>
-
-      <div id="reviewai-settings-tab" class="reviewai-tab-content">
-        <div class="reviewai-settings-section">          
-          <div class="reviewai-setting-item">
-            <button id="reviewai-teach-btn" class="reviewai-btn-primary">
-              Teach ReviewAI Where Reviews Are
-            </button>
-            <p class="reviewai-setting-desc">
-              Train ReviewAI to find reviews on this website by selecting them manually.
-            </p>
+        <div class="reviewai-content">
+          <div class="reviewai-tabs">
+            <button class="reviewai-tab active" data-tab="single">Single Review</button>
+            <button class="reviewai-tab" data-tab="batch">Batch Analysis</button>
+            <button class="reviewai-tab" data-tab="settings">Settings</button>
+            <button class="reviewai-tab" data-tab="account">Account</button>
+          </div>
+          
+          <div id="reviewai-single-tab" class="reviewai-tab-content active">
+            <div class="reviewai-input-section">
+              <textarea id="reviewai-text-input" placeholder="Paste review text here or select text on the page..."></textarea>
+              <button id="reviewai-analyze-btn" class="reviewai-btn-primary">Analyze Review</button>
+            </div>
+            <div id="reviewai-single-result" class="reviewai-result-section"></div>
+          </div>
+          
+          <div id="reviewai-batch-tab" class="reviewai-tab-content">
+            <div class="reviewai-batch-controls">
+              <button id="reviewai-scrape-btn" class="reviewai-btn-secondary">Scrape Reviews</button>
+              <div id="reviewai-scrape-status" class="reviewai-status"></div>
+              <div class="reviewai-batch-limit-note" id="reviewai-batch-limit-display">Up to 20 reviews per batch</div>
+            </div>
+            <div id="reviewai-batch-result" class="reviewai-result-section"></div>
           </div>
 
-          <div class="reviewai-setting-item">
-            <button id="reviewai-reset-patterns-btn" class="reviewai-btn-danger">
-              Reset Learned Patterns
-            </button>
-            <p class="reviewai-setting-desc">
-              Clear all learned patterns for this site and start fresh.
-            </p>
+          <div id="reviewai-settings-tab" class="reviewai-tab-content">
+            <div class="reviewai-settings-section">          
+              <div class="reviewai-setting-item">
+                <button id="reviewai-teach-btn" class="reviewai-btn-primary">
+                  Teach ReviewAI Where Reviews Are
+                </button>
+                <p class="reviewai-setting-desc">
+                  Train ReviewAI to find reviews on this website by selecting them manually.
+                </p>
+              </div>
+
+              <div class="reviewai-setting-item">
+                <button id="reviewai-reset-patterns-btn" class="reviewai-btn-danger">
+                  Reset Learned Patterns
+                </button>
+                <p class="reviewai-setting-desc">
+                  Clear all learned patterns for this site and start fresh.
+                </p>
+              </div>
+
+              <div class="reviewai-setting-item">
+                <button id="reviewai-test-detection-btn" class="reviewai-btn-secondary">
+                  Test Current Detection
+                </button>
+                <p class="reviewai-setting-desc">
+                  See what reviews are currently detected on this page.
+                </p>
+              </div>
+
+              <div id="reviewai-pattern-status" class="reviewai-pattern-status">
+                <!-- Pattern status will be shown here -->
+              </div>
+            </div>
           </div>
 
-          <div class="reviewai-setting-item">
-            <button id="reviewai-test-detection-btn" class="reviewai-btn-secondary">
-              Test Current Detection
-            </button>
-            <p class="reviewai-setting-desc">
-              See what reviews are currently detected on this page.
-            </p>
-          </div>
-
-          <div id="reviewai-pattern-status" class="reviewai-pattern-status">
-            <!-- Pattern status will be shown here -->
+          <!-- Account Tab -->
+          <div id="reviewai-account-tab" class="reviewai-tab-content">
+            <div class="reviewai-account-section">
+              ${this.isLoggedIn ? this.createLoggedInAccountHTML() : this.createLoginFormHTML()}
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Account Tab -->
-      <div id="reviewai-account-tab" class="reviewai-tab-content">
-        <div class="reviewai-account-section">
-          ${this.isLoggedIn ? this.createLoggedInAccountHTML() : this.createLoginFormHTML()}
+        <div class="reviewai-loading" id="reviewai-loading">
+          <div class="reviewai-spinner"></div>
+          <p>Analyzing with ML models...</p>
         </div>
       </div>
-    </div>
-    <div class="reviewai-loading" id="reviewai-loading">
-      <div class="reviewai-spinner"></div>
-      <p>Analyzing with ML models...</p>
-    </div>
-  `;
+    `;
 
-    document.body.appendChild(panel);
-    this.setupPanelListeners();
+    // Append styles and content to shadow DOM
+    shadow.appendChild(style);
+    shadow.appendChild(panelContainer);
+
+    // Append shadow host to document
+    document.body.appendChild(panelHost);
+
+    // Store shadow reference for later use
+    this.shadow = shadow;
+    this.panelHost = panelHost;
+
+    // Setup event listeners with shadow DOM
+    this.setupShadowPanelListeners();
   }
 
   createLoginFormHTML() {
@@ -429,60 +2229,76 @@ class ReviewAIContentScript {
     `;
   }
 
-  setupPanelListeners() {
-    document.getElementById("reviewai-close").addEventListener("click", () => {
+  setupShadowPanelListeners() {
+    // Use shadow.getElementById instead of document.getElementById
+    this.shadow.getElementById("reviewai-close").addEventListener("click", () => {
       this.hidePanel();
     });
 
-    document.querySelectorAll(".reviewai-tab").forEach((tab) => {
+    this.shadow.querySelectorAll(".reviewai-tab").forEach((tab) => {
       tab.addEventListener("click", (e) => {
         this.switchTab(e.target.dataset.tab);
       });
     });
 
-    document
-      .getElementById("reviewai-analyze-btn")
-      .addEventListener("click", () => {
-        const text = document
-          .getElementById("reviewai-text-input")
-          .value.trim();
-        if (text) {
-          this.analyzeSingleReview(text);
+    this.shadow.getElementById("reviewai-analyze-btn").addEventListener("click", () => {
+      const text = this.shadow.getElementById("reviewai-text-input").value.trim();
+      if (text) {
+        this.analyzeSingleReview(text);
+      }
+    });
+
+    this.shadow.getElementById("reviewai-scrape-btn").addEventListener("click", async () => {
+      await this.scrapeBatchReviews();
+    });
+
+    this.shadow.getElementById("reviewai-teach-btn")?.addEventListener("click", () => {
+      this.startUserSelectionFromUI();
+    });
+
+    this.shadow.getElementById("reviewai-reset-patterns-btn")?.addEventListener("click", () => {
+      this.resetLearnedPatterns();
+    });
+
+    this.shadow.getElementById("reviewai-test-detection-btn")?.addEventListener("click", () => {
+      this.testCurrentDetection();
+    });
+
+    this.shadow.querySelector('[data-tab="settings"]')?.addEventListener("click", () => {
+      this.updatePatternStatus();
+    });
+
+    this.setupShadowAccountListeners();
+  }
+
+  setupShadowAccountListeners() {
+    const loginBtn = this.shadow.getElementById("reviewai-login-btn");
+    const logoutBtn = this.shadow.getElementById("reviewai-logout-btn");
+
+    if (loginBtn) {
+      loginBtn.addEventListener("click", () => {
+        this.handleLogin();
+      });
+
+      const usernameInput = this.shadow.getElementById("reviewai-username");
+      const passwordInput = this.shadow.getElementById("reviewai-password");
+      
+      [usernameInput, passwordInput].forEach(input => {
+        if (input) {
+          input.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+              this.handleLogin();
+            }
+          });
         }
       });
+    }
 
-    document
-      .getElementById("reviewai-scrape-btn")
-      .addEventListener("click", async () => {
-        await this.scrapeBatchReviews();
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        this.handleLogout();
       });
-
-    document
-      .getElementById("reviewai-teach-btn")
-      ?.addEventListener("click", () => {
-        this.startUserSelectionFromUI();
-      });
-
-    document
-      .getElementById("reviewai-reset-patterns-btn")
-      ?.addEventListener("click", () => {
-        this.resetLearnedPatterns();
-      });
-
-    document
-      .getElementById("reviewai-test-detection-btn")
-      ?.addEventListener("click", () => {
-        this.testCurrentDetection();
-      });
-
-    document
-      .querySelector('[data-tab="settings"]')
-      ?.addEventListener("click", () => {
-        this.updatePatternStatus();
-      });
-
-
-    this.setupAccountListeners();
+    }
   }
 
   setupEventListeners() {
@@ -508,8 +2324,8 @@ class ReviewAIContentScript {
   }
 
   setupAccountListeners() {
-    const loginBtn = document.getElementById("reviewai-login-btn");
-    const logoutBtn = document.getElementById("reviewai-logout-btn");
+    const loginBtn = this.shadow.getElementById("reviewai-login-btn");
+    const logoutBtn = this.shadow.getElementById("reviewai-logout-btn");
 
     if (loginBtn) {
       loginBtn.addEventListener("click", () => {
@@ -517,9 +2333,9 @@ class ReviewAIContentScript {
       });
 
       // Allow Enter key to submit login
-      const usernameInput = document.getElementById("reviewai-username");
-      const passwordInput = document.getElementById("reviewai-password");
-      
+      const usernameInput = this.shadow.getElementById("reviewai-username");
+      const passwordInput = this.shadow.getElementById("reviewai-password");
+
       [usernameInput, passwordInput].forEach(input => {
         if (input) {
           input.addEventListener("keypress", (e) => {
@@ -540,10 +2356,10 @@ class ReviewAIContentScript {
 
   // Handle login
   async handleLogin() {
-    const usernameInput = document.getElementById("reviewai-username");
-    const passwordInput = document.getElementById("reviewai-password");
-    const loginBtn = document.getElementById("reviewai-login-btn");
-    const statusDiv = document.getElementById("reviewai-login-status");
+    const usernameInput = this.shadow.getElementById("reviewai-username");
+    const passwordInput = this.shadow.getElementById("reviewai-password");
+    const loginBtn = this.shadow.getElementById("reviewai-login-btn");
+    const statusDiv = this.shadow.getElementById("reviewai-login-status");
 
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
@@ -616,8 +2432,8 @@ class ReviewAIContentScript {
 
   // Handle logout
   async handleLogout() {
-    const logoutBtn = document.getElementById("reviewai-logout-btn");
-    const statusDiv = document.getElementById("reviewai-account-status");
+    const logoutBtn = this.shadow.getElementById("reviewai-logout-btn");
+    const statusDiv = this.shadow.getElementById("reviewai-account-status");
 
     // Show loading state
     logoutBtn.textContent = "Logging out...";
@@ -660,17 +2476,13 @@ class ReviewAIContentScript {
 
   // Refresh panel after login/logout
   async refreshPanel() {
-    const panel = document.getElementById("reviewai-panel");
-    if (panel) {
-      panel.remove();
+    // Remove the host element instead of just the panel
+    if (this.panelHost) {
+      this.panelHost.remove();
     }
     
-    // Check login status before recreating panel
     await this.checkLoginStatus();
-    
     this.createAnalysisPanel();
-    
-    // Keep panel visible after refresh
     this.showPanel();
   }
 
@@ -839,11 +2651,6 @@ class ReviewAIContentScript {
     ) {
       selectors = [...this.reviewSelectors.alibaba];
     } else if (
-      hostname.includes("aliexpress.com") ||
-      hostname.includes("aliexpress.")
-    ) {
-      selectors = [...this.reviewSelectors.aliexpress];
-    } else if (
       hostname.includes("newegg.com") ||
       hostname.includes("newegg.")
     ) {
@@ -913,31 +2720,6 @@ class ReviewAIContentScript {
         return true;
     }
 
-    if (hostname.includes("shein.")) {
-      if (
-        /^(translate|show original|translated by|see original|original review)$/i.test(text) ||
-        el.matches('button, a[class*="translate"], [class*="translation"]') ||
-        el.closest('[class*="translate"], [class*="translation"]') ||
-        (el.tagName === 'SPAN' && /^(Translate|Show original)$/i.test(text)) ||
-        el.parentElement?.className.toLowerCase().includes('translate') ||
-        el.classList.contains('rate-translate') ||
-        el.closest('.rate-translate')
-      ) {
-        return true;
-      }
-
-      if (text.length < 15 && /^(Translate|Show original|show|see|more)$/i.test(text)) {
-        return true;
-      }
-
-      if (
-        el.matches('button, a, span[role="button"]') &&
-        text.split(/\s+/).length <= 3
-      ) {
-        return true;
-      }
-    }
-
     const style = window.getComputedStyle(el);
     const isVisible =
       style.display !== "none" &&
@@ -983,9 +2765,6 @@ class ReviewAIContentScript {
       /^(\d+\.\d+|\d+)(\s*(stars?|out of|\/))$/i,
       /^(helpful|not helpful|yes|no|report)$/i,
       /^(by|from|posted|reviewed)?\s*[a-z\s]+\s*(ago|on)$/i,
-      /^(translate|translated|show original|see original|original review|translation by)$/i,
-      /^(translate this|show original text|see original review)$/i,
-      /^(google translate|bing translate|auto translate)$/i,
     ];
 
     return !nonReviewPatterns.some((pattern) =>
@@ -1521,13 +3300,13 @@ class ReviewAIContentScript {
   }
 
   togglePanel() {
-    const panel = document.getElementById("reviewai-panel");
+    const panel = this.shadow?.getElementById("reviewai-panel");
     if (panel) {
       if (panel.classList.contains("reviewai-hidden")) {
-        panel.classList.remove("reviewai-hidden");
+        this.showPanel();
         console.log("Panel shown");
       } else {
-        panel.classList.add("reviewai-hidden");
+        this.hidePanel();
         console.log("Panel hidden");
       }
     } else {
@@ -1535,47 +3314,38 @@ class ReviewAIContentScript {
     }
   }
 
-  async showPanel() {
-    const panel = document.getElementById("reviewai-panel");
-    
-    const productName = await this.getProductName();
-    const displayName = productName.length > 50 
-      ? productName.substring(0, 50) + "..." 
-      : productName;
-      
-    const productNameEl = panel.querySelector(".reviewai-product-name");
-    if (productNameEl) {
-      productNameEl.textContent = displayName;
-      productNameEl.title = productName;
-    }
-    
+  showPanel() {
+    const panel = this.shadow.getElementById("reviewai-panel");
     panel.classList.remove("reviewai-hidden");
+    this.panelHost.style.pointerEvents = "auto";
   }
 
   hidePanel() {
-    const panel = document.getElementById("reviewai-panel");
+    const panel = this.shadow.getElementById("reviewai-panel");
     panel.classList.add("reviewai-hidden");
+    this.panelHost.style.pointerEvents = "none";
   }
 
   switchTab(tabName) {
-    document.querySelectorAll(".reviewai-tab").forEach((tab) => {
+    this.shadow.querySelectorAll(".reviewai-tab").forEach((tab) => {
       tab.classList.remove("active");
     });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
+    this.shadow.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
 
-    document.querySelectorAll(".reviewai-tab-content").forEach((content) => {
+    this.shadow.querySelectorAll(".reviewai-tab-content").forEach((content) => {
       content.classList.remove("active");
     });
-    document.getElementById(`reviewai-${tabName}-tab`).classList.add("active");
+    this.shadow.getElementById(`reviewai-${tabName}-tab`).classList.add("active");
   }
 
   showLoading() {
-    document.getElementById("reviewai-loading").style.display = "flex";
+    this.shadow.getElementById("reviewai-loading").style.display = "flex";
   }
 
   hideLoading() {
-    document.getElementById("reviewai-loading").style.display = "none";
+    this.shadow.getElementById("reviewai-loading").style.display = "none";
   }
+
 
   getPlatformCode() {
     const hostname = window.location.hostname.toLowerCase();
@@ -1586,7 +3356,6 @@ class ReviewAIContentScript {
     if (hostname.includes("lazada.")) return "lazada";
     if (hostname.includes("flipkart.")) return "flipkart";
     if (hostname.includes("alibaba.") || hostname.includes("alibaba.")) return "alibaba";
-    if (hostname.includes("aliexpress.")) return "aliexpress";
     if (hostname.includes("shein.")) return "shein";
     if (hostname.includes("walmart.")) return "walmart";
     if (hostname.includes("newegg.")) return "newegg";
@@ -1609,7 +3378,7 @@ class ReviewAIContentScript {
     this.showLoading();
 
     const originalText = reviewText.trim();
-    const inputField = document.getElementById("reviewai-text-input");
+    const inputField = this.shadow.getElementById("reviewai-text-input");
     inputField.value = originalText;
 
     this.sendAnalysisRequest(originalText);
@@ -1617,8 +3386,7 @@ class ReviewAIContentScript {
 
   // Separate async method
   async sendAnalysisRequest(originalText) {
-    const inputField = document.getElementById("reviewai-text-input");
-    
+    const inputField = this.shadow.getElementById("reviewai-text-input");
     const productName = await this.getProductName();
     
     chrome.runtime.sendMessage(
@@ -1662,7 +3430,6 @@ class ReviewAIContentScript {
 
           this.displaySingleResult(response.data);
 
-          // Show save status
           if (response.data.user_logged_in) {
             this.showTempMessage("✅ Review saved to your account!");
           } else {
@@ -1704,7 +3471,7 @@ class ReviewAIContentScript {
 
   async updateBatchLimitDisplay() {
     const batchLimit = await this.fetchBatchLimit();
-    const displayEl = document.getElementById("reviewai-batch-limit-display");
+    const displayEl = this.shadow.getElementById("reviewai-batch-limit-display");
     if (displayEl) {
       displayEl.textContent = `Up to ${batchLimit} reviews per batch`;
     }
@@ -1741,7 +3508,7 @@ class ReviewAIContentScript {
       return;
     }
 
-    const statusEl = document.getElementById("reviewai-scrape-status");
+    const statusEl = this.shadow.getElementById("reviewai-scrape-status");
     statusEl.textContent = `Found ${reviewObjects.length} valid reviews. Analyzing...`;
 
     this.showLoading();
@@ -1782,7 +3549,7 @@ class ReviewAIContentScript {
     console.log("Confidence:", result.confidence);
     console.log("Probabilities:", result.probabilities);
 
-    const resultEl = document.getElementById("reviewai-single-result");
+    const resultEl = this.shadow.getElementById("reviewai-single-result");
 
     const prediction = result.prediction;
     const confidence = result.confidence;
@@ -1905,7 +3672,7 @@ class ReviewAIContentScript {
   }
 
   displayBatchResults(results) {
-    const resultEl = document.getElementById("reviewai-batch-result");
+    const resultEl = this.shadow.getElementById("reviewai-batch-result");
 
     if (!Array.isArray(results) || results.length === 0) {
       this.showError("No results received from batch analysis.");
@@ -2075,7 +3842,7 @@ class ReviewAIContentScript {
     const errorEl = document.createElement("div");
     errorEl.className = "reviewai-error-toast";
     errorEl.textContent = message;
-
+    
     document.body.appendChild(errorEl);
 
     setTimeout(() => {
@@ -2208,7 +3975,7 @@ class ReviewAIContentScript {
 
   async updatePatternStatus() {
     const hostname = window.location.hostname;
-    const statusEl = document.getElementById("reviewai-pattern-status");
+    const statusEl = this.shadow.getElementById("reviewai-pattern-status");
     if (!statusEl) return;
 
     const userPatterns = await this.getUserLearnedPatterns(hostname);
@@ -2305,9 +4072,7 @@ class ReviewAIContentScript {
 
     const countEl = document.getElementById("reviewai-selected-count");
     const modeStatusEl = document.getElementById("reviewai-mode-status");
-    const activeControlsEl = document.getElementById(
-      "reviewai-active-controls"
-    );
+    const activeControlsEl = document.getElementById("reviewai-active-controls");
     const instructionsEl = document.getElementById("reviewai-instructions");
 
     let selectedElements = [];
@@ -2547,7 +4312,7 @@ class ReviewAIContentScript {
 
   // Method 15: Better toast messages (NEW)
   showSelectionToast(message) {
-    const existing = document.getElementById("reviewai-selection-toast");
+    const existing = this.shadow.getElementById("reviewai-selection-toast");
     if (existing) existing.remove();
 
     const toast = document.createElement("div");
@@ -2569,7 +4334,7 @@ class ReviewAIContentScript {
     console.log("Exiting selection mode...");
 
     document.body.classList.remove("reviewai-selection-mode");
-    const style = document.getElementById("reviewai-selection-mode-styles");
+    const style = this.shadow.getElementById("reviewai-selection-mode-styles");
     if (style) style.remove();
 
     if (this.currentSelectionHandler) {
@@ -2583,13 +4348,13 @@ class ReviewAIContentScript {
     });
 
     // Clear toasts
-    const toast = document.getElementById("reviewai-selection-toast");
+    const toast = this.shadow.getElementById("reviewai-selection-toast");
     if (toast) toast.remove();
   }
 
   // Method 17: Hide user selection prompt (NEW)
   hideUserSelectionPrompt() {
-    const prompt = document.getElementById("reviewai-selection-prompt");
+    const prompt = this.shadow.getElementById("reviewai-selection-prompt");
     if (prompt) {
       prompt.style.animation = "reviewai-modal-disappear 0.3s ease-out";
       setTimeout(() => prompt.remove(), 300);
@@ -2681,7 +4446,7 @@ class ReviewAIContentScript {
   }
 
   showTempMessage(message) {
-    const existing = document.getElementById("reviewai-temp-message");
+    const existing = this.shadow.getElementById("reviewai-temp-message");
     if (existing) existing.remove();
 
     const msgEl = document.createElement("div");

@@ -24,6 +24,7 @@
         "*://*.ph.shein.com/*",
         "*://*.us.shein.com/*",
         "*://*.alibaba.com/*",
+        "*://*.aliexpress.com/*",
         "*://*.zalora.com.ph/*",
         "*://*.newegg.com/*",
         "*://*.walmart.com/*",
