@@ -1,6 +1,7 @@
 class ReviewAPIService {
   constructor() {
-    this.apiBaseUrl = "http://localhost:8000";
+    // this.apiBaseUrl = "http://localhost:8000";
+    this.apiBaseUrl = "https://wawuri07.pythonanywhere.com";
     this.endpoints = {
       analyzeSingle: "/api/analyze-review/",
       analyzeBatch: "/api/analyze-batch-reviews/",

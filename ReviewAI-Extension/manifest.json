@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Analyze and flag fake reviews using advanced NLP and machine learning models",
   "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
-  "host_permissions": ["https://*/*", "http://*/*"],
+  "host_permissions": ["https://wawuri07.pythonanywhere.com/*"],
   "background": {
     "service_worker": "background.js"
   },
