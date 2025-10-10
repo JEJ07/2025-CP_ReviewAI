@@ -1,6 +1,8 @@
+import { CONFIG } from "./config.js";
+
 class ReviewAPIService {
   constructor() {
-    this.apiBaseUrl = "http://localhost:8000";
+    this.apiBaseUrl = CONFIG.API_BASE_URL;
     this.endpoints = {
       analyzeSingle: "/api/analyze-review/",
       analyzeBatch: "/api/analyze-batch-reviews/",

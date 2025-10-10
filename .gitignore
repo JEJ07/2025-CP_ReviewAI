@@ -1,7 +1,10 @@
 
 env/
+.env
 .venv/
 venv/
+
+reviewai-extension/config.js
 
 reviewai/ml_models/
 # Python
