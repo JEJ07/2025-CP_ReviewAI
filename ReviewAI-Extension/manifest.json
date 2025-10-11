@@ -6,7 +6,8 @@
   "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
   "host_permissions": ["https://wawuri07.pythonanywhere.com/*"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
