@@ -11,7 +11,7 @@ class ReviewAIContentScript {
 
     this.reviewSelectors = {
       amazon: ['div[data-hook="review-collapsed"]', ".review-text-content"],
-      ebay: [".fdbk-container__details__comment"],
+      ebay: [".fdbk-container__details__comment", ".x-review-section__content"],
       flipkart: [".ZmyHeo", ".review-text"],
       shopee: [
         ".YNedDV",
