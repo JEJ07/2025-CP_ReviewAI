@@ -1,6 +1,8 @@
 from django.urls import path
-from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
+from . import views
 app_name = 'reviewai'
 
 urlpatterns = [
@@ -48,3 +50,5 @@ urlpatterns = [
     path('api/logout/', views.extension_logout, name='api_logout'),
     path('api/user-info/', views.extension_user_info, name='api_user_info'),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

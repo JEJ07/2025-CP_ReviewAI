@@ -254,8 +254,16 @@ def analyze_view(request):
                 "color": platform_meta[code]["color"],
                 "text_color": platform_meta[code]["text_color"],
             })
+            
+    video_filename = "tutorial/reviewai_installation.mp4"
+    video_path = os.path.join(settings.MEDIA_ROOT, video_filename)
 
-    return render(request, 'reviewai/analyze.html', {"stats": stats})
+    video_url = settings.MEDIA_URL + video_filename if os.path.exists(video_path) else None
+
+    return render(request, 'reviewai/analyze.html', {
+        "stats": stats,
+        "video_url": video_url,
+        })
 
 # api for review count ajax
 def review_count(request):
