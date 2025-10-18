@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from reviewai.views import log_activity
+
+
 from django.core.cache import cache
 import time
 from django.http import HttpResponseForbidden
@@ -13,6 +15,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import JsonResponse
 from django.utils import timezone
 import ipaddress
+from .forms import RegisterForm  
 
 
 def register_view(request):
@@ -20,7 +23,7 @@ def register_view(request):
         return redirect('reviewai:analyze')
 
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             username = form.cleaned_data.get('username')
@@ -35,8 +38,10 @@ def register_view(request):
             )
 
             return redirect('reviewai:analyze')
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
-        form = UserCreationForm()
+        form = RegisterForm()
 
     return render(request, 'users/register.html', {'form': form})
 
