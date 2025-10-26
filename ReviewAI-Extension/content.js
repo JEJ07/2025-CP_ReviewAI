@@ -312,7 +312,7 @@ class ReviewAIContentScript {
         <div class="reviewai-settings-section">          
           <div class="reviewai-setting-item">
             <button id="reviewai-teach-btn" class="reviewai-btn-primary">
-              Teach ReviewAI Where Reviews Are
+              Teach ReviewAI
             </button>
             <p class="reviewai-setting-desc">
               Train ReviewAI to find reviews on this website by selecting them manually.
@@ -383,14 +383,14 @@ class ReviewAIContentScript {
         <div id="reviewai-login-status" class="reviewai-status"></div>
         
         <div class="reviewai-login-help">
-          <p>Don't have an account? <a href="http://localhost:8000/users/register" target="_blank">Register here</a></p>
-          <p>Visit <a href="http://localhost:8000" target="_blank">ReviewAI Dashboard</a></p>
+          <p>Don't have an account? <a href="https://wawuri07.pythonanywhere.com/users/register/" target="_blank">Register here</a></p>
+          <p>Visit <a href="https://wawuri07.pythonanywhere.com" target="_blank">ReviewAI Dashboard</a></p>
         </div>
       </div>
     `;
   }
 
-  // Create logged in account HTML
+  // Create logged in account
   createLoggedInAccountHTML() {
     return `
       <div class="reviewai-account-info">
@@ -417,7 +417,7 @@ class ReviewAIContentScript {
         
         <div class="reviewai-account-actions">
           <button id="reviewai-logout-btn" class="reviewai-btn-danger">Logout</button>
-          <a href="http://localhost:8000/dashboard" target="_blank" class="reviewai-btn-secondary">Open Web Dashboard</a>
+          <a href="https://wawuri07.pythonanywhere.com/dashboard" target="_blank" class="reviewai-btn-secondary">Open Web Dashboard</a>
         </div>
         
         <div id="reviewai-account-status" class="reviewai-status"></div>
