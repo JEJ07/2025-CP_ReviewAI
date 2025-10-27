@@ -102,7 +102,7 @@
                                value="{{ form.email.value|default:'' }}"
                                placeholder="Enter your email"
                                class="w-full pl-10 px-4 py-3 border {% if form.email.errors %}border-red-300{% else %}border-gray-300{% endif %} rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
-                               required
+                               
                                autocomplete="email">
                     </div>
 
@@ -291,6 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     return true;
   }
+
 
   // Real-time validation while typing
   password1.addEventListener("input", validatePasswords);
