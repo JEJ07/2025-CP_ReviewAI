@@ -4,6 +4,7 @@
     <title>{% block title %}ReviewAI{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     {% load static %}
     {% block extra_css %}{% endblock %}
 </head>
@@ -303,8 +304,6 @@
     </div>
     {% endif %}
 
-    
-    
     <!-- Alpine.js for dropdown functionality -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
@@ -314,6 +313,26 @@
             const mobileMenu = document.getElementById('mobile-menu');
             mobileMenu.classList.toggle('hidden');
         }
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+        });
+
+        {% if messages %}
+            {% for message in messages %}
+            Toast.fire({
+                icon: "{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}",
+                title: "{{ message|escapejs }}"
+            });
+            {% endfor %}
+        {% endif %}
+        });
     </script>
 
     {% block extra_js %}{% endblock %}
