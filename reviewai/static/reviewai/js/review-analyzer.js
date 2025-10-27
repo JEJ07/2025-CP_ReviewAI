@@ -39,7 +39,17 @@ class ReviewAnalyzer {
 
     const reviewText = this.textarea.value.trim();
     if (!reviewText) {
-      alert("Please enter a review text");
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+      Toast.fire({
+        icon: "warning",
+        title: "Please enter a review text",
+      });
       return;
     }
 
