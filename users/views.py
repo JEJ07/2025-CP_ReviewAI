@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from reviewai.views import log_activity
-
+import re
 
 from django.core.cache import cache
 import time
@@ -246,19 +246,31 @@ def profile_view(request):
 
 @login_required
 def edit_profile_view(request):
+    user = request.user
+
     if request.method == 'POST':
-        # Get form data
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
         email = request.POST.get('email', '').strip()
-        
-        # Validate email uniqueness (if provided)
-        if email and User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+
+        # If no changes detected
+        if (first_name == user.first_name and
+            last_name == user.last_name and
+            email == user.email):
+            messages.info(request, 'No changes detected — your profile is already up to date.')
+            return redirect('users:edit_profile')
+
+        # Validate email format
+        if email and not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email):
+            messages.error(request, 'Please enter a valid email address.')
+            return render(request, 'users/edit_profile.html')
+
+        # Validate email uniqueness
+        if email and User.objects.filter(email=email).exclude(pk=user.pk).exists():
             messages.error(request, 'This email is already in use by another account.')
             return render(request, 'users/edit_profile.html')
-        
-        # Update user profile
-        user = request.user
+
+        # Save lng if may bagoo
         user.first_name = first_name
         user.last_name = last_name
         user.email = email
@@ -270,8 +282,8 @@ def edit_profile_view(request):
             description='User updated profile information',
             request=request
         )
-        
+
         messages.success(request, 'Your profile has been updated successfully!')
         return redirect('users:profile')
-    
+
     return render(request, 'users/edit_profile.html')

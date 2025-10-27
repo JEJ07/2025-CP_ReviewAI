@@ -110,4 +110,72 @@
         </div>
     </div>
 </div>
+
+<!-- VALIDATIONS -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector("form");
+    const firstNameInput = document.getElementById("first_name");
+    const lastNameInput = document.getElementById("last_name");
+    const emailInput = document.getElementById("email");
+
+    const initialData = {
+    first_name: firstNameInput.value.trim(),
+    last_name: lastNameInput.value.trim(),
+    email: emailInput.value.trim(),
+    };
+
+    const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+    });
+
+    form.addEventListener("submit", (e) => {
+    const firstName = firstNameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+    const email = emailInput.value.trim();
+
+    // no email 
+    if (!email) {
+        e.preventDefault();
+        Toast.fire({
+        icon: "warning",
+        title: "Email address cannot be empty",
+        });
+        emailInput.focus();
+        return;
+    }
+
+    // Email format validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        e.preventDefault();
+        Toast.fire({
+        icon: "error",
+        title: "Please enter a valid email address",
+        });
+        emailInput.focus();
+        return;
+    }
+
+    // Detect no changes
+    const hasChanges =
+        firstName !== initialData.first_name ||
+        lastName !== initialData.last_name ||
+        email !== initialData.email;
+
+    if (!hasChanges) {
+        e.preventDefault();
+        Toast.fire({
+        icon: "info",
+        title: "No changes detected",
+        });
+    }
+    });
+});
+</script>
+
 {% endblock %}
