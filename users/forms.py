@@ -1,6 +1,6 @@
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
@@ -43,4 +43,15 @@ class RegisterForm(UserCreationForm):
         validate_password(password2, self.instance)
 
         return password2
+    
+    
+class CustomPasswordResetForm(PasswordResetForm):
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+
+        # Check if the email exists in the database
+        if not User.objects.filter(email=email).exists():
+            raise forms.ValidationError("No account found with this email address.")
+
+        return email
     
