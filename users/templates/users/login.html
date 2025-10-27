@@ -181,7 +181,7 @@
                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"/>
             <label for="remember-me" class="ml-2 text-sm text-gray-700" id="remember-me-label">Remember me</label>
           </div>
-          <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">Forgot password?</a>
+          <a href="{% url 'users:password_reset' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500">Forgot password?</a>
         </div>
 
         <div id="remember-me-info" class="hidden bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-600">
