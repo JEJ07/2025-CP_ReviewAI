@@ -114,23 +114,44 @@
     
 
     <!-- SUPPORTED PLATFORMS -->
-  <section class=" py-16 border-t border-gray-100 text-center">
-    <div class="max-w-4xl mx-auto px-6">
+  <section class="py-16 border-t border-gray-100 text-center">
+    <div class="max-w-5xl mx-auto px-6">
       <h2 class="text-3xl font-bold text-gray-900 mb-4">Supported Platforms</h2>
-      <p class="text-gray-600 mb-8">ReviewAI works across all major e-commerce sites to help you shop smarter.</p>
+      <p class="text-gray-600 mb-10">
+        ReviewAI works across all major e-commerce sites to help you shop smarter.
+      </p>
 
-      <div class="flex flex-wrap justify-center gap-10">
-        <a href="https://www.shopee.ph" target="_blank" class="flex flex-col items-center">
-          <img src="{% static 'reviewai/images/shopee.png' %}" class="w-20 h-20 object-contain mb-2" alt="Shopee logo">
+      <div class="flex flex-wrap justify-center gap-10 sm:gap-12">
+        <a href="https://www.shopee.ph" target="_blank" 
+          class="flex flex-col items-center transform transition-transform duration-300 hover:scale-110 w-28 sm:w-32">
+          <img src="{% static 'reviewai/images/shopee.png' %}" 
+              class="w-20 h-20 object-contain mb-2 rounded-xl shadow-sm bg-white p-3" 
+              alt="Shopee logo">
           <span class="font-medium text-gray-700">Shopee</span>
         </a>
-        <a href="https://www.amazon.com" target="_blank" class="flex flex-col items-center">
-          <img src="{% static 'reviewai/images/amazon.png' %}" class="w-20 h-20 object-contain mb-2" alt="Amazon logo">
+
+        <a href="https://www.amazon.com" target="_blank" 
+          class="flex flex-col items-center transform transition-transform duration-300 hover:scale-110 w-28 sm:w-32">
+          <img src="{% static 'reviewai/images/amazon.png' %}" 
+              class="w-20 h-20 object-contain mb-2 rounded-xl shadow-sm bg-white p-3" 
+              alt="Amazon logo">
           <span class="font-medium text-gray-700">Amazon</span>
         </a>
-        <a href="https://www.lazada.com.ph" target="_blank" class="flex flex-col items-center">
-          <img src="{% static 'reviewai/images/laz.png' %}" class="w-20 h-20 object-contain mb-2" alt="Lazada logo">
+
+        <a href="https://www.lazada.com.ph" target="_blank" 
+          class="flex flex-col items-center transform transition-transform duration-300 hover:scale-110 w-28 sm:w-32">
+          <img src="{% static 'reviewai/images/laz.png' %}" 
+              class="w-20 h-20 object-contain mb-2 rounded-xl shadow-sm bg-white p-3" 
+              alt="Lazada logo">
           <span class="font-medium text-gray-700">Lazada</span>
+        </a>
+
+        <a href="https://www.ebay.com" target="_blank" 
+          class="flex flex-col items-center transform transition-transform duration-300 hover:scale-110 w-28 sm:w-32">
+          <img src="{% static 'reviewai/images/ebay.png' %}" 
+              class="w-20 h-20 object-contain mb-2 rounded-xl shadow-sm bg-white p-3" 
+              alt="Ebay logo">
+          <span class="font-medium text-gray-700">Ebay</span>
         </a>
       </div>
     </div>
