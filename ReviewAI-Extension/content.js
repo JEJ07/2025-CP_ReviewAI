@@ -14,7 +14,8 @@ class ReviewAIContentScript {
       ebay: [".fdbk-container__details__comment", ".x-review-section__content"],
       flipkart: [".ZmyHeo", ".review-text"],
       shopee: [
-        ".YNedDV",
+        // ".YNedDV",
+        ".meQyXP",
         // ".item"
       ],
       lazada: [".content", ".item-content-main-content"],
@@ -570,14 +571,12 @@ class ReviewAIContentScript {
       });
 
       if (response.success) {
-        // Login successful
         statusDiv.textContent = "Login successful! Refreshing...";
         statusDiv.className = "reviewai-status reviewai-success";
 
-        // Update local state FIRST
         this.isLoggedIn = true;
         this.currentUser = { 
-          username: response.data.username || username // Use returned username or fallback
+          username: response.data.username || username
         };
 
         // Get complete user info after login
@@ -591,7 +590,6 @@ class ReviewAIContentScript {
           }
         } catch (userInfoError) {
           console.warn("Failed to get user info:", userInfoError);
-          // Keep basic user info from login response
         }
 
         // Refresh the panel with updated state
@@ -619,7 +617,6 @@ class ReviewAIContentScript {
     const logoutBtn = document.getElementById("reviewai-logout-btn");
     const statusDiv = document.getElementById("reviewai-account-status");
 
-    // Show loading state
     logoutBtn.textContent = "Logging out...";
     logoutBtn.disabled = true;
     statusDiv.textContent = "Disconnecting...";
@@ -644,7 +641,6 @@ class ReviewAIContentScript {
       }, 1000);
 
     } catch (error) {
-      // Still logout locally even if API call fails
       this.isLoggedIn = false;
       this.currentUser = null;
       
@@ -665,12 +661,8 @@ class ReviewAIContentScript {
       panel.remove();
     }
     
-    // Check login status before recreating panel
     await this.checkLoginStatus();
-    
     this.createAnalysisPanel();
-    
-    // Keep panel visible after refresh
     this.showPanel();
   }
 
@@ -1251,7 +1243,7 @@ class ReviewAIContentScript {
         console.log(`DEBUG: Full className: "${fullClassName}"`);
 
         if (fullClassName) {
-          // ✅ STRATEGY 1: Try complete class combination first
+          // 1: Try complete class combination first
           const allClassesSelector = `.${fullClassName.replace(/\s+/g, ".")}`;
 
           try {
@@ -1278,7 +1270,7 @@ class ReviewAIContentScript {
             );
           }
 
-          // ✅ STRATEGY 2: If complete selector doesn't work, try individual classes
+          // 2: If complete selector doesn't work, try individual classes
           const classes = fullClassName.split(/\s+/);
           console.log(`DEBUG: Fallback to individual classes:`, classes);
 
@@ -1315,7 +1307,7 @@ class ReviewAIContentScript {
               `✅ Added BEST individual class: ${selector} (${bestScore} matches)`
             );
           } else {
-            // ✅ STRATEGY 3: Last resort - use first class
+            // 3: Last resort - use first class
             const selector = `.${classes[0]}`;
             selectors.add(selector);
             console.log(`⚠️ FALLBACK to first class: ${selector}`);
@@ -1595,7 +1587,7 @@ class ReviewAIContentScript {
     if (hostname.includes("carousell.")) return "carousell";
 
 
-    return "extension"; // Default for extension usage
+    return "extension";
   }
 
   analyzeSingleReview(reviewText) {
@@ -1972,7 +1964,7 @@ class ReviewAIContentScript {
         : "N/A";
 
       const link = result.link || "N/A";
-      const cleanedText = result.cleaned_text || result.text || "N/A"; // ✅ fallback to text
+      const cleanedText = result.cleaned_text || result.text || "N/A";
       const preview =
         cleanedText.substring(0, 100) + (cleanedText.length > 100 ? "..." : "");
 
@@ -2394,27 +2386,24 @@ class ReviewAIContentScript {
       );
     });
 
-    // Close modal completely
     const closeModal = () => {
       console.log("Closing modal...");
       this.exitSelectionMode();
       this.hideUserSelectionPrompt();
-      this.showPanel(); // Return to main panel
+      this.showPanel();
     };
 
     closeBtn.addEventListener("click", closeModal);
     closeHeaderBtn.addEventListener("click", closeModal);
   }
 
-  // Method 12: Setup improved selection handlers (COMPLETELY REWRITTEN)
+  // Setup improved selection handlers
   setupImprovedSelectionHandlers(selectedElements, countEl, finishBtn) {
     const selectionHandler = (e) => {
-      // Skip modal elements
       if (e.target.closest("#reviewai-selection-prompt")) {
-        return; // Let modal handle its own clicks
+        return;
       }
 
-      // Skip already selected elements
       if (e.target.classList.contains("reviewai-selected")) {
         this.showSelectionToast(
           "Already selected! Click on different review text."
@@ -2422,18 +2411,17 @@ class ReviewAIContentScript {
         return;
       }
 
-      // Validate selection target
       const element = e.target;
       const text = element.textContent.trim();
 
-      if (text.length < 10) {
+      if (text.length < 8) {
         this.showSelectionToast(
           "Text too short. Click on actual review content."
         );
         return;
       }
 
-      if (text.split(/\s+/).length < 8) {
+      if (text.split(/\s+/).length < 5) {
         this.showSelectionToast(
           "Need more substantial text. Click on full review paragraphs."
         );
@@ -2447,18 +2435,14 @@ class ReviewAIContentScript {
         return;
       }
 
-      // Valid selection - prevent event propagation and add to selection
       e.preventDefault();
       e.stopPropagation();
 
-      // Add to selection with visual feedback
       element.classList.add("reviewai-selected");
       selectedElements.push(element);
 
-      // Update UI
       countEl.textContent = selectedElements.length;
 
-      // Enable save button when we have enough selections
       if (selectedElements.length >= 1) {
         finishBtn.disabled = false;
         finishBtn.textContent = `Save Pattern (${selectedElements.length} reviews)`;
@@ -2466,7 +2450,6 @@ class ReviewAIContentScript {
         finishBtn.textContent = `Save Pattern`;
       }
 
-      // Success feedback
       this.showSelectionToast(
         `Review ${selectedElements.length} selected! ${
           selectedElements.length >= 1
@@ -2475,11 +2458,9 @@ class ReviewAIContentScript {
         }`
       );
 
-      // Add pulse effect to selected element
       element.style.animation = "reviewai-pulse 0.6s ease-out";
     };
 
-    // Add event listener
     document.addEventListener("click", selectionHandler, true);
     this.currentSelectionHandler = selectionHandler;
   }
@@ -2503,7 +2484,6 @@ class ReviewAIContentScript {
   }
 
   isValidSelectionTarget(element) {
-    // Skip ReviewAI elements
     if (
       element.closest("#reviewai-selection-prompt") ||
       element.closest("#reviewai-panel") ||
@@ -2542,10 +2522,10 @@ class ReviewAIContentScript {
       }
     }
 
-    return textNodes.length >= 1; // At least one substantial text node
+    return textNodes.length >= 1;
   }
 
-  // Method 15: Better toast messages (NEW)
+  // Toast messages
   showSelectionToast(message) {
     const existing = document.getElementById("reviewai-selection-toast");
     if (existing) existing.remove();
@@ -2582,12 +2562,11 @@ class ReviewAIContentScript {
       el.style.animation = "";
     });
 
-    // Clear toasts
     const toast = document.getElementById("reviewai-selection-toast");
     if (toast) toast.remove();
   }
 
-  // Method 17: Hide user selection prompt (NEW)
+  // Hide user selection prompt
   hideUserSelectionPrompt() {
     const prompt = document.getElementById("reviewai-selection-prompt");
     if (prompt) {
@@ -2596,7 +2575,7 @@ class ReviewAIContentScript {
     }
   }
 
-  // Method 18: Save user-learned patterns (UPDATED)
+  // Save user-learned patterns (UPDATED)
   async saveUserLearnedPattern(hostname, selectedElements) {
     console.log("🔵 saveUserLearnedPattern called with:", {
       hostname,
