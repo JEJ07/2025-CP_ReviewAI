@@ -12,7 +12,11 @@ urlpatterns = [
     path('developer-page', views.developer_page, name='developer_page'),
     path('blueprintdev', views.blueprint_developer_page, name='blueprintdeveloper_page'),
 
-    
+    # CHABOT FAQ
+    path("chatbot/", views.chatbot_view, name="chatbot"),
+    path("faq-list/", views.faq_list, name="faq_list"),
+    path('chatbot/initial-suggestions/', views.initial_suggestions, name='initial_suggestions'),
+
     path('predict/', views.predict_review, name='predict'),
     path('history/', views.review_history, name='history'),
     path('dashboard/', views.user_dashboard, name='user_dashboard'),

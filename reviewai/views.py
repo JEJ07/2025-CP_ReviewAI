@@ -31,16 +31,18 @@ from django.conf import settings
 from .models import Review, ReviewAnalysis
 from .utils.timezone_utils import convert_to_user_timezone, get_current_user_time
 from .utils.visualization import create_confusion_matrix_plot, create_performance_comparison_chart
-import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from matplotlib.figure import Figure
+from .models import FAQ
+import difflib
+from difflib import SequenceMatcher
+import random
 
 logger = logging.getLogger(__name__)
 
 
-import io
 from django.http import FileResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -51,7 +53,7 @@ from matplotlib.figure import Figure
 from .models import Review
 
 
-import io
+
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -63,7 +65,7 @@ from django.contrib.auth.models import User
 from datetime import datetime
 
 
-import io
+
 from datetime import datetime
 from django.http import FileResponse
 from reportlab.lib import colors
@@ -1468,4 +1470,82 @@ def extension_user_info(request):
             'success': False,
             'error': 'Failed to get user info'
         }, status=500)
+
+### CHATBOT FAQ
+def faq_list(request):
+    """Return all FAQs grouped by category"""
+    faqs = FAQ.objects.all().order_by('category')
+    grouped = {}
+
+    for faq in faqs:
+        if faq.category not in grouped:
+            grouped[faq.category] = []
+        grouped[faq.category].append({
+            "id": faq.id,
+            "question": faq.question,
+            "answer": faq.answer,
+        })
     
+    return JsonResponse(grouped)
+
+def initial_suggestions(request):
+    """Return a few random FAQ questions as initial chatbot prompts"""
+    faqs = list(FAQ.objects.all())
+    random.shuffle(faqs)
+    suggestions = [f.question for f in faqs[:3]]
+    return JsonResponse({"suggestions": suggestions})
+
+
+@csrf_exempt
+def chatbot_view(request):
+    """Handles user input & returns the best matching FAQ answer."""
+    if request.method == "POST":
+        data = json.loads(request.body)
+        message = data.get("message", "").strip().lower()
+
+        faqs = FAQ.objects.all()
+        best_match = None
+        highest_score = 0
+
+        # Fuzzy similarity matching to find closest FAQ
+        for faq in faqs:
+            score = SequenceMatcher(None, message, faq.question.lower()).ratio()
+            if score > highest_score:
+                highest_score = score
+                best_match = faq
+
+        # Consider anything above 0.4 as "good enough" match
+        if best_match and highest_score > 0.4:
+            category = best_match.category
+
+            # Related questions from same category
+            related_same = list(
+                FAQ.objects.filter(category=category).exclude(id=best_match.id)
+            )
+            random.shuffle(related_same)
+            related_same = related_same[:2]
+
+            # Add one random from another category to encourage flow
+            other_category = random.choice(
+                [c for c in FAQ.objects.values_list("category", flat=True).distinct() if c != category]
+            )
+            related_other = random.choice(list(FAQ.objects.filter(category=other_category)))
+
+            suggestions = [r.question for r in related_same]
+            suggestions.append(related_other.question)
+
+            response = {
+                "answer": best_match.answer,
+                "suggestions": suggestions,
+            }
+
+        else:
+            # No close match found
+            general_faqs = list(FAQ.objects.filter(category="general")[:3])
+            suggestions = [f.question for f in general_faqs]
+            response = {
+                "answer": "I'm sorry, I couldn’t find a direct match. Try one of these related questions:",
+                "suggestions": suggestions,
+            }
+
+        return JsonResponse(response)
