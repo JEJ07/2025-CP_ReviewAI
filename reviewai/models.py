@@ -88,3 +88,27 @@ class ActivityLog(models.Model):
         
     def __str__(self):
         return f"{self.user or 'Anonymous'} - {self.action} at {self.timestamp}"
+    
+
+### FAQ CHATBOT
+class FAQ(models.Model):
+    category_choices = [
+        ("general", "General"),
+        ("process", "Detection Process"),
+        ("models", "Models Used"),
+        ("data", "Data Sources"),
+        ("usage", "System Usage"),
+        ("nlp", "NLP"),
+        ("performance", "Performance"),
+        ("privacy", "Privacy"),
+        ("features", "Features"),
+        ("technology", "Technology"),
+        ("future", "Future Improvements"),
+    ]
+
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+    category = models.CharField(max_length=50, choices=category_choices, default="general")
+
+    def __str__(self):
+        return self.question
