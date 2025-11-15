@@ -15,6 +15,7 @@ import re
 from collections import Counter
 # from .utils.fake_review_detector import get_detector
 from .utils.fake_review_detector2 import get_detector
+from .utils.language_detector import is_english, get_language_error_message
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
@@ -299,6 +300,16 @@ def predict_review(request):
             }, status=400)
         
         detector_instance = get_detector()
+
+        is_eng, detected_lang = is_english(review_text)
+        if not is_eng:
+            error_msg = get_language_error_message(detected_lang)
+            return JsonResponse({
+                'error': error_msg,
+                'detected_language': detected_lang,
+                'supported_languages': ['en']
+            }, status=400)
+        
         result = detector_instance.predict_single_review(review_text)
         
         logger.info(f"Prediction completed for review length: {len(review_text)}")
@@ -947,6 +958,18 @@ def extension_predict(request):
         user = get_user_from_token(token) if token else None
         
         detector_instance = get_detector()
+
+        is_eng, detected_lang = is_english(review_text)
+        if not is_eng:
+            error_msg = get_language_error_message(detected_lang)
+            return JsonResponse({
+                'success': False,
+                'error': error_msg,
+                'detected_language': detected_lang,
+                'supported_languages': ['en'],
+                'status': 'error'
+            }, status=400)
+
         result = detector_instance.predict_single_review(review_text)
         
         try:
@@ -1034,6 +1057,7 @@ def extension_predict(request):
             logger.error(f"Extension database save failed: {save_error}")
         
         return JsonResponse({
+            'success': True,
             'prediction': result['prediction'],
             'confidence': result['confidence'],
             'probabilities': result['probabilities'],
@@ -1046,6 +1070,7 @@ def extension_predict(request):
     except Exception as e:
         logger.error(f"Extension prediction error: {str(e)}")
         return JsonResponse({
+            'success': False,
             'error': str(e)
         }, status=500)
 
@@ -1068,6 +1093,7 @@ def extension_batch_predict(request):
 
         detector_instance = get_detector()
         results = []
+        skipped = []
         
         platform = data.get('platform_name', 'extension')
         default_product = data.get('product_name', 'Unknown Product').strip()
@@ -1111,6 +1137,17 @@ def extension_batch_predict(request):
                     results.append({
                         'error': f'Empty review text at review {i+1}',
                         'prediction': 'error'
+                    })
+                    continue
+
+                is_eng, detected_lang = is_english(review_text)
+                if not is_eng:
+                    error_msg = get_language_error_message(detected_lang)
+                    logger.warning(f"Batch #{i+1}: Non-English review detected ({detected_lang})")
+                    skipped.append({
+                        'index': i,
+                        'reason': error_msg,
+                        'text': review_text[:100]
                     })
                     continue
 
@@ -1207,8 +1244,10 @@ def extension_batch_predict(request):
         logger.info(f"Batch processing completed. {len(results)} results generated.")
         return JsonResponse({
             'results': results,
+            'skipped': skipped,
             'user_logged_in': user is not None,
-            'total_processed': len(results)
+            'total_processed': len(results),
+            'total_skipped': len(skipped)
         }, safe=False)
         
     except Exception as e:
@@ -1231,6 +1270,17 @@ def extension_quick_analyze(request):
             }, status=400)
 
         detector_instance = get_detector()
+
+        is_eng, detected_lang = is_english(review_text)
+        if not is_eng:
+            error_msg = get_language_error_message(detected_lang)
+            return JsonResponse({
+                'error': error_msg,
+                'detected_language': detected_lang,
+                'supported_languages': ['en'],
+                'status': 'error'
+            }, status=400)
+        
         result = detector_instance.predict_single_review(review_text)
         
         logger.info(f"Quick analysis completed (not saved): {len(review_text)} chars")

@@ -18,7 +18,11 @@ class ReviewAIContentScript {
         ".meQyXP",
         // ".item"
       ],
-      lazada: [".content", ".item-content-main-content"],
+      lazada: [
+        // ".item-content-main-content",
+        ".item-content-main-content-reviews"
+
+      ],
       temu: ["._2EO0yd2j"],
       shein: [
         // ".rate-des",
@@ -1661,7 +1665,11 @@ class ReviewAIContentScript {
             this.showTempMessage("ℹ️ Review analyzed but not saved (not logged in)");
           }
         } else {
-          this.showError(`Analysis failed: ${response.error}`);
+          if (response.error) {
+            this.showError(response.error);
+          } else {
+            this.showError("Analysis failed. Please try again.");
+          }
         }
       }
     );
@@ -1753,6 +1761,21 @@ class ReviewAIContentScript {
 
         if (response.success) {
           const results = response.data.results || response.data;
+
+          if (results.length === 0 && response.data.skipped && response.data.skipped.length > 0) {
+            const firstSkipped = response.data.skipped[0];
+            this.showError(`All reviews were skipped: ${firstSkipped.reason}`);
+            return;
+          }
+
+          if (response.data.skipped && response.data.skipped.length > 0) {
+            const skippedCount = response.data.skipped.length;
+            const firstReason = response.data.skipped[0].reason;
+            this.showWarningMessage(
+              `⚠️ ${skippedCount} review(s) skipped: ${firstReason}`
+            );
+          }
+
           this.displayBatchResults(results);
 
           // Show save status
