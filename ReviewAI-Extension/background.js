@@ -14,7 +14,7 @@ class ReviewAPIService {
     };
   }
 
-  // NEW: Login method
+  // Login method
   async login(username, password) {
     try {
       const response = await fetch(`${this.apiBaseUrl}${this.endpoints.login}`, {
@@ -54,7 +54,7 @@ class ReviewAPIService {
     }
   }
 
-  // NEW: Logout method
+  // Logout method
   async logout() {
     try {
       const { authToken } = await chrome.storage.local.get(['authToken']);
@@ -85,7 +85,6 @@ class ReviewAPIService {
     }
   }
 
-  // NEW: Get current user info
   async getUserInfo() {
     try {
       const { authToken } = await chrome.storage.local.get(['authToken']);
@@ -116,7 +115,6 @@ class ReviewAPIService {
     }
   }
 
-  // NEW: Check if user is logged in
   async isLoggedIn() {
     try {
       const { authToken, loginTime } = await chrome.storage.local.get(['authToken', 'loginTime']);
@@ -140,7 +138,6 @@ class ReviewAPIService {
     }
   }
 
-  // UPDATED: Include token in review analysis
   async analyzeReview(reviewText, metadata = {}) {
     try {
       const { authToken } = await chrome.storage.local.get(['authToken']);
@@ -154,7 +151,6 @@ class ReviewAPIService {
         analysis_type: metadata.analysisType || 'single'
       };
 
-      // Add token if user is logged in
       if (authToken) {
         requestBody.token = authToken;
       }
@@ -194,7 +190,6 @@ class ReviewAPIService {
     }
   }
 
-  // UPDATED: Include token in batch analysis
   async analyzeBatchReviews(reviews, metadata = {}) {
     try {
       // Get auth token from storage
@@ -208,7 +203,6 @@ class ReviewAPIService {
         analysis_type: metadata.analysisType || 'batch'
       };
 
-      // Add token if user is logged in
       if (authToken) {
         requestBody.token = authToken;
       }
@@ -250,7 +244,6 @@ class ReviewAPIService {
     }
   }
 
-  // analyzeQuickReview and getBatchLimit remain the same...
   async analyzeQuickReview(reviewText) {
     try {
       const response = await fetch(
@@ -325,7 +318,6 @@ class ReviewAPIService {
 
 const apiService = new ReviewAPIService();
 
-// Existing context menu and message handlers...
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "analyzeSelectedReview",
@@ -355,7 +347,7 @@ function analyzeSelectedText(selectedText) {
   );
 }
 
-// UPDATED: Handle messages from content scripts (including new auth actions)
+// Handle messages from content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "analyzeReview") {
     const metadata = {
@@ -420,7 +412,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // NEW: Authentication actions
   if (request.action === "login") {
     apiService
       .login(request.username, request.password)
@@ -469,7 +460,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  // Existing settings actions...
   if (request.action === "getSettings") {
     chrome.storage.sync.get(
       ["apiUrl", "autoAnalyze", "showConfidence"],
