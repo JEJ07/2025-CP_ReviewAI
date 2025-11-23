@@ -3,6 +3,13 @@
   "name": "ReviewAI",
   "version": "1.0.0",
   "description": "Analyze and flag fake reviews using advanced NLP and machine learning models",
+  "icons": {
+    "16": "icons/reviewailogonobg.png",
+    "32": "icons/reviewailogonobg.png",
+    "48": "icons/reviewailogonobg.png",
+    "128": "icons/reviewailogonobg.png"
+  },
+
   "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
   "host_permissions": ["https://wawuri07.pythonanywhere.com/*"],
   "background": {
