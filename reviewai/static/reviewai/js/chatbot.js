@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // const AI_LOGO = "/static/reviewai/images/logo/reviewailogobluestarnobg.png";
+
     const toggleBtn = document.getElementById("chatbot-toggle");
     const chatbotBox = document.getElementById("chatbot-box");
     const closeBtn = document.getElementById("close-chatbot");
@@ -33,8 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
     async function loadCategorizedFAQs() {
         messages.innerHTML = `
             <div class='flex items-start gap-3 mb-4'>
-                <div class='flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm'>
-                    <span class='text-white text-sm font-semibold'>AI</span>
+                <div class="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden shadow-sm">
+                    <img src="${AI_LOGO}" class="w-full h-full object-cover">
                 </div>
                 <div class='bg-gradient-to-br from-blue-50 to-indigo-50 text-gray-800 p-4 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%] border border-blue-100'>
                     <p class='text-sm leading-relaxed'>
@@ -72,8 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 messages.innerHTML += `
                     <div class='flex items-start gap-3 mb-4'>
-                        <div class='flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm'>
-                            <span class='text-white text-sm font-semibold'>AI</span>
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden shadow-sm">
+                            <img src="${AI_LOGO}" class="w-full h-full object-cover">
+
                         </div>
                         <div class='bg-white p-4 rounded-2xl rounded-tl-sm shadow-md max-w-[85%] border border-gray-100'>
                             <div class='flex items-center gap-2 mb-3 pb-2 border-b border-gray-200'>
@@ -155,8 +158,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // Bot answer bubble
             messages.innerHTML += `
                 <div class='flex items-start gap-3 mb-4'>
-                    <div class='flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm'>
-                        <span class='text-white text-sm font-semibold'>AI</span>
+                    <div class='flex-shrink-0 w-8 h-8 rounded-full overflow-hidden shadow-sm'>
+                        <img src="${AI_LOGO}" class="w-full h-full object-cover">
                     </div>
                     <div class='bg-white text-gray-800 p-4 rounded-2xl rounded-tl-sm shadow-md max-w-[85%] border border-gray-200'>
                         <p class='text-sm leading-relaxed whitespace-pre-wrap'>${data.answer}</p>
