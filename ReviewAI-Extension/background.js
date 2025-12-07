@@ -11,6 +11,7 @@ class ReviewAPIService {
       login: "/api/login/",
       logout: "/api/logout/",
       userInfo: "/api/user-info/",
+      checkLanguage: "/api/check-language/",
     };
   }
 
@@ -314,6 +315,33 @@ class ReviewAPIService {
       throw error;
     }
   }
+
+  async checkLanguage(text) {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}${this.endpoints.checkLanguage}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ text: text }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Language check error:", error);
+      throw error;
+    }
+  }
 }
 
 const apiService = new ReviewAPIService();
@@ -474,6 +502,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.sync.set(request.settings, () => {
       sendResponse({ success: true });
     });
+    return true;
+  }
+  if (request.action === "checkLanguage") {
+    apiService
+      .checkLanguage(request.text)
+      .then((result) => {
+        sendResponse({ success: true, isEnglish: result.isEnglish });
+      })
+      .catch((error) => {
+        sendResponse({ success: false, error: error.message });
+      });
     return true;
   }
 });

@@ -954,7 +954,7 @@ class ReviewAIContentScript {
         return true;
       }
 
-      // ✅ IMPORTANT: Only accept elements that are actual review content
+      // Only accept elements that are actual review content
       if (!el.classList.contains("item-content-main-content-reviews") &&
           !el.closest(".item-content-main-content-reviews")) {
         console.log("Skipping non-review Lazada element:", text.substring(0, 50));
@@ -2226,15 +2226,47 @@ class ReviewAIContentScript {
 
       if (reviews.length === 0) {
         this.showError("No reviews detected with current patterns");
-      } else {
-        reviews.forEach((review, index) => {
-          review.style.outline = "3px solid #22c55e";
-          review.style.backgroundColor = "rgba(34, 197, 94, 0.1)";
+        return;
+      }
 
-          const badge = document.createElement("div");
-          badge.textContent = index + 1;
-          badge.className = "reviewai-badge";
-          badge.style.cssText = `
+      // Filter out non-English reviews
+      const validReviews = [];
+      
+      for (const review of reviews) {
+        const reviewText = this.extractReviewText(review);
+        
+        // Skip if text is too short
+        if (!reviewText || reviewText.trim().length < 20) {
+          console.warn("Skipping review with short text:", reviewText.substring(0, 50));
+          continue;
+        }
+        
+        try {
+          const isValid = await this.checkIfEnglish(reviewText);
+          if (isValid) {
+            validReviews.push(review);
+          } else {
+            console.log("Filtered Non-English review:", reviewText.substring(0, 50));
+          }
+        } catch (error) {
+          console.error("Language check failed, skipping review:", error);
+        }
+      }
+
+      if (validReviews.length === 0) {
+        this.showError("No English reviews detected. All reviews on this page are in other languages.");
+        return;
+      }
+
+      // Highlight only valid English reviews
+      validReviews.forEach((review, index) => {
+        review.style.outline = "3px solid #22c55e";
+        review.style.backgroundColor = "rgba(34, 197, 94, 0.1)";
+
+        const badge = document.createElement("div");
+        badge.textContent = index + 1;
+        badge.className = "reviewai-badge";
+        badge.style.cssText = `
           position: absolute;
           top: -10px;
           left: -10px;
@@ -2250,27 +2282,56 @@ class ReviewAIContentScript {
           font-size: 12px;
           z-index: 1000;
         `;
-          review.style.position = "relative";
-          review.appendChild(badge);
-        });
+        review.style.position = "relative";
+        review.appendChild(badge);
+      });
 
+      // Show accurate count with filtering info
+      const filteredCount = reviews.length - validReviews.length;
+      if (filteredCount > 0) {
         this.showSuccessMessage(
-          `Found ${reviews.length} reviews (highlighted in green)`
+          `Found ${validReviews.length} English reviews (${filteredCount} non-english reviews filtered out)`
         );
-
-        setTimeout(() => {
-          reviews.forEach((review) => {
-            review.style.outline = "";
-            review.style.backgroundColor = "";
-            const badge = review.querySelector(
-              "div[style*='position: absolute']"
-            );
-            if (badge) badge.remove();
-          });
-        }, 5000);
+      } else {
+        this.showSuccessMessage(
+          `Found ${validReviews.length} English reviews (highlighted in green)`
+        );
       }
+
+      setTimeout(() => {
+        validReviews.forEach((review) => {
+          review.style.outline = "";
+          review.style.backgroundColor = "";
+          const badge = review.querySelector(".reviewai-badge");
+          if (badge) badge.remove();
+        });
+      }, 5000);
+
     } catch (error) {
       this.showError("Error testing detection");
+    }
+  }
+
+  async checkIfEnglish(text) {
+    if (!text || text.trim().length < 20) {
+      return false;
+    }
+
+    try {
+      const response = await new Promise((resolve) => {
+        chrome.runtime.sendMessage(
+          {
+            action: "checkLanguage",
+            text: text.trim()
+          },
+          resolve
+        );
+      });
+
+      return response.success && response.isEnglish;
+    } catch (error) {
+      console.error("Language check error:", error);
+      return false; // skip if check fails
     }
   }
 

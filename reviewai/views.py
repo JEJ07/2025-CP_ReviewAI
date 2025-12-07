@@ -1523,7 +1523,6 @@ def extension_user_info(request):
 
 ### CHATBOT FAQ
 def faq_list(request):
-    """Return all FAQs grouped by category"""
     faqs = FAQ.objects.all().order_by('category')
     grouped = {}
 
@@ -1539,7 +1538,6 @@ def faq_list(request):
     return JsonResponse(grouped)
 
 def initial_suggestions(request):
-    """Return a few random FAQ questions as initial chatbot prompts"""
     faqs = list(FAQ.objects.all())
     random.shuffle(faqs)
     suggestions = [f.question for f in faqs[:3]]
@@ -1548,7 +1546,6 @@ def initial_suggestions(request):
 
 @csrf_exempt
 def chatbot_view(request):
-    """Handles user input & returns the best matching FAQ answer."""
     if request.method == "POST":
         data = json.loads(request.body)
         message = data.get("message", "").strip().lower()
@@ -1599,3 +1596,31 @@ def chatbot_view(request):
             }
 
         return JsonResponse(response)
+    
+@csrf_exempt
+@require_http_methods(["POST"])
+def check_language(request):
+    try:
+        data = json.loads(request.body)
+        text = data.get('text', '').strip()
+        
+        if not text:
+            return JsonResponse({
+                'success': False,
+                'error': 'Text is required'
+            }, status=400)
+
+        is_eng, detected_lang = is_english(text)
+        
+        return JsonResponse({
+            'success': True,
+            'isEnglish': is_eng,
+            'detectedLanguage': detected_lang
+        })
+        
+    except Exception as e:
+        logger.error(f"Language check error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

@@ -161,7 +161,7 @@ class FakeReviewDetector:
             if not processed_text:
                 raise ValueError("Review text becomes empty after preprocessing")
 
-            # --- Feature engineering for SVM/RF ---
+            # Feature engineering for SVM/RF
             text_tfidf = self.tfidf_vectorizer.transform([processed_text])
             extra_features = self._feature_engineering(processed_text, review_text)
             X = sparse.hstack([text_tfidf, sparse.csr_matrix(extra_features)])
@@ -174,7 +174,7 @@ class FakeReviewDetector:
             svm_proba = (e_x / e_x.sum(axis=1, keepdims=True))[0]
             rf_proba = self.rf_model.predict_proba(X)[0]
 
-            # --- DistilBERT probabilities ---
+            # DistilBERT probabilities
             inputs = self.tokenizer(
                 distilbert_text,
                 return_tensors="pt",
@@ -191,7 +191,7 @@ class FakeReviewDetector:
             if self.config['label_mapping']['distilbert_needs_flip']:
                 distilbert_proba = distilbert_proba[[1, 0]]
 
-            # --- Ensemble prediction ---
+            # Ensemble prediction
             ensemble_proba = (
                 self.weights[0] * svm_proba +
                 self.weights[1] * rf_proba +
@@ -239,9 +239,6 @@ class FakeReviewDetector:
         return results
     
     def get_model_performance(self):
-        """
-        Returns updated performance metrics for all models and ensemble
-        """
         return {
             'ensemble': {
                 'accuracy': 0.94,
@@ -294,9 +291,6 @@ class FakeReviewDetector:
         }
 
     def get_model_info(self):
-        """
-        Returns general model information
-        """
         return {
             'ensemble_config': self.config,
             'model_versions': {

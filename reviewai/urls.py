@@ -53,6 +53,8 @@ urlpatterns = [
     path('api/login/', views.extension_login, name='api_login'),
     path('api/logout/', views.extension_logout, name='api_logout'),
     path('api/user-info/', views.extension_user_info, name='api_user_info'),
+    path('api/check-language/', views.check_language, name='check_language'),
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
