@@ -20,7 +20,8 @@ class ReviewAIContentScript {
       ],
       lazada: [
         // ".item-content-main-content",
-        ".item-content-main-content-reviews"
+        // ".item-content-main-content-reviews",
+        ".item-content:not(:has(.seller-reply-wrapper-v2)) .item-content-main-content-reviews"
 
       ],
       temu: ["._2EO0yd2j"],
@@ -898,15 +899,67 @@ class ReviewAIContentScript {
     }
 
     if (hostname.includes("lazada.")) {
+      // Skip if it's inside seller reply wrapper
+      if (el.closest(".seller-reply-wrapper-v2")) {
+        console.log("Skipping Lazada seller reply (wrapper-v2):", text.substring(0, 50));
+        return true;
+      }
+
+      // Skip if element itself is the wrapper
+      if (el.classList.contains("seller-reply-wrapper-v2")) {
+        console.log("Skipping Lazada seller reply container:", text.substring(0, 50));
+        return true;
+      }
+
+      // Skip legacy class names (just in case)
+      if (
+        el.classList.contains("item-content--seller-reply") ||
+        el.closest(".item-content--seller-reply")
+      ) {
+        console.log("Skipping Lazada seller reply (legacy):", text.substring(0, 50));
+        return true;
+      }
+
+      // Skip if parent has seller reply indicator
       const parent = el.closest(".item-content");
-      if (!parent) return true;
-      if (parent.classList.contains("item-content--seller-reply")) return true;
+      if (parent && parent.querySelector(".seller-reply-wrapper-v2")) {
+        console.log("Skipping Lazada element with seller reply sibling:", text.substring(0, 50));
+        return true;
+      }
+
+      // Skip if it contains seller response keywords
+      const sellerIndicators = [
+        "seller response",
+        "seller reply",
+        "response from seller",
+        "seller's response",
+        "seller:",
+        "store response",
+        "merchant reply",
+        "seller feedback"
+      ];
+
+      const lowerText = text.toLowerCase();
+      if (sellerIndicators.some(indicator => lowerText.includes(indicator))) {
+        console.log("Skipping Lazada seller response (text match):", text.substring(0, 50));
+        return true;
+      }
+
+      // Skip if it's too short (likely not a review)
       if (
         /^\d+(\.\d+)?\s*stars?$/.test(text) ||
         /out of 5 stars/i.test(text) ||
-        text.split(/\s+/).length < 2
-      )
+        text.split(/\s+/).length < 3
+      ) {
         return true;
+      }
+
+      // ✅ IMPORTANT: Only accept elements that are actual review content
+      if (!el.classList.contains("item-content-main-content-reviews") &&
+          !el.closest(".item-content-main-content-reviews")) {
+        console.log("Skipping non-review Lazada element:", text.substring(0, 50));
+        return true;
+      }
     }
 
     if (hostname.includes("shein.")) {
