@@ -11,7 +11,10 @@ class ReviewAIContentScript {
 
     this.reviewSelectors = {
       amazon: ['div[data-hook="review-collapsed"]', ".review-text-content"],
-      ebay: [".fdbk-container__details__comment", ".x-review-section__content"],
+      ebay: [
+        ".fdbk-container__details__comment > span:first-child", 
+        ".x-review-section__content"
+      ],
       flipkart: [".ZmyHeo", ".review-text"],
       shopee: [
         // ".YNedDV",
@@ -945,7 +948,7 @@ class ReviewAIContentScript {
         return true;
       }
 
-      // Skip if it's too short (likely not a review)
+      // Skip if it's too short
       if (
         /^\d+(\.\d+)?\s*stars?$/.test(text) ||
         /out of 5 stars/i.test(text) ||
@@ -1004,12 +1007,12 @@ class ReviewAIContentScript {
   }
 
   isValidReview(reviewText, element) {
-    if (!reviewText || reviewText.length < 10) {
+    if (!reviewText || reviewText.length < 3) {
       return false;
     }
 
     const wordCount = reviewText.split(/\s+/).length;
-    if (wordCount < 2) {
+    if (wordCount < 1) {
       return false;
     }
 
@@ -1023,7 +1026,8 @@ class ReviewAIContentScript {
     const hasReviewContent = reviewPatterns.some((pattern) =>
       pattern.test(reviewText)
     );
-    if (!hasReviewContent && wordCount < 5) {
+    
+    if (wordCount < 5 && !hasReviewContent) {
       return false;
     }
 
@@ -1505,7 +1509,10 @@ class ReviewAIContentScript {
     const probabilities = result.probabilities;
 
     const isGenuine = prediction && prediction.toLowerCase() === "genuine";
-    const statusIcon = isGenuine ? "✅" : "⚠️";
+    
+    const iconType = this.getIconType(prediction, confidence);
+    const statusIcon = this.getStatusIcon(iconType, 16);
+    
     const confidenceColor = this.getConfidenceColor(
       prediction.toLowerCase(),
       confidence
@@ -1516,7 +1523,6 @@ class ReviewAIContentScript {
     );
     const confidenceDesc = this.getConfidenceDescription(confidence);
 
-    // Create circular progress
     const radius = 30;
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset =
@@ -1561,7 +1567,7 @@ class ReviewAIContentScript {
         </div>
         ${
           confidence < 0.6
-            ? `<div class="reviewai-low-confidence-warning" style="color:#6b7280;">⚠️ Low confidence result</div>`
+            ? `<div class="reviewai-low-confidence-warning" style="color:#6b7280;">${this.getStatusIcon('warning', 14)} Low confidence result</div>`
             : ""
         }
       </div>
@@ -1868,7 +1874,8 @@ class ReviewAIContentScript {
       statusClass = "reviewai-uncertain";
     }
 
-    const statusIcon = isGenuine ? "✅" : confidence >= 0.5 ? "⚠️" : "❓";
+    const iconType = this.getIconType(prediction, confidence);
+    const statusIcon = this.getStatusIcon(iconType, 24);
 
     const predictionLabel = this.getPredictionLabel(
       prediction.toLowerCase(),
@@ -1959,10 +1966,11 @@ class ReviewAIContentScript {
   }
 
   createLowConfidenceWarning() {
+    const warningIcon = this.getStatusIcon('warning', 20);
     return `
     <div class="reviewai-low-confidence-warning">
       <div class="reviewai-warning-content">
-        <span class="reviewai-warning-icon">⚠️</span>
+        <span class="reviewai-warning-icon">${warningIcon}</span>
         <div>
           <div class="reviewai-warning-title">Low Confidence Result</div>
           <div class="reviewai-warning-text">Consider getting additional opinions or manual review.</div>
@@ -2033,8 +2041,8 @@ class ReviewAIContentScript {
         statusClass = "reviewai-uncertain";
       }
 
-      const statusIcon =
-        prediction === "genuine" ? "✅" : confidence >= 0.5 ? "⚠️" : "❓";
+      const iconType = this.getIconType(prediction, confidence);
+      const statusIcon = this.getStatusIcon(iconType, 18);
       const confidenceDisplay = confidence
         ? (confidence * 100).toFixed(1)
         : "N/A";
@@ -2809,6 +2817,55 @@ class ReviewAIContentScript {
     setTimeout(() => {
       if (msgEl.parentNode) msgEl.remove();
     }, 3000);
+  }
+
+  // get status icon based on type and size
+  getStatusIcon(type, size = 20) {
+    const icons = {
+      genuine: `
+        <svg width="${size}" height="${size}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="9" fill="#22c55e" stroke="#16a34a" stroke-width="1"/>
+          <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `,
+      warning: `
+        <svg width="${size}" height="${size}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 2L2 17h16L10 2z" fill="#f59e0b" stroke="#d97706" stroke-width="1"/>
+          <path d="M10 8v4M10 14h.01" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      `,
+      error: `
+        <svg width="${size}" height="${size}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="9" fill="#ef4444" stroke="#dc2626" stroke-width="1"/>
+          <path d="M7 7l6 6M13 7l-6 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      `,
+      uncertain: `
+        <svg width="${size}" height="${size}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="9" fill="#6b7280" stroke="#4b5563" stroke-width="1"/>
+          <path d="M8 8c0-1.1.9-2 2-2s2 .9 2 2c0 1.1-.9 2-2 2v1M10 14h.01" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      `,
+      info: `
+        <svg width="${size}" height="${size}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="9" fill="#3b82f6" stroke="#2563eb" stroke-width="1"/>
+          <path d="M10 10v4M10 6h.01" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      `,
+    };
+    
+    return icons[type] || icons.uncertain;
+  }
+
+  // get icon type based on prediction and confidence
+  getIconType(prediction, confidence) {
+    const pred = prediction.toLowerCase();
+    const conf = parseFloat(confidence);
+    
+    if (pred === "genuine" && conf >= 0.75) return "genuine";
+    if (pred === "fake" && conf >= 0.75) return "error";
+    if (conf >= 0.6) return "warning";
+    return "uncertain";
   }
 }
 
