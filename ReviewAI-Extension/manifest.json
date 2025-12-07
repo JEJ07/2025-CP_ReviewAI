@@ -11,7 +11,7 @@
   },
 
   "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
-  "host_permissions": ["https://wawuri07.pythonanywhere.com/*"],
+  "host_permissions": ["http://www.reviewai.live/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
