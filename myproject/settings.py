@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 import environ
+from datetime import timedelta
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -61,6 +62,19 @@ LOCKOUT_TIME = 300  # 5 minutes in seconds
 # EXTENTION BATCH LIMIT
 REVIEWAI_BATCH_LIMIT = 20
 
+
+AXES_FAILURE_LIMIT = 5
+# AXES_COOLOFF_TIME = timedelta(hours=1)
+
+
+# For testing purposes
+AXES_COOLOFF_TIME = timedelta(minutes=1)
+
+
+
+
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -76,9 +90,11 @@ INSTALLED_APPS = [
     'users',
     'rest_framework',
     'rest_framework.authtoken',
+    'axes',
 ]
 
 MIDDLEWARE = [
+    'axes.middleware.AxesMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -88,7 +104,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',       # <--- REQUIRED for Axes
+    'django.contrib.auth.backends.ModelBackend', # Default Django auth backend
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
