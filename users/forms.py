@@ -3,6 +3,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(
@@ -32,17 +33,32 @@ class RegisterForm(UserCreationForm):
             raise forms.ValidationError("Email is already registered.")
         return email
 
-    def clean_password2(self):
-        password1 = self.cleaned_data.get("password1")
-        password2 = self.cleaned_data.get("password2")
+    def clean(self):
+        cleaned_data = super().clean()
+        username = cleaned_data.get("username")
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
 
-        if password1 and password2 and password1 != password2:
-            raise forms.ValidationError("Passwords do not match.")
+        if password1 and password2:
+            # Passwords do not match
+            if password1 != password2:
+                self.add_error("password1", "Passwords do not match.")
+                self.add_error("password2", "Passwords do not match.")
 
-        
-        validate_password(password2, self.instance)
+            # Password same as username
+            if username and password1.lower() == username.lower():
+                self.add_error("password1", "Password cannot be the same as your username.")
+                self.add_error("password2", "Password cannot be the same as your username.")
 
-        return password2
+            # Django password validation
+            try:
+                validate_password(password2, self.instance)
+            except forms.ValidationError as e:
+                for msg in e.messages:
+                    self.add_error("password1", msg)
+                    self.add_error("password2", msg)
+
+        return cleaned_data
     
     
 class CustomPasswordResetForm(PasswordResetForm):

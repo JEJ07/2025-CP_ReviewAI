@@ -26,6 +26,10 @@ def register_view(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
+            
+            # set the authentication backend manually
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            
             username = form.cleaned_data.get('username')
             login(request, user)
             messages.success(request, f'Welcome, {username}! Your account was created successfully.')
