@@ -5,360 +5,513 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<!-- Stats Cards -->
-<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-    <!-- Total Reviews -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-1l-4 4z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Total Reviews</dt>
-                        <dd class="text-3xl font-semibold text-gray-900">{{ total_reviews }}</dd>
-                    </dl>
-                </div>
-            </div>
+<!-- Stats Cards Section -->
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Overview</h2>
+            <p class="text-sm text-gray-600 mt-1">Real-time insights and analytics</p>
+        </div>
+        <div class="mt-3 sm:mt-0">
+            <button id="exportPdfBtn" 
+                class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Export as PDF
+            </button>
         </div>
     </div>
-
-    <!-- Fake Reviews -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Fake Reviews</dt>
-                        <dd class="text-3xl font-semibold text-gray-900">{{ fake_count }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Genuine Reviews -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Genuine Reviews</dt>
-                        <dd class="text-3xl font-semibold text-gray-900">{{ genuine_count }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Active Users -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Active Users</dt>
-                        <dd class="text-3xl font-semibold text-gray-900">{{ total_users }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a4 4 0 118 0v4m-8 12V7a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2H10a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Guest Reviews</dt>
-                        <dd class="text-3xl font-semibold text-gray-900">{{ guest_reviews_count }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Web App Reviews -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Web App Reviews</dt>
-                        <dd class="text-3xl font-semibold text-gray-900">{{ web_reviews_count }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Extension Reviews -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-teal-500 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Extension Reviews</dt>
-                        <dd class="text-3xl font-semibold text-gray-900">{{ extension_reviews_count }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-    <div>
-        <button id="exportPdfBtn" 
-            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-            Export as PDF
-        </button>
-    </div>
-
-<!--Common words-->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
     
-    {% if wordcloud_image %}
-    <div class="bg-white shadow rounded-lg p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4 text-center">Common Words in Fake Reviews</h3>
-        <img src="data:image/png;base64,{{ wordcloud_image }}" alt="Word Cloud" class="mx-auto rounded-lg shadow">
-
-        <!-- Legend / Explanation -->
-        <div class="mt-4 text-center text-sm text-gray-600">
-            <p><span class="font-semibold">Legend:</span> 
-                Bigger words = appear more often in fake reviews. 
-                Smaller words = less common.
-            </p>
-        </div>
-
-        <!-- Recent Review Activity Chart -->
-        <div class="bg-slate-100 shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4 text-center">Recent Review Activity</h3>
-                <canvas id="reviewActivityChart" height="120"></canvas>
-                <script>
-                    const labels = [{% for day in daily_data %}'{{ day.date }}',{% endfor %}];
-                    const data = [{% for day in daily_data %}{{ day.total }},{% endfor %}];
-                    const ctx = document.getElementById('reviewActivityChart').getContext('2d');
-                    new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: 'Reviews',
-                                data: data,
-                                backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                                borderRadius: 6,
-                            }]
-                        },
-                        options: {
-                            plugins: {
-                                legend: { display: false }
-                            },
-                            scales: {
-                                x: { grid: { display: false } },
-                                y: { beginAtZero: true, grid: { color: '#f3f4f6' } }
-                            }
-                        }
-                    });
-                </script>
-                <div class="mt-4 pt-3 border-t border-gray-200 text-center">
-                            <p class="text-xs text-gray-500">
-                                Total: {{ daily_data|length }} day{{ daily_data|length|pluralize }} with activity
-                            </p>
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- Total Reviews Card -->
+        <div class="bg-gradient-to-br from-white to-blue-50 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Reviews</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ total_reviews }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-1l-4 4z"></path>
+                            </svg>
                         </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Top Platforms Pie Chart -->
-<div class="bg-white shadow rounded-lg">
-    <div class="px-4 py-5 sm:p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Top Platforms</h3>
-        <canvas id="platformsPieChart" height="180"></canvas>
-        <script>
-            const platformLabels = [{% for p in top_platforms %}'{{ p.platform|title }}',{% endfor %}];
-            const platformCounts = [{% for p in top_platforms %}{{ p.count }},{% endfor %}];
-            const platformColors = [
-                'rgba(59,130,246,0.7)',   // blue
-                'rgba(16,185,129,0.7)',   // green
-                'rgba(239,68,68,0.7)',    // red
-                'rgba(251,191,36,0.7)',   // yellow
-                'rgba(139,92,246,0.7)'    // purple
-            ];
-            const ctxPlatform = document.getElementById('platformsPieChart').getContext('2d');
-            new Chart(ctxPlatform, {
-                type: 'pie',
-                data: {
-                    labels: platformLabels,
-                    datasets: [{
-                        data: platformCounts,
-                        backgroundColor: platformColors.slice(0, platformLabels.length),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
-        </script>
-        <div class="mt-4 flex flex-wrap gap-4 justify-center">
-            {% for p in top_platforms %}
-            <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold shadow">
-                {{ p.platform|title }} <span class="ml-2 bg-gray-200 text-gray-600 rounded-full px-2 py-0.5 text-xs font-medium">{{ p.count }}</span>
-            </span>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-</div>
-
-<!-- System Overview -->
-<div class="bg-white shadow rounded-lg mb-8">
-    <div class="px-4 py-5 sm:p-6">
-        <h3 class="text-lg font-medium text-gray-900  text-center">System Overview</h3>
-        <div class="grid grid-cols-2 gap-4 text-center">
-            <div>
-                <div class="text-2xl font-bold text-blue-600">
-                    {% if total_reviews > 0 %}
-                        {% widthratio genuine_count total_reviews 100 %}%
-                    {% else %}
-                        0%
-                    {% endif %}
+                    </div>
                 </div>
-                <div class="text-sm text-gray-500">Genuine Rate</div>
             </div>
-            <div>
-                <div class="text-2xl font-bold text-red-600">
-                    {% if total_reviews > 0 %}
-                        {% widthratio fake_count total_reviews 100 %}%
-                    {% else %}
-                        0%
-                    {% endif %}
+        </div>
+
+        <!-- Fake Reviews Card -->
+        <div class="bg-gradient-to-br from-white to-red-50 rounded-xl border border-red-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Fake Reviews</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ fake_count }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                        <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
-                <div class="text-sm text-gray-500">Fake Rate</div>
+            </div>
+        </div>
+
+        <!-- Genuine Reviews Card -->
+        <div class="bg-gradient-to-br from-white to-green-50 rounded-xl border border-green-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Genuine Reviews</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ genuine_count }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Users Card -->
+        <div class="bg-gradient-to-br from-white to-purple-50 rounded-xl border border-purple-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Users</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ total_users }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats Cards (Row 2) -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mt-5">
+        <!-- Guest Reviews Card -->
+        <div class="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Guest Reviews</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ guest_reviews_count }}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <div class="w-6 h-6 bg-orange-500 rounded-md flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a4 4 0 118 0v4m-8 12V7a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2H10a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Web App Reviews Card -->
+        <div class="bg-gradient-to-br from-white to-indigo-50 rounded-xl border border-indigo-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Web App Reviews</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ web_reviews_count }}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <div class="w-6 h-6 bg-indigo-500 rounded-md flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extension Reviews Card -->
+        <div class="bg-gradient-to-br from-white to-teal-50 rounded-xl border border-teal-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Extension Reviews</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ extension_reviews_count }}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                        <div class="w-6 h-6 bg-teal-500 rounded-md flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Left Column -->
+    <div class="space-y-6">
+        <!-- Common Words in Fake Reviews -->
+        {% if wordcloud_image %}
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800">Common Words in Fake Reviews</h3>
+                <p class="text-sm text-gray-600 mt-1">Most frequent words appearing in fake reviews</p>
+            </div>
+            <div class="p-5">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <img src="data:image/png;base64,{{ wordcloud_image }}" alt="Word Cloud" class="mx-auto rounded-lg max-h-64">
+                </div>
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-sm text-blue-700">
+                            <span class="font-semibold">Legend:</span> Word size indicates frequency. Larger words appear more often in fake reviews.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
+        <!-- System Overview -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800">System Overview</h3>
+                <p class="text-sm text-gray-600 mt-1">Review authenticity distribution</p>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="text-center p-4 bg-green-50 rounded-lg border border-green-100">
+                        <div class="text-3xl font-bold text-green-600">
+                            {% if total_reviews > 0 %}
+                                {% widthratio genuine_count total_reviews 100 %}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                        <div class="text-sm font-medium text-gray-700 mt-2">Genuine Rate</div>
+                        <div class="mt-3">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" 
+                                     style="width: {% if total_reviews > 0 %}{% widthratio genuine_count total_reviews 100 %}%{% else %}0%{% endif %}"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center p-4 bg-red-50 rounded-lg border border-red-100">
+                        <div class="text-3xl font-bold text-red-600">
+                            {% if total_reviews > 0 %}
+                                {% widthratio fake_count total_reviews 100 %}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                        <div class="text-sm font-medium text-gray-700 mt-2">Fake Rate</div>
+                        <div class="mt-3">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-red-500 h-2 rounded-full" 
+                                     style="width: {% if total_reviews > 0 %}{% widthratio fake_count total_reviews 100 %}%{% else %}0%{% endif %}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Right Column -->
+    <div class="space-y-6">
+        <!-- Top Platforms -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Top Platforms</h3>
+                        <p class="text-sm text-gray-600 mt-1">Review distribution by platform</p>
+                    </div>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+                        {{ top_platforms|length }} Platforms
+                    </span>
+                </div>
+            </div>
+            <div class="p-5">
+                <div class="flex flex-col lg:flex-row items-center">
+                    <div class="w-full lg:w-1/2 mb-6 lg:mb-0">
+                        <canvas id="platformsPieChart" height="200"></canvas>
+                    </div>
+                    <div class="w-full lg:w-1/2 lg:pl-6">
+                        <div class="space-y-3">
+                            {% for p in top_platforms %}
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 rounded-full mr-3" 
+                                         style="background-color: rgba(59,130,246,0.{% cycle '7' '8' '9' '6' '5' %})"></div>
+                                    <span class="font-medium text-gray-700">{{ p.platform|title }}</span>
+                                </div>
+                                <span class="font-bold text-gray-800">{{ p.count }} reviews</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Review Activity -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Review Activity</h3>
+                <p class="text-sm text-gray-600 mt-1">Daily review submission trends</p>
+            </div>
+            <div class="p-5">
+                <canvas id="reviewActivityChart" height="140"></canvas>
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <div class="flex items-center justify-center">
+                        <span class="text-sm text-center text-gray-600">
+                            Last {{ daily_data|length }} day{{ daily_data|length|pluralize }} of activity
+                        </span>
+                        {% comment %} <span class="text-sm font-medium text-blue-600">
+                            {% with total_reviews=0 %}
+                                {% for day in daily_data %}
+                                    {% widthratio day.total 1 1 as day_total %}
+                                    {% with total_reviews=total_reviews|add:day_total %}
+                                    {% endwith %}
+                                {% endfor %}
+                                {{ total_reviews }} total reviews
+                            {% endwith %}
+                        </span> {% endcomment %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Recent Reviews Section -->
-<div class="bg-white shadow rounded-lg">
-    <div class="px-4 py-5 sm:p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Recent Reviews</h3>
-            <a href="{% url 'reviewai:admin_history' %}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                View all →
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">Recent Reviews</h3>
+                <p class="text-sm text-gray-600 mt-1">Latest analyzed reviews</p>
+            </div>
+            <a href="{% url 'reviewai:admin_history' %}" 
+               class="inline-flex items-center px-4 py-2 mt-3 sm:mt-0 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg hover:from-indigo-700 hover:to-blue-700 transition-all duration-200">
+                View All
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
             </a>
         </div>
-        
+    </div>
+    
+    <div class="divide-y divide-gray-100">
         {% if recent_reviews %}
-            <div class="space-y-4">
-                {% for review in recent_reviews %}
-                    {% with analysis=review.analyses.first %}
-                    <div class="border-l-4 {% if analysis.result == 'fake' or analysis.result == 'likely_fake' %}border-red-400{% elif analysis.result == 'genuine' or analysis.result == 'likely_genuine' %}border-green-400{% else %}border-yellow-400{% endif %} pl-4 py-2">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <h4 class="text-sm font-medium text-gray-900">{{ review.product_name }}</h4>
-                                <p class="text-sm text-gray-600 mt-1">"{{ review.review_text|truncatechars:100 }}"</p>
-                                <div class="flex items-center mt-2 space-x-4">
-                                    {% if analysis %}
-                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
-                                        {% if analysis.result == 'fake' or analysis.result == 'likely_fake' %}bg-red-100 text-red-800
-                                        {% elif analysis.result == 'genuine' or analysis.result == 'likely_genuine' %}bg-green-100 text-green-800
-                                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                                        {{ analysis.get_result_display }}
-                                    </span>
-                                    <span class="text-xs text-gray-500">{{ analysis.confidence_percentage }} confidence</span>
-                                    {% endif %}
-                                    <span class="text-xs text-gray-500">
-                                        {% if review.user %}by {{ review.user.username }}{% else %}by Guest{% endif %} • {{ review.local_created_at|timesince }} ago
-                                    </span>
+            {% for review in recent_reviews %}
+                {% with analysis=review.analyses.first %}
+                <div class="p-5 hover:bg-gray-50 transition-colors duration-150">
+                    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                                        {% if analysis.result == 'fake' or analysis.result == 'likely_fake' %}
+                                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        {% elif analysis.result == 'genuine' or analysis.result == 'likely_genuine' %}
+                                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        {% else %}
+                                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <h4 class="font-medium text-gray-900">{{ review.product_name }}</h4>
+                                        {% if analysis %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            {% if analysis.result == 'fake' or analysis.result == 'likely_fake' %}bg-red-100 text-red-800
+                                            {% elif analysis.result == 'genuine' or analysis.result == 'likely_genuine' %}bg-green-100 text-green-800
+                                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                            {{ analysis.get_result_display }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-sm text-gray-600 line-clamp-2">"{{ review.review_text|truncatechars:150 }}"</p>
+                                    <div class="flex flex-wrap items-center gap-4 mt-3">
+                                        <span class="inline-flex items-center text-xs text-gray-500">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            {{ review.local_created_at|timesince }} ago
+                                        </span>
+                                        <span class="inline-flex items-center text-xs text-gray-500">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                            {% if review.user %}{{ review.user.username }}{% else %}Guest{% endif %}
+                                        </span>
+                                        {% if analysis %}
+                                        <span class="inline-flex items-center text-xs font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            {{ analysis.confidence_percentage }}% confidence
+                                        </span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {% endwith %}
-                {% endfor %}
-            </div>
+                </div>
+                {% endwith %}
+            {% endfor %}
         {% else %}
-            <div class="text-center py-8">
-                <div class="text-gray-400 text-3xl mb-3">💬</div>
+            <div class="p-10 text-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-1l-4 4z"></path>
+                    </svg>
+                </div>
                 <h4 class="text-sm font-medium text-gray-900">No Recent Reviews</h4>
-                <p class="text-xs text-gray-500 mt-1">Recent reviews will appear here when users analyze reviews</p>
+                <p class="text-xs text-gray-500 mt-1 max-w-sm mx-auto">Reviews will appear here once users start analyzing content</p>
             </div>
         {% endif %}
     </div>
 </div>
 
+<!-- Chart Scripts -->
 <script>
-document.getElementById("exportPdfBtn").addEventListener("click", function() {
-    Swal.fire({
-        title: 'Export Dashboard',
-        text: "Do you want to export this dashboard as PDF?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#4F46E5', 
-        cancelButtonColor: '#6B7280', 
-        confirmButtonText: 'Yes, Export',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = "{% url 'reviewai:export_dashboard_pdf' %}";
+    // Top Platforms Pie Chart
+    const platformLabels = [{% for p in top_platforms %}'{{ p.platform|title }}',{% endfor %}];
+    const platformCounts = [{% for p in top_platforms %}{{ p.count }},{% endfor %}];
+    const platformColors = [
+        'rgba(59,130,246,0.8)',   // blue
+        'rgba(16,185,129,0.8)',   // green
+        'rgba(239,68,68,0.8)',    // red
+        'rgba(251,191,36,0.8)',   // yellow
+        'rgba(139,92,246,0.8)'    // purple
+    ];
+    
+    const ctxPlatform = document.getElementById('platformsPieChart').getContext('2d');
+    new Chart(ctxPlatform, {
+        type: 'doughnut',
+        data: {
+            labels: platformLabels,
+            datasets: [{
+                data: platformCounts,
+                backgroundColor: platformColors.slice(0, platformLabels.length),
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            cutout: '60%',
+            plugins: {
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
         }
     });
-});
+
+    // Recent Review Activity Chart
+    const labels = [{% for day in daily_data %}'{{ day.date }}',{% endfor %}];
+    const data = [{% for day in daily_data %}{{ day.total }},{% endfor %}];
+    const ctx = document.getElementById('reviewActivityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Reviews',
+                data: data,
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { 
+                    grid: { display: false },
+                    ticks: { color: '#6b7280' }
+                },
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: 'rgba(243, 244, 246, 1)' },
+                    ticks: { color: '#6b7280' }
+                }
+            }
+        }
+    });
+
+    // Export PDF Button
+    document.getElementById("exportPdfBtn").addEventListener("click", function() {
+        Swal.fire({
+            title: 'Export Dashboard',
+            text: "Do you want to export this dashboard as PDF?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4F46E5', 
+            cancelButtonColor: '#6B7280', 
+            confirmButtonText: 'Yes, Export',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{% url 'reviewai:export_dashboard_pdf' %}";
+            }
+        });
+    });
 </script>
 
+<style>
+    .line-clamp-2 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+</style>
 {% endblock %}
