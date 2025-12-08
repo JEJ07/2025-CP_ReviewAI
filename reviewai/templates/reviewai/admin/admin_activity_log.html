@@ -7,39 +7,72 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900">Activity Log</h2>
-            <p class="text-gray-600">System activity tracking ({{ total_logs }} total entries)</p>
+            <h2 class="text-2xl font-bold text-gray-800">Activity Log</h2>
+            <div class="flex items-center gap-2 mt-1">
+                <p class="text-sm text-gray-600">Complete system activity tracking</p>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{ total_logs }} total entries
+                </span>
+            </div>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
-        <form method="GET" class="flex flex-wrap gap-4">
-            <div class="flex-1 min-w-48">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Action Type</label>
-                <select name="action" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option value="">All Actions</option>
-                    {% for choice in action_choices %}
-                        <option value="{{ choice.0 }}" {% if current_action_filter == choice.0 %}selected{% endif %}>
-                            {{ choice.1 }}
-                        </option>
-                    {% endfor %}
-                </select>
+    <!-- Filters Card -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <form method="GET" class="flex flex-col lg:flex-row lg:items-end gap-4">
+            <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Action Type Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Action Type</label>
+                    <div class="relative">
+                        <select name="action" class="appearance-none w-full bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 px-4 py-2.5 pr-8">
+                            <option value="">All Actions</option>
+                            {% for choice in action_choices %}
+                                <option value="{{ choice.0 }}" {% if current_action_filter == choice.0 %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- User Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">User Search</label>
+                    <div class="relative">
+                        <input type="text" name="user" value="{{ current_user_filter|default:'' }}" 
+                               placeholder="Enter username..." 
+                               class="w-full bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 px-4 py-2.5">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="flex-1 min-w-48">
-                <label class="block text-sm font-medium text-gray-700 mb-2">User</label>
-                <input type="text" name="user" value="{{ current_user_filter|default:'' }}" 
-                       placeholder="Username..." class="w-full border border-gray-300 rounded-md px-3 py-2">
-            </div>
-            
-            <div class="flex items-end">
-                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
-                    Filter
+            <!-- Action Buttons -->
+            <div class="flex gap-2">
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                    Apply Filters
                 </button>
-                <a href="{% url 'reviewai:admin_activity_log' %}" class="ml-2 bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600">
+                <a href="{% url 'reviewai:admin_activity_log' %}" 
+                   class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
                     Clear
                 </a>
             </div>
@@ -47,98 +80,217 @@
     </div>
 
     <!-- Activity Log Table -->
-    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Action
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Description
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        IP Address
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Timestamp
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% for log in logs %}
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            {% if log.user %}
-                                <div class="text-sm font-medium text-gray-900">{{ log.user.username }}</div>
-                                <div class="text-sm text-gray-500">{{ log.user.first_name }} {{ log.user.last_name }}</div>
-                            {% else %}
-                                <div class="text-sm text-gray-500 italic">Guest</div>
-                            {% endif %}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                            {% if log.action == 'login' %}bg-green-100 text-green-800
-                            {% elif log.action == 'logout' %}bg-red-100 text-red-800
-                            {% elif log.action == 'analysis' %}bg-blue-100 text-blue-800
-                            {% elif log.action == 'batch_analysis' %}bg-purple-100 text-purple-800
-                            {% else %}bg-gray-100 text-gray-800{% endif %}">
-                            {{ log.get_action_display }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900">{{ log.description|truncatechars:100 }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ log.ip_address|default:"-" }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ log.local_timestamp|date:"M d, Y" }}</div>
-                        <div class="text-sm text-gray-500">{{ log.local_timestamp|date:"H:i:s" }}</div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                        No activity logs found.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800">Activity Entries</h3>
+            <p class="text-sm text-gray-600 mt-1">Detailed system activity records</p>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            User
+                        </th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Action
+                        </th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Description
+                        </th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            IP Address
+                        </th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Timestamp
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for log in logs %}
+                    <tr class="hover:bg-gray-50/50 transition-colors duration-150">
+                        <!-- User Column -->
+                        <td class="px-5 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-9 h-9 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg flex items-center justify-center mr-3 border border-blue-100">
+                                    {% if log.user %}
+                                        <span class="text-sm font-semibold text-blue-600">{{ log.user.username|first|upper }}</span>
+                                    {% else %}
+                                        <span class="text-sm font-semibold text-gray-500">G</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {% if log.user %}
+                                        <div class="text-sm font-medium text-gray-800">{{ log.user.username }}</div>
+                                        <div class="text-xs text-gray-500">{{ log.user.first_name }} {{ log.user.last_name|default:"" }}</div>
+                                    {% else %}
+                                        <div class="text-sm font-medium text-gray-500 italic">Guest User</div>
+                                        <div class="text-xs text-gray-500">Anonymous</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- Action Column -->
+                        <td class="px-5 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-full
+                                {% if log.action == 'login' %}bg-green-100 text-green-800 border border-green-200
+                                {% elif log.action == 'logout' %}bg-red-100 text-red-800 border border-red-200
+                                {% elif log.action == 'analysis' %}bg-blue-100 text-blue-800 border border-blue-200
+                                {% elif log.action == 'batch_analysis' %}bg-purple-100 text-purple-800 border border-purple-200
+                                {% else %}bg-gray-100 text-gray-800 border border-gray-200{% endif %}">
+                                {% if log.action == 'login' %}
+                                    <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                    </svg>
+                                {% elif log.action == 'logout' %}
+                                    <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                {% elif log.action == 'analysis' %}
+                                    <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                {% elif log.action == 'batch_analysis' %}
+                                    <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                {% endif %}
+                                {{ log.get_action_display }}
+                            </span>
+                        </td>
+                        
+                        <!-- Description Column -->
+                        <td class="px-5 py-4">
+                            <div class="text-sm text-gray-700 max-w-xs">
+                                <div class="group relative">
+                                    <span class="line-clamp-1">{{ log.description|truncatechars:80 }}</span>
+                                    {% if log.description|length > 80 %}
+                                    <div class="absolute left-0 top-full mt-1 z-10 hidden group-hover:block">
+                                        <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 max-w-xs shadow-lg">
+                                            {{ log.description }}
+                                            <div class="absolute -top-1 left-3 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- IP Address Column -->
+                        <td class="px-5 py-4 whitespace-nowrap">
+                            <div class="text-sm">
+                                {% if log.ip_address %}
+                                    <span class="font-mono text-gray-800 bg-gray-100 px-2 py-1 rounded">{{ log.ip_address }}</span>
+                                {% else %}
+                                    <span class="text-gray-400">-</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- Timestamp Column -->
+                        <td class="px-5 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ log.local_timestamp|date:"M d, Y" }}</div>
+                            <div class="text-xs text-gray-500 flex items-center mt-1">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                {{ log.local_timestamp|date:"H:i:s" }}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-5 py-10 text-center">
+                            <div class="max-w-sm mx-auto">
+                                <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-semibold text-gray-800 mb-1">No activity logs found</p>
+                                <p class="text-xs text-gray-600">No activity records match your current filters</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Pagination -->
     {% if logs.has_other_pages %}
-    <div class="flex justify-between items-center mt-6">
-        <div class="text-sm text-gray-700">
-            Showing {{ logs.start_index }} to {{ logs.end_index }} of {{ total_logs }} entries
-        </div>
-        <div class="flex space-x-2">
-            {% if logs.has_previous %}
-                <a href="?{% if current_action_filter %}action={{ current_action_filter }}&{% endif %}{% if current_user_filter %}user={{ current_user_filter }}&{% endif %}page={{ logs.previous_page_number }}" 
-                   class="px-3 py-2 bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 rounded-md">
-                    Previous
-                </a>
-            {% endif %}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing <span class="font-semibold text-gray-800">{{ logs.start_index }}</span> to 
+                    <span class="font-semibold text-gray-800">{{ logs.end_index }}</span> of 
+                    <span class="font-semibold text-gray-800">{{ total_logs }}</span> entries
+                </p>
+            </div>
             
-            <span class="px-3 py-2 bg-blue-600 text-white rounded-md">
-                Page {{ logs.number }} of {{ logs.paginator.num_pages }}
-            </span>
-            
-            {% if logs.has_next %}
-                <a href="?{% if current_action_filter %}action={{ current_action_filter }}&{% endif %}{% if current_user_filter %}user={{ current_user_filter }}&{% endif %}page={{ logs.next_page_number }}" 
-                   class="px-3 py-2 bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 rounded-md">
-                    Next
-                </a>
-            {% endif %}
+            <div class="flex items-center space-x-2">
+                <!-- Previous Button -->
+                {% if logs.has_previous %}
+                    <a href="?{% if current_action_filter %}action={{ current_action_filter }}&{% endif %}{% if current_user_filter %}user={{ current_user_filter }}&{% endif %}page={{ logs.previous_page_number }}" 
+                       class="inline-flex items-center px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                {% else %}
+                    <span class="inline-flex items-center px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-sm font-medium text-gray-400 cursor-not-allowed">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </span>
+                {% endif %}
+                
+                <!-- Current Page Indicator -->
+                <span class="inline-flex items-center px-4 py-2 rounded-lg border border-blue-500 bg-blue-50 text-sm font-semibold text-blue-600">
+                    Page {{ logs.number }} of {{ logs.paginator.num_pages }}
+                </span>
+                
+                <!-- Next Button -->
+                {% if logs.has_next %}
+                    <a href="?{% if current_action_filter %}action={{ current_action_filter }}&{% endif %}{% if current_user_filter %}user={{ current_user_filter }}&{% endif %}page={{ logs.next_page_number }}" 
+                       class="inline-flex items-center px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                {% else %}
+                    <span class="inline-flex items-center px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-sm font-medium text-gray-400 cursor-not-allowed">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                {% endif %}
+            </div>
         </div>
     </div>
     {% endif %}
 </div>
+
+<style>
+    .appearance-none {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+    
+    select::-ms-expand {
+        display: none;
+    }
+    
+    .line-clamp-1 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+    }
+</style>
 {% endblock %}
