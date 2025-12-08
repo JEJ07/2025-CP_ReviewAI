@@ -1,0 +1,55 @@
+{% extends "reviewai/base.html" %}
+
+{% block title %}Privacy Policy - ReviewAI{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-4">Privacy Policy – ReviewAI</h1>
+
+    <p><strong>Effective Date:</strong> {{ effective_date }}</p>
+
+    <h2 class="text-2xl font-semibold mt-6">Overview</h2>
+    <p>
+        ReviewAI is a Chrome extension that analyzes product reviews on supported e-commerce websites
+        (such as Amazon, Shopee, Lazada, Walmart, eBay, and others) to detect potentially fake reviews using AI.
+    </p>
+
+    <h2 class="text-2xl font-semibold mt-6">Data Collection</h2>
+    <ul class="list-disc pl-6">
+        <li>ReviewAI does not collect personally identifiable information such as names, email addresses, passwords, or financial data.</li>
+        <li>ReviewAI does not collect health, location, or web history data.</li>
+        <li>The extension reads only public product reviews displayed on the websites you visit.</li>
+        <li>Any review data accessed is used solely for AI-powered analysis and is not stored or shared.</li>
+    </ul>
+
+    <h2 class="text-2xl font-semibold mt-6">Remote Code</h2>
+    <p>
+        ReviewAI may fetch AI analysis scripts and model data from our secure server at
+        <a href="http://www.reviewai.live">http://www.reviewai.live</a> to perform real-time review analysis.
+        No personal data is transmitted to our server; only public review content is processed.
+    </p>
+
+    <h2 class="text-2xl font-semibold mt-6">Data Use</h2>
+    <p>
+        Data accessed is used exclusively to provide insights on the authenticity of product reviews.
+        ReviewAI does not sell, transfer, or share user data with third parties.
+    </p>
+
+    <h2 class="text-2xl font-semibold mt-6">Security</h2>
+    <p>
+        All communication with our server uses HTTPS. No user credentials, financial info, or personal identifiers are stored or transmitted.
+    </p>
+
+    <h2 class="text-2xl font-semibold mt-6">Changes to this Privacy Policy</h2>
+    <p>
+        We may update this policy to reflect changes in our extension or legal requirements. The updated policy will be available at this page.
+    </p>
+
+    <h2 class="text-2xl font-semibold mt-6">Contact Us</h2>
+    <p>
+        For questions or concerns about this Privacy Policy, please contact us at: <br>
+        Email: <a href="mailto:jjohnemman@gmail.com">jjohnemman@gmail.com</a> <br>
+        Website: <a href="http://www.reviewai.live">http://www.reviewai.live</a>
+    </p>
+</div>
+{% endblock %}

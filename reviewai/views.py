@@ -76,7 +76,13 @@ from reportlab.lib.utils import ImageReader
 from matplotlib.figure import Figure
 from django.contrib.auth.models import User
 from .models import Review
+from datetime import date
 
+def privacy_policy(request):
+    return render(request, "reviewai/privacy.html", {
+        "effective_date": date.today().strftime("%B %d, %Y")
+    })
+    
 @staff_member_required
 def export_dashboard_pdf(request):
     buffer = io.BytesIO()
