@@ -5,6 +5,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <!-- AOS Animate on Scroll JS -->
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     {% load static %}
     <link rel="icon" type="image/png" href="{% static 'reviewai/images/logo/reviewailogobluestarnobg.png' %}">
 
@@ -69,7 +72,7 @@
                 </button>
                 {% endif %}
 
-                <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6" data-aos="fade-in">
                     <div class="flex flex-1 items-center">
                         {% if request.resolver_match.url_name == 'analyze' %}
                         <h1 class="text-xl font-bold text-gray-800">
@@ -270,7 +273,7 @@
 
 
             <!--footer-->
-            <footer class="bg-white border-t border-gray-200 flex-shrink-0">
+            <footer class="bg-white border-t border-gray-200 flex-shrink-0" data-aos="fade-up" data-aos-duration="1000">
               <div class="max-w-6xl mx-auto px-4 py-8 ">
                     <div class="text-center">
                         <h3 class="font-bold text-gray-900 mb-4">
@@ -343,6 +346,14 @@
         </div>
     </div>
     {% endif %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+            duration: 800, // animation duration in ms
+            once: true,    // whether animation should happen only once
+            });
+        });
+    </script>
 
     <!-- Alpine.js for dropdown functionality -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
