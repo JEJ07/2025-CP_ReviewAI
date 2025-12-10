@@ -249,6 +249,11 @@ def analyze_view(request):
             "color": "bg-blue-700",
             "text_color": "text-blue-700",
         },
+        "ebay": {
+            "logo": "reviewai/images/ebay.png",
+            "color": "bg-blue-700",
+            "text_color": "text-blue-700",
+        },
         # add lng other platforms here if ok
     }
     
