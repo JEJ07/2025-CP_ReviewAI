@@ -8,6 +8,7 @@ app_name = 'reviewai'
 urlpatterns = [
     path('', views.analyze_view, name='analyze'),
     path("privacy/", views.privacy_policy, name="privacy_policy"),
+    path("terms-of-use/", views.terms_of_use, name="terms_of_use"),
 
     path('blueprint', views.blueprint_view, name='blueprint'),
     path('developer-page', views.developer_page, name='developer_page'),

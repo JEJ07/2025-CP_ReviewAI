@@ -279,6 +279,10 @@ def review_count(request):
     total_reviews = Review.objects.count()
     return JsonResponse({"total_reviews": total_reviews})
 
+def terms_of_use(request):
+    return render(request, 'reviewai/terms_of_use.html', {
+        "effective_date": date.today().strftime("%B %d, %Y")
+    })
 
 def blueprint_view(request):
     return render(request, 'reviewai/blueprint.html')

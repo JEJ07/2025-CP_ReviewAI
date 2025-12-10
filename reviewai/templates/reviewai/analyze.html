@@ -7,6 +7,58 @@
 
 {% block content %}
 
+
+<!-- TERMS OF USE MODAL (FIRST VISIT ONLY) -->
+<div id="termsModal"
+  class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[9999] hidden">
+
+  <div class="bg-white max-w-lg w-full mx-4 p-8 rounded-2xl shadow-2xl
+              transform transition-all duration-300">
+
+    <!-- SVG ICON -->
+    <div class="flex justify-center mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" 
+           class="w-14 h-14 text-blue-600"
+           fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" 
+          d="M12 8v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      </svg>
+    </div>
+
+    <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">
+      Terms of Use
+    </h2>
+
+    <p class="text-gray-700 mb-4">
+      By using ReviewAI, you acknowledge and agree that this tool provides <strong>probabilistic analyse</strong>  of online reviews.
+      The results are generated using AI models and <strong>may not reflect absolute accuracy</strong>.
+    </p>
+
+    <p class="text-gray-700 mb-4">
+      ReviewAI is intended as a <strong>supplementary tool</strong> to help users identify potentially misleading or fake reviews.
+      Users must apply their own judgment and consider additional information before making purchasing decisions.
+    </p>
+
+    <p class="text-gray-700 mb-4">
+      You agree not to use ReviewAI to make legal claims, defame others, or take actions based solely on AI-generated results.
+      All use is at your own risk, and ReviewAI disclaims liability for any losses, damages, or disputes arising from your use.
+    </p>
+
+    <p class="text-gray-700 mb-6 text-sm">
+      For more details, please review our <a href="{% url 'reviewai:terms_of_use' %}" class="text-blue-600 underline">full Terms of Use</a> and <a href="{% url 'reviewai:privacy_policy' %}" class="text-blue-600 underline">Privacy Policy</a>.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 mt-6">
+      <button id="acceptTermsBtn"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition shadow-lg">
+        I Agree & Continue
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
 <!-- Hero Section -->
 <section class=" py-16 rounded-xl mb-8">
   <div class="max-w-2xl mx-auto text-center">
@@ -293,6 +345,39 @@
 {% endblock %}
 
 {% block extra_js %}
+
+
+<style>
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+</style>
+
+<script>
+// Show modal only if the user has not accepted yet
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("termsModal");
+    const acceptBtn = document.getElementById("acceptTermsBtn");
+
+    // Show modal only if not previously accepted
+    if (!localStorage.getItem("reviewai_terms_accepted")) {
+        modal.classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+    }
+
+    // Accept terms
+    acceptBtn.addEventListener("click", () => {
+        localStorage.setItem("reviewai_terms_accepted", "true");
+        modal.classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
+    });
+});
+</script>
+
+
 <script>
   document.body.dataset.authenticated =
     '{{ user.is_authenticated|yesno:"true,false" }}';
