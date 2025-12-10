@@ -1,6 +1,6 @@
 class PopupManager {
   constructor() {
-    this.apiUrl = "http://www.reviewai.live"; // default API URL
+    this.apiUrl = "https://www.reviewai.live"; // default API URL
     this.bindEvents();
   }
 
