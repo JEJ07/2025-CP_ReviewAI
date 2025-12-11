@@ -10,6 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     {% load static %}
     <link rel="icon" type="image/png" href="{% static 'reviewai/images/logo/reviewailogobluestarnobg.png' %}">
+        <!--jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -390,6 +393,322 @@
     </script>
 
     <script src="{% static 'reviewai/js/chatbot.js' %}"></script>
+
+    <!-- PDF Export Function (Global) -->
+    <script>
+        function exportUserDashboardToPDF() {
+            // Show loading state
+            Swal.fire({
+                title: 'Generating PDF...',
+                html: 'Please wait while we create your dashboard report',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                // Check if jsPDF is loaded
+                if (typeof window.jspdf === 'undefined') {
+                    throw new Error('jsPDF library not loaded');
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 15;
+                let yPosition = margin;
+
+                // Helper function to add new page if needed
+                const checkPageBreak = (requiredHeight) => {
+                    if (yPosition + requiredHeight > pageHeight - margin) {
+                        doc.addPage();
+                        yPosition = margin;
+                        return true;
+                    }
+                    return false;
+                };
+
+                // Get data from page
+                const username = document.querySelector('[data-username]')?.dataset.username || 'User';
+                const totalReviews = document.querySelector('[data-total-reviews]')?.textContent || '0';
+                const fakeCount = document.querySelector('[data-fake-count]')?.textContent || '0';
+                const genuineCount = document.querySelector('[data-genuine-count]')?.textContent || '0';
+                const recentCount = document.querySelector('[data-recent-count]')?.textContent || '0';
+
+                // Header with gradient effect (simulated)
+                doc.setFillColor(59, 130, 246); // Blue
+                doc.rect(0, 0, pageWidth, 40, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(24);
+                doc.setFont(undefined, 'bold');
+                doc.text('ReviewAI Dashboard', margin, 20);
+                
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                doc.text(username, margin, 30);
+                doc.text(new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                }), pageWidth - margin, 30, { align: 'right' });
+
+                yPosition = 50;
+
+                // Statistics Section
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('Overview Statistics', margin, yPosition);
+                yPosition += 10;
+
+                // Stats boxes
+                const stats = [
+                    { label: 'Total Reviews', value: totalReviews, color: [59, 130, 246] },
+                    { label: 'Fake Detected', value: fakeCount, color: [239, 68, 68] },
+                    { label: 'Genuine Found', value: genuineCount, color: [34, 197, 94] },
+                    { label: 'Last 30 Days', value: recentCount, color: [168, 85, 247] }
+                ];
+
+                const boxWidth = (pageWidth - 2 * margin - 15) / 2;
+                const boxHeight = 25;
+                let xPos = margin;
+                
+                stats.forEach((stat, index) => {
+                    if (index === 2) {
+                        xPos = margin;
+                        yPosition += boxHeight + 5;
+                    }
+                    
+                    // Box background
+                    doc.setFillColor(stat.color[0], stat.color[1], stat.color[2]);
+                    doc.setDrawColor(stat.color[0], stat.color[1], stat.color[2]);
+                    doc.roundedRect(xPos, yPosition, boxWidth, boxHeight, 3, 3, 'FD');
+                    
+                    // Text
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(stat.label, xPos + 5, yPosition + 8);
+                    
+                    doc.setFontSize(18);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(stat.value, xPos + 5, yPosition + 18);
+                    
+                    xPos += boxWidth + 5;
+                });
+
+                yPosition += boxHeight + 15;
+                checkPageBreak(20);
+
+                // Get products from page - FIXED LAYOUT
+                const productElements = document.querySelectorAll('[data-product-name]');
+                if (productElements.length > 0) {
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(16);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Most Analyzed Products', margin, yPosition);
+                    yPosition += 8;
+
+                    doc.setFontSize(10);
+                    
+                    productElements.forEach((el, index) => {
+                        const productName = el.dataset.productName;
+                        const productCount = el.dataset.productCount;
+                        
+                        // Calculate required height based on text wrapping
+                        const maxProductWidth = pageWidth - 2 * margin - 45; // Space for number and count
+                        const wrappedLines = doc.splitTextToSize(productName, maxProductWidth);
+                        const lineHeight = 5;
+                        const requiredHeight = Math.max(10, wrappedLines.length * lineHeight + 4);
+                        
+                        checkPageBreak(requiredHeight + 2);
+                        
+                        // Background box
+                        doc.setFillColor(240, 240, 240);
+                        doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, requiredHeight, 2, 2, 'F');
+                        
+                        // Rank number (left side)
+                        doc.setTextColor(100, 116, 139);
+                        doc.setFont(undefined, 'normal');
+                        doc.text((index + 1).toString(), margin + 3, yPosition + (requiredHeight / 2) + 1.5);
+                        
+                        // Product name (middle - wrapped if needed)
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont(undefined, 'bold');
+                        
+                        // Center text vertically based on number of lines
+                        const textStartY = yPosition + (requiredHeight / 2) - ((wrappedLines.length - 1) * lineHeight / 2) + 1.5;
+                        
+                        wrappedLines.forEach((line, lineIndex) => {
+                            doc.text(line, margin + 12, textStartY + (lineIndex * lineHeight));
+                        });
+                        
+                        // Review count (right side - aligned to middle)
+                        doc.setFont(undefined, 'normal');
+                        doc.setTextColor(100, 116, 139);
+                        doc.text(productCount, pageWidth - margin - 5, yPosition + (requiredHeight / 2) + 1.5, { align: 'right' });
+                        
+                        yPosition += requiredHeight + 2;
+                    });
+                    yPosition += 3;
+                }
+
+                // Get recent reviews from page - FIXED WITH TRUNCATION
+                const reviewElements = document.querySelectorAll('[data-review-id]');
+                if (reviewElements.length > 0) {
+                    checkPageBreak(20);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(16);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Recent Reviews', margin, yPosition);
+                    yPosition += 10;
+
+                    reviewElements.forEach((el, index) => {
+                        let reviewProduct = el.dataset.reviewProduct || 'Unknown Product';
+                        let reviewText = el.dataset.reviewText || 'No review text';
+                        const reviewResult = el.dataset.reviewResult;
+                        const reviewConfidence = el.dataset.reviewConfidence;
+
+                        // TRUNCATE LONG PRODUCT NAMES (max 60 chars)
+                        if (reviewProduct.length > 60) {
+                            reviewProduct = reviewProduct.substring(0, 57) + '...';
+                        }
+
+                        // TRUNCATE LONG REVIEW TEXT (max 150 chars)
+                        if (reviewText.length > 150) {
+                            reviewText = reviewText.substring(0, 147) + '...';
+                        }
+
+                        const maxWidth = pageWidth - 2 * margin - 8;
+
+                        // Set font BEFORE splitting text
+                        doc.setFontSize(11);
+                        doc.setFont(undefined, 'bold');
+                        const productLines = doc.splitTextToSize(reviewProduct, maxWidth);
+
+                        doc.setFontSize(9);
+                        doc.setFont(undefined, 'normal');
+                        const reviewLines = doc.splitTextToSize(reviewText, maxWidth);
+
+                        // Limit to 2 lines for product name, 3 lines for review
+                        const limitedProductLines = productLines.slice(0, 2);
+                        const limitedReviewLines = reviewLines.slice(0, 3);
+
+                        // Calculate heights
+                        const productHeight = limitedProductLines.length * 5;
+                        const reviewHeight = limitedReviewLines.length * 4.5;
+                        const statusHeight = 6;
+                        const padding = 12;
+
+                        const boxHeight = productHeight + reviewHeight + statusHeight + padding;
+
+                        checkPageBreak(boxHeight + 4);
+
+                        // Box colors
+                        if (reviewResult === 'fake' || reviewResult === 'likely_fake') {
+                            doc.setDrawColor(239, 68, 68);
+                            doc.setFillColor(254, 242, 242);
+                        } else if (reviewResult === 'genuine' || reviewResult === 'likely_genuine') {
+                            doc.setDrawColor(34, 197, 94);
+                            doc.setFillColor(240, 253, 244);
+                        } else {
+                            doc.setDrawColor(234, 179, 8);
+                            doc.setFillColor(254, 252, 232);
+                        }
+
+                        // Draw box
+                        doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, boxHeight, 3, 3, 'FD');
+
+                        let currentY = yPosition + 6;
+
+                        // Product name (BOLD, max 2 lines)
+                        doc.setFontSize(11);
+                        doc.setFont(undefined, 'bold');
+                        doc.setTextColor(0, 0, 0);
+                        limitedProductLines.forEach(line => {
+                            doc.text(line, margin + 4, currentY);
+                            currentY += 5;
+                        });
+
+                        currentY += 2;
+
+                        // Review text (NORMAL, max 3 lines)
+                        doc.setFontSize(9);
+                        doc.setFont(undefined, 'normal');
+                        doc.setTextColor(75, 85, 99);
+                        limitedReviewLines.forEach(line => {
+                            doc.text(line, margin + 4, currentY);
+                            currentY += 4.5;
+                        });
+
+                        // Status badge at bottom
+                        const bottomY = yPosition + boxHeight - 4;
+                        doc.setFontSize(8);
+                        doc.setFont(undefined, 'bold');
+
+                        let statusText = 'WARNING';
+                        let statusColor = [161, 98, 7];
+
+                        if (reviewResult === 'fake' || reviewResult === 'likely_fake') {
+                            statusText = 'FAKE';
+                            statusColor = [185, 28, 28];
+                        } else if (reviewResult === 'genuine' || reviewResult === 'likely_genuine') {
+                            statusText = 'GENUINE';
+                            statusColor = [22, 163, 74];
+                        }
+
+                        doc.setTextColor(...statusColor);
+                        doc.text(statusText, margin + 4, bottomY);
+
+                        // Confidence
+                        doc.setFont(undefined, 'normal');
+                        doc.setTextColor(107, 114, 128);
+                        doc.text(reviewConfidence + ' confidence', margin + 30, bottomY);
+
+                        yPosition += boxHeight + 4;
+                    });
+                }
+
+                // Footer on all pages
+                const totalPages = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(156, 163, 175);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(
+                        `ReviewAI Dashboard Report - Page ${i} of ${totalPages}`,
+                        pageWidth / 2,
+                        pageHeight - 10,
+                        { align: 'center' }
+                    );
+                }
+
+                // Save PDF
+                doc.save('ReviewAI_Dashboard_' + username + '_' + new Date().toISOString().split('T')[0] + '.pdf');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'PDF Generated!',
+                    text: 'Your dashboard report has been downloaded successfully.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Generation Failed',
+                    text: 'Error: ' + error.message + '. Please ensure all libraries are loaded.',
+                });
+            }
+        }
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>
