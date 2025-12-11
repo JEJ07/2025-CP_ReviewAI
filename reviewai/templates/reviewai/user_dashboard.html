@@ -380,7 +380,7 @@
                                                 {% if analysis.result == 'fake' or analysis.result == 'likely_fake' %}bg-red-100 text-red-800 ring-1 ring-red-200
                                                 {% elif analysis.result == 'genuine' or analysis.result == 'likely_genuine' %}bg-green-100 text-green-800 ring-1 ring-green-200
                                                 {% else %}bg-yellow-100 text-yellow-800 ring-1 ring-yellow-200{% endif %}">
-                                                {% if analysis.result == 'fake' %}🚫{% elif analysis.result == 'genuine' %}✅{% else %}⚠️{% endif %}
+                                                {% if analysis.result == 'fake' %}{% elif analysis.result == 'genuine' %}{% else %}{% endif %}
                                                 {{ analysis.get_result_display }}
                                             </span>
                                             <span class="inline-flex items-center gap-1 text-xs font-semibold text-gray-600">
