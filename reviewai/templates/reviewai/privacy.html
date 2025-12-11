@@ -1,55 +1,389 @@
-{% extends "reviewai/base.html" %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - ReviewAI</title>
+    {% load static %}
+    <link rel="icon" type="image/png" href="{% static 'reviewai/images/logo/reviewailogobluestarnobg.png' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-indigo-50">
 
-{% block title %}Privacy Policy - ReviewAI{% endblock %}
+    <div class="min-h-screen py-8 sm:py-12 lg:py-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+            
+            <!-- header-->
+            <header class="text-center mb-10 sm:mb-12 lg:mb-16 animate-fadeIn">
+                <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full mb-4 sm:mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 sm:w-10 sm:h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-3 sm:mb-4">Privacy Policy</h1>
+                <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                    Your privacy is important to us. Learn how we protect your data.
+                </p>
+                <div class="mt-4 sm:mt-6 inline-flex items-center px-4 py-2 bg-green-50 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-sm sm:text-base font-semibold text-gray-700">Effective Date: {{ effective_date }}</span>
+                </div>
+            </header>
 
-{% block content %}
-<div class="container mx-auto p-6" data-aos="zoom-in" >
-    <h1 class="text-3xl font-bold mb-4">Privacy Policy – ReviewAI</h1>
+            <!-- Content Card -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-fadeIn">
+                
+                <!-- Table of Contents -->
+                <div class="bg-gradient-to-r from-green-600 to-teal-600 px-6 sm:px-8 py-6">
+                    <h2 class="text-xl sm:text-2xl font-bold text-white mb-4">Quick Navigation</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                        <a href="#section-1" class="text-white/90 hover:text-white hover:underline text-sm sm:text-base transition">1. Overview</a>
+                        <a href="#section-2" class="text-white/90 hover:text-white hover:underline text-sm sm:text-base transition">2. Data Collection</a>
+                        <a href="#section-3" class="text-white/90 hover:text-white hover:underline text-sm sm:text-base transition">3. Remote Code</a>
+                        <a href="#section-4" class="text-white/90 hover:text-white hover:underline text-sm sm:text-base transition">4. Data Use</a>
+                        <a href="#section-5" class="text-white/90 hover:text-white hover:underline text-sm sm:text-base transition">5. Security</a>
+                        <a href="#section-6" class="text-white/90 hover:text-white hover:underline text-sm sm:text-base transition">6. Contact Us</a>
+                    </div>
+                </div>
 
-    <p><strong>Effective Date:</strong> {{ effective_date }}</p>
+                <!-- Privacy Content -->
+                <div class="px-6 sm:px-8 lg:px-12 py-8 sm:py-10 lg:py-12 space-y-10 sm:space-y-12">
+                    
+                    <!-- Section 1 -->
+                    <section id="section-1" class="scroll-mt-20">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <span class="text-lg sm:text-xl font-bold text-blue-600">1</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Overview</h2>
+                                <div class="h-1 w-16 sm:w-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="pl-0 sm:pl-16">
+                            <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                <strong class="text-blue-600">ReviewAI</strong> is a Chrome extension that analyzes product reviews on supported e-commerce websites 
+                                (such as Amazon, Shopee, Lazada, Walmart, eBay, and others) to detect potentially fake reviews using AI. 
+                                This Privacy Policy explains how we handle data when you use our service.
+                            </p>
+                        </div>
+                    </section>
 
-    <h2 class="text-2xl font-semibold mt-6">Overview</h2>
-    <p>
-        ReviewAI is a Chrome extension that analyzes product reviews on supported e-commerce websites
-        (such as Amazon, Shopee, Lazada, Walmart, eBay, and others) to detect potentially fake reviews using AI.
-    </p>
+                    <!-- Section 2 -->
+                    <section id="section-2" class="scroll-mt-20">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <span class="text-lg sm:text-xl font-bold text-indigo-600">2</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Data Collection</h2>
+                                <div class="h-1 w-16 sm:w-20 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="pl-0 sm:pl-16 space-y-4">
+                            <div class="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-4 sm:p-6 border-l-4 border-green-600">
+                                <p class="text-sm sm:text-base font-semibold text-gray-900 mb-3">What We DON'T Collect:</p>
+                                <ul class="space-y-2 sm:space-y-3">
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Personally identifiable information (names, email addresses, passwords)</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Financial data or payment information</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Health, location, or web history data</span>
+                                    </li>
+                                </ul>
+                            </div>
 
-    <h2 class="text-2xl font-semibold mt-6">Data Collection</h2>
-    <ul class="list-disc pl-6">
-        <li>ReviewAI does not collect personally identifiable information such as names, email addresses, passwords, or financial data.</li>
-        <li>ReviewAI does not collect health, location, or web history data.</li>
-        <li>The extension reads only public product reviews displayed on the websites you visit.</li>
-        <li>Any review data accessed is used solely for AI-powered analysis and is not stored or shared.</li>
-    </ul>
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border-l-4 border-blue-600">
+                                <p class="text-sm sm:text-base font-semibold text-gray-900 mb-3">What We DO Access:</p>
+                                <ul class="space-y-2 sm:space-y-3">
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>The extension reads <strong>only public product reviews</strong> displayed on the websites you visit</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Any review data accessed is used <strong>solely for AI-powered analysis</strong></span>
+                                    </li>
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>Review data is <strong>not stored or shared</strong> with third parties</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
 
-    <h2 class="text-2xl font-semibold mt-6">Remote Code</h2>
-    <p>
-        ReviewAI may fetch AI analysis scripts and model data from our secure server at
-        <a href="https://www.reviewai.live" class="hover:underline">https://www.reviewai.live</a> to perform real-time review analysis.
-        No personal data is transmitted to our server; only public review content is processed.
-    </p>
+                    <!-- Section 3: Remote Code -->
+                    <section id="section-3" class="scroll-mt-20">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <span class="text-lg sm:text-xl font-bold text-purple-600">3</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Remote Code</h2>
+                                <div class="h-1 w-16 sm:w-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="pl-0 sm:pl-16 space-y-4">
+                            <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                ReviewAI may fetch AI analysis scripts and model data from our secure server at 
+                                <a href="https://www.reviewai.live" class="text-purple-600 hover:text-purple-800 font-semibold underline decoration-2">https://www.reviewai.live</a> 
+                                to perform real-time review analysis.
+                            </p>
+                            <div class="bg-purple-50 rounded-xl p-4 sm:p-6 border border-purple-200">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-purple-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                        <strong class="text-gray-900">Important:</strong> No personal data is transmitted to our server; 
+                                        only public review content is processed for analysis purposes.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
-    <h2 class="text-2xl font-semibold mt-6">Data Use</h2>
-    <p>
-        Data accessed is used exclusively to provide insights on the authenticity of product reviews.
-        ReviewAI does not sell, transfer, or share user data with third parties.
-    </p>
+                    <!-- Section 4: Data Use -->
+                    <section id="section-4" class="scroll-mt-20">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                <span class="text-lg sm:text-xl font-bold text-yellow-600">4</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Data Use</h2>
+                                <div class="h-1 w-16 sm:w-20 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="pl-0 sm:pl-16 space-y-4">
+                            <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                Data accessed is used <strong>exclusively to provide insights</strong> on the authenticity of product reviews. 
+                                ReviewAI operates with the following principles:
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div>
+                                            <p class="font-semibold text-gray-900 text-sm">No Selling</p>
+                                            <p class="text-xs text-gray-600">We never sell user data</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div>
+                                            <p class="font-semibold text-gray-900 text-sm">No Transferring</p>
+                                            <p class="text-xs text-gray-600">We never transfer data</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div>
+                                            <p class="font-semibold text-gray-900 text-sm">No Sharing</p>
+                                            <p class="text-xs text-gray-600">We never share with third parties</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div>
+                                            <p class="font-semibold text-gray-900 text-sm">Privacy First</p>
+                                            <p class="text-xs text-gray-600">Your privacy is our priority</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
-    <h2 class="text-2xl font-semibold mt-6">Security</h2>
-    <p>
-        All communication with our server uses HTTPS. No user credentials, financial info, or personal identifiers are stored or transmitted.
-    </p>
+                    <!-- Section 5: Security -->
+                    <section id="section-5" class="scroll-mt-20">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <span class="text-lg sm:text-xl font-bold text-green-600">5</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Security</h2>
+                                <div class="h-1 w-16 sm:w-20 bg-gradient-to-r from-green-600 to-teal-600 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="pl-0 sm:pl-16 space-y-4">
+                            <div class="bg-green-50 rounded-xl p-4 sm:p-6 border-l-4 border-green-600">
+                                <p class="text-sm sm:text-base font-semibold text-gray-900 mb-3">Our Security Measures:</p>
+                                <ul class="space-y-2 sm:space-y-3">
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span><strong>HTTPS Encryption:</strong> All communication with our server uses HTTPS for secure data transmission</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span><strong>No Storage:</strong> No user credentials, financial info, or personal identifiers are stored</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span><strong>No Transmission:</strong> Personal data is never transmitted to our servers</span>
+                                    </li>
+                                    <li class="flex items-start gap-2 sm:gap-3 text-sm sm:text-base text-gray-700">
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span><strong>Public Data Only:</strong> We only process publicly available review content</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
 
-    <h2 class="text-2xl font-semibold mt-6">Changes to this Privacy Policy</h2>
-    <p>
-        We may update this policy to reflect changes in our extension or legal requirements. The updated policy will be available at this page.
-    </p>
+                    <!-- Changes to Privacy Policy -->
+                    <section class="scroll-mt-20 border-l-4 border-gray-300 pl-4 sm:pl-6">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Changes to this Privacy Policy</h2>
+                        <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
+                            We may update this policy to reflect changes in our extension or legal requirements. 
+                            The updated policy will be available at this page. We encourage you to review this 
+                            Privacy Policy periodically for any changes.
+                        </p>
+                    </section>
 
-    <h2 class="text-2xl font-semibold mt-6">Contact Us</h2>
-    <p>
-        For questions or concerns about this Privacy Policy, please contact us at: <br>
-        Email: <a href="mailto:reviewai2025@gmail.com">reviewai2025@gmail.com</a> <br>
-        Website: <a href="https://www.reviewai.live" class="hover:underline">https://www.reviewai.live</a>
-    </p>
-</div>
-{% endblock %}
+                    <!-- Contact Section -->
+                    <section id="section-6" class="scroll-mt-20 bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6 sm:p-8 border border-green-200">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Contact Us</h2>
+                                <div class="h-1 w-16 sm:w-20 bg-gradient-to-r from-green-600 to-teal-600 rounded-full mb-4"></div>
+                            </div>
+                        </div>
+                        <p class="text-sm sm:text-base text-gray-700 leading-relaxed mb-4 sm:mb-6">
+                            For questions or concerns about this Privacy Policy, please contact us at:
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 bg-white rounded-lg p-3 sm:p-4 shadow-sm">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Email</p>
+                                    <a href="mailto:reviewai2025@gmail.com" class="text-sm sm:text-base text-green-600 hover:text-green-800 font-semibold">reviewai2025@gmail.com</a>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white rounded-lg p-3 sm:p-4 shadow-sm">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Website</p>
+                                    <a href="https://www.reviewai.live" class="text-sm sm:text-base text-green-600 hover:text-green-800 font-semibold">https://www.reviewai.live</a>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Final Acknowledgement -->
+                    <div class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 sm:p-8 text-center">
+                        <div class="flex justify-center mb-4">
+                            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-sm sm:text-base text-white/90 mb-2">
+                            <strong class="text-white">Last Updated:</strong> December 11, 2025
+                        </p>
+                        <p class="text-xs sm:text-sm text-white/80 max-w-2xl mx-auto">
+                            By using ReviewAI, you acknowledge that you have read and understood this Privacy Policy. 
+                            Your trust is important to us, and we are committed to protecting your privacy.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Back to Top & Home Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mt-8 sm:mt-10">
+                <a href="{% url 'reviewai:analyze' %}" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Return Home
+                </a>
+                <a href="#" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    Back to Top
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+    </script>
+
+</body>
+</html>
