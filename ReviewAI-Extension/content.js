@@ -1027,7 +1027,7 @@ class ReviewAIContentScript {
       pattern.test(reviewText)
     );
     
-    if (wordCount < 5 && !hasReviewContent) {
+    if (wordCount < 2 && !hasReviewContent) {
       return false;
     }
 
@@ -1083,8 +1083,9 @@ class ReviewAIContentScript {
     ).filter((el) => {
       const text = el.textContent.trim();
       const wordCount = text.split(/\s+/).length;
+      
       return (
-        wordCount >= 10 &&
+        wordCount >= 2 &&
         wordCount <= 500 &&
         el.offsetParent !== null &&
         !el.closest("#reviewai-panel") &&

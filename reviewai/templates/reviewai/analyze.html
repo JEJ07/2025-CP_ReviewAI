@@ -212,7 +212,7 @@
       </p>
     </header>
 
-    <!-- Coming Soon Banner -->
+    {% comment %} <!-- Coming Soon Banner -->
     <div class="mb-6 sm:mb-8 p-4 sm:p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl">
       <div class="flex flex-col sm:flex-row items-center justify-center mb-2 sm:mb-3 gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -223,6 +223,31 @@
       <p class="text-amber-700 text-sm sm:text-base px-2">
         We're working on getting ReviewAI approved for the Chrome Web Store. Soon you'll be able to install it with just one click! 
         In the meantime, you can manually install the extension using the steps below.
+      </p>
+    </div> {% endcomment %}
+
+        <!-- Now Available on Chrome Web Store Banner -->
+    <div class="mb-6 sm:mb-8 p-4 sm:p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl">
+      <div class="flex flex-col sm:flex-row items-center justify-center mb-2 sm:mb-3 gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-green-800 text-center">Now Available on Chrome Web Store!</h3>
+      </div>
+      <p class="text-green-700 text-sm sm:text-base px-2 text-center mb-4">
+        ReviewAI is now officially published! Install with just one click.
+      </p>
+      <div class="flex justify-center mb-3">
+        <a href="https://chromewebstore.google.com/detail/reviewai/anfhfkdelloafmpoibgilefckblmoidj" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 text-sm sm:text-base">
+          <svg class="h-5 w-5 sm:h-6 sm:w-6 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm5.696 8.289l-6.143 6.143c-.387.387-1.016.387-1.403 0l-3.143-3.143c-.387-.387-.387-1.016 0-1.403.387-.387 1.016-.387 1.403 0l2.441 2.441 5.442-5.442c.387-.387 1.016-.387 1.403 0 .387.387.387 1.016 0 1.404z"/>
+          </svg>
+          Add to Chrome - Official
+        </a>
+      </div>
+      <p class="text-green-600 text-xs sm:text-sm text-center">
+        Or you can follow the steps below to manually install the extension.
       </p>
     </div>
 
