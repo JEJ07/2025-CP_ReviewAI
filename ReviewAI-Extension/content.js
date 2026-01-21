@@ -1883,12 +1883,10 @@ class ReviewAIContentScript {
           Why This Classification?
         </h5>
         
-        <!-- Overall Summary -->
         <div class="reviewai-justification-summary">
           <p>${justification.overall_summary}</p>
         </div>
 
-        <!-- Sentiment Analysis (Only Tone) -->
         ${sentiment.polarity !== undefined ? `
           <div class="reviewai-sentiment-box">
             <div class="reviewai-sentiment-label">Sentiment Tone:</div>
@@ -1896,7 +1894,6 @@ class ReviewAIContentScript {
           </div>
         ` : ''}
 
-        <!-- Detection Flags -->
         ${Object.keys(flags).length > 0 ? `
           <div class="reviewai-flags-box">
             <div class="reviewai-flags-label">Detection Flags:</div>
@@ -1911,7 +1908,6 @@ class ReviewAIContentScript {
           </div>
         ` : ''}
 
-        <!-- Key Indicators -->
         ${reasons.length > 0 ? `
           <div class="reviewai-indicators-box">
             <div class="reviewai-indicators-label">Key Indicators:</div>
@@ -1972,79 +1968,80 @@ class ReviewAIContentScript {
     const strokeDashoffset =
       circumference - (confidencePercentage / 100) * circumference;
 
+    const genuineWidth = (probabilities.genuine * 100).toFixed(1);
+    const fakeWidth = (probabilities.fake * 100).toFixed(1);
+
     resultEl.innerHTML = `
-    <div class="reviewai-result-card ${statusClass}">
-      <div class="reviewai-result-header">
-        <span class="reviewai-status-icon">${statusIcon}</span>
-        <h4>Review Analysis Result</h4>
-      </div>
-      
-      <div class="reviewai-main-result">
-        <div class="reviewai-circular-progress">
-          <div class="reviewai-progress-circle">
-            <svg class="reviewai-progress-svg" viewBox="0 0 144 144">
-              <circle cx="72" cy="72" r="60" stroke="#e5e7eb" stroke-width="8" fill="none" />
-              <circle 
-                cx="72" cy="72" r="60" 
-                stroke="${confidenceColor}" 
-                stroke-width="8" 
-                fill="none"
-                stroke-dasharray="${circumference}" 
-                stroke-dashoffset="${strokeDashoffset}"
-                stroke-linecap="round" 
-                class="reviewai-progress-bar" 
-              />
-            </svg>
-            <div class="reviewai-progress-text">
-              <div class="reviewai-percentage">${confidencePercentage}%</div>
-              <div class="reviewai-conf-label">Confidence</div>
+      <div class="reviewai-result-card ${statusClass}">
+        <div class="reviewai-result-header">
+          <span class="reviewai-status-icon">${statusIcon}</span>
+          <h4>Review Analysis Result</h4>
+        </div>
+        
+        <div class="reviewai-main-result">
+          <div class="reviewai-circular-progress">
+            <div class="reviewai-progress-circle">
+              <svg class="reviewai-progress-svg" viewBox="0 0 144 144">
+                <circle cx="72" cy="72" r="60" stroke="#e5e7eb" stroke-width="8" fill="none" />
+                <circle 
+                  cx="72" cy="72" r="60" 
+                  stroke="${confidenceColor}" 
+                  stroke-width="8" 
+                  fill="none"
+                  stroke-dasharray="${circumference}" 
+                  stroke-dashoffset="${strokeDashoffset}"
+                  stroke-linecap="round" 
+                  class="reviewai-progress-bar" 
+                />
+              </svg>
+              <div class="reviewai-progress-text">
+                <div class="reviewai-percentage">${confidencePercentage}%</div>
+                <div class="reviewai-conf-label">Confidence</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="reviewai-prediction-details">
+            <div class="reviewai-prediction">
+              <span class="reviewai-value ${statusClass}">${predictionLabel}</span>
+            </div>
+            <div class="reviewai-confidence-desc">
+              <span class="reviewai-value">${confidenceDesc}</span>
             </div>
           </div>
         </div>
         
-        <div class="reviewai-prediction-details">
-          <div class="reviewai-prediction">
-            <span class="reviewai-value ${statusClass}">${predictionLabel}</span>
-          </div>
-          <div class="reviewai-confidence-desc">
-            <span class="reviewai-value">${confidenceDesc}</span>
-          </div>
-        </div>
-      </div>
-      
-      ${confidence < 0.6 ? this.createLowConfidenceWarning() : ""}
-      
-      ${this.createJustificationSection(justification, statusClass)}
-      
-      <div class="reviewai-probabilities">
-        <h5>Detailed Probabilities:</h5>
-        <div class="reviewai-prob-bar">
-          <div class="reviewai-prob-item">
-            <span>Genuine: ${(probabilities.genuine * 100).toFixed(1)}%</span>
-            <div class="reviewai-bar">
-              <div class="reviewai-bar-fill reviewai-genuine" style="width: ${
-                probabilities.genuine * 100
-              }%"></div>
+        ${confidence < 0.6 ? this.createLowConfidenceWarning() : ""}
+        
+        ${this.createJustificationSection(justification, statusClass)}
+        
+        <div class="reviewai-probabilities">
+          <h5>Probability Breakdown:</h5>
+          <div class="reviewai-prob-bars-compact">
+            <div class="reviewai-prob-item-compact">
+              <span class="reviewai-prob-label-compact">Genuine</span>
+              <div class="reviewai-prob-bar-compact">
+                <div class="reviewai-prob-fill-compact reviewai-genuine-fill" style="width: ${genuineWidth}%"></div>
+              </div>
+              <span class="reviewai-prob-value-compact">${genuineWidth}%</span>
             </div>
-          </div>
-          <div class="reviewai-prob-item">
-            <span>Fake: ${(probabilities.fake * 100).toFixed(1)}%</span>
-            <div class="reviewai-bar">
-              <div class="reviewai-bar-fill reviewai-fake" style="width: ${
-                probabilities.fake * 100
-              }%"></div>
+            <div class="reviewai-prob-item-compact">
+              <span class="reviewai-prob-label-compact">Fake</span>
+              <div class="reviewai-prob-bar-compact">
+                <div class="reviewai-prob-fill-compact reviewai-fake-fill" style="width: ${fakeWidth}%"></div>
+              </div>
+              <span class="reviewai-prob-value-compact">${fakeWidth}%</span>
             </div>
           </div>
         </div>
+        
+        ${
+          result.individual_predictions
+            ? this.renderIndividualPredictions(result.individual_predictions)
+            : ""
+        }
       </div>
-      
-      ${
-        result.individual_predictions
-          ? this.renderIndividualPredictions(result.individual_predictions)
-          : ""
-      }
-    </div>
-  `;
+    `;
   }
 
   createLowConfidenceWarning() {
@@ -2078,18 +2075,15 @@ class ReviewAIContentScript {
     }
     
     if (detailsSection.style.display === 'none' || detailsSection.style.display === '') {
-      // Expand
       detailsSection.style.display = 'block';
       icon.textContent = '▲';
       text.textContent = 'Hide';
       buttonElement.classList.add('expanded');
       
-      // Smooth scroll into view
       setTimeout(() => {
         detailsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 100);
     } else {
-      // Collapse
       detailsSection.style.display = 'none';
       icon.textContent = '▼';
       text.textContent = 'View Justification';
@@ -2142,7 +2136,6 @@ class ReviewAIContentScript {
             <div class="reviewai-detail-label">Key Indicators:</div>
             <ul>
               ${reasons.slice(0, 3).map(reason => `<li>${reason}</li>`).join('')}
-              ${reasons.length > 3 ? `<li class="reviewai-more">+${reasons.length - 3} more</li>` : ''}
             </ul>
           </div>
         ` : ''}
@@ -2216,6 +2209,9 @@ class ReviewAIContentScript {
       const predictionLabel = this.getPredictionLabel(prediction, confidence);
       const justification = result.justification || {};
 
+      const genuineWidth = (result.probabilities.genuine * 100).toFixed(1);
+      const fakeWidth = (result.probabilities.fake * 100).toFixed(1);
+
       resultsHTML += `
         <div class="reviewai-batch-item ${statusClass}">
           <div class="reviewai-batch-header">
@@ -2245,16 +2241,16 @@ class ReviewAIContentScript {
                   <div class="reviewai-prob-item-compact">
                     <span class="reviewai-prob-label-compact">Genuine</span>
                     <div class="reviewai-prob-bar-compact">
-                      <div class="reviewai-prob-fill reviewai-genuine" style="width: ${result.probabilities.genuine * 100}%"></div>
+                      <div class="reviewai-prob-fill-compact reviewai-genuine-fill" style="width: ${genuineWidth}%"></div>
                     </div>
-                    <span class="reviewai-prob-value-compact">${(result.probabilities.genuine * 100).toFixed(1)}%</span>
+                    <span class="reviewai-prob-value-compact">${genuineWidth}%</span>
                   </div>
                   <div class="reviewai-prob-item-compact">
                     <span class="reviewai-prob-label-compact">Fake</span>
                     <div class="reviewai-prob-bar-compact">
-                      <div class="reviewai-prob-fill reviewai-fake" style="width: ${result.probabilities.fake * 100}%"></div>
+                      <div class="reviewai-prob-fill-compact reviewai-fake-fill" style="width: ${fakeWidth}%"></div>
                     </div>
-                    <span class="reviewai-prob-value-compact">${(result.probabilities.fake * 100).toFixed(1)}%</span>
+                    <span class="reviewai-prob-value-compact">${fakeWidth}%</span>
                   </div>
                 </div>
               </div>

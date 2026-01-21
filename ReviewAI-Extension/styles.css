@@ -1797,9 +1797,9 @@
   }
 }
 
-/* Justification Section Styles */
+/* Justification Section */
 .reviewai-justification-section {
-  margin-top: 1rem;
+  margin: 1rem;
   padding: 1rem;
   background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
   border: 1px solid #bfdbfe;
@@ -1851,6 +1851,7 @@
   font-size: 12px;
   color: #6b7280;
   font-weight: 500;
+  text-transform: uppercase;
 }
 
 .reviewai-sentiment-value {
@@ -1907,6 +1908,7 @@
   color: #6b7280;
   font-weight: 500;
   margin-bottom: 0.5rem;
+  text-transform: uppercase;
 }
 
 .reviewai-indicators-list {
@@ -2171,9 +2173,22 @@
   color: #1f2937;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .reviewai-details-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.reviewai-prob-fill-compact {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 8px;
+}
+
+.reviewai-genuine-fill {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.reviewai-fake-fill {
+  background: linear-gradient(90deg, #ef4444, #f87171);
 }
