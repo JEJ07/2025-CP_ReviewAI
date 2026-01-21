@@ -39,7 +39,9 @@
         "*://*.zalora.com.ph/*",
         "*://*.newegg.com/*",
         "*://*.walmart.com/*",
-        "*://*.carousell.ph/*"
+        "*://*.carousell.ph/*",
+        "*://*.tiktok.com/*"
+
       ],
       "js": ["content.js"],
       "css": ["styles.css"]

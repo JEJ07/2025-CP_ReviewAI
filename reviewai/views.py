@@ -15,6 +15,7 @@ import re
 from collections import Counter
 # from .utils.fake_review_detector import get_detector
 from .utils.fake_review_detector2 import get_detector
+from .utils.justification_generator import get_justification_generator
 from .utils.language_detector import is_english, get_language_error_message
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
@@ -264,7 +265,7 @@ def analyze_view(request):
             stats.append({
                 "name": code.capitalize(),
                 "logo": platform_meta[code]["logo"],
-                "confidence": round(p["avg_conf"] * 100, 1),  # % format
+                "confidence": round(p["avg_conf"] * 100, 1),
                 "color": platform_meta[code]["color"],
                 "text_color": platform_meta[code]["text_color"],
             })
@@ -308,10 +309,17 @@ def predict_review(request):
         data = json.loads(request.body)
         review_text = data.get('review_text', '').strip()
         
-        if not review_text:
+        if not review_text or len(review_text) < 3:
             return JsonResponse({
                 'success': False,
-                'error': 'Please provide review text'
+                'error': 'Review text must be at least 3 characters long'
+            }, status=400)
+
+        word_count = len(review_text.split())
+        if word_count < 1:
+            return JsonResponse({
+                'success': False,
+                'error': 'Review text must contain at least 1 word'
             }, status=400)
         
         detector_instance = get_detector()
@@ -327,13 +335,21 @@ def predict_review(request):
         
         result = detector_instance.predict_single_review(review_text)
         
+        # Generate justification
+        justification_gen = get_justification_generator()
+        justification = justification_gen.generate_justification(
+            review_text=review_text,
+            prediction=result['prediction'],
+            confidence=result['confidence'],
+            cleaned_text=result.get('cleaned_text')
+        )
+        
         logger.info(f"Prediction completed for review length: {len(review_text)}")
         
         try:
             product_name = data.get('product_name', 'Unknown Product')
             user = request.user if request.user.is_authenticated else None
             
-            # Get ML-cleaned text
             cleaned_text = result.get('cleaned_text', review_text)
             
             review = Review.objects.create(
@@ -344,7 +360,6 @@ def predict_review(request):
                 created_at=timezone.now()
             )
 
-            # Log the activity
             log_activity(
                 user=user,
                 action='analysis',
@@ -364,7 +379,7 @@ def predict_review(request):
                     db_result = 'possibly_fake'
                 else:
                     db_result = 'uncertain'
-            else:  # genuine
+            else:
                 if confidence >= 0.9:
                     db_result = 'genuine'
                 elif confidence >= 0.75:
@@ -393,7 +408,8 @@ def predict_review(request):
             'confidence': result['confidence'],
             'probabilities': result['probabilities'],
             'individual_predictions': result.get('individual_predictions'),
-            'cleaned_text': result.get('cleaned_text')
+            'cleaned_text': result.get('cleaned_text'),
+            'justification': justification
         })
         
     except ValueError as e:
@@ -968,7 +984,6 @@ def extension_predict(request):
                 'error': 'Review text is required'
             }, status=400)
 
-        # Get user from token
         token = data.get('token')
         user = get_user_from_token(token) if token else None
         
@@ -987,19 +1002,25 @@ def extension_predict(request):
 
         result = detector_instance.predict_single_review(review_text)
         
+        justification_gen = get_justification_generator()
+        justification = justification_gen.generate_justification(
+            review_text=review_text,
+            prediction=result['prediction'],
+            confidence=result['confidence'],
+            cleaned_text=result.get('cleaned_text')
+        )
+        
         try:
             raw_product = data.get('product_name', 'Unknown Product')
             product_name = str(raw_product).strip() if raw_product else 'Unknown Product'
             
             platform = data.get('platform_name', 'extension')
             
-            # Initialize link variable properly
             raw_link = data.get('link', '')
             link = str(raw_link).strip() if raw_link else None
             if link == '':
                 link = None
             
-            # Get the ML-cleaned text from the result
             cleaned_text = result.get('cleaned_text', review_text)
             
             logger.info(f"Processing extension review - Platform: {platform}")
@@ -1007,7 +1028,6 @@ def extension_predict(request):
             logger.info(f"Original text: '{review_text[:50]}...'")
             logger.info(f"Cleaned text: '{cleaned_text[:50]}...'")
             
-            # Check for duplicates using cleaned text AND product name
             existing_review = Review.objects.filter(
                 platform=platform,
                 product_name=product_name[:255],
@@ -1048,7 +1068,7 @@ def extension_predict(request):
                         db_result = 'possibly_fake'
                     else:
                         db_result = 'uncertain'
-                else:  # genuine
+                else:
                     if confidence >= 0.9:
                         db_result = 'genuine'
                     elif confidence >= 0.75:
@@ -1078,6 +1098,7 @@ def extension_predict(request):
             'probabilities': result['probabilities'],
             'individual_predictions': result.get('individual_predictions'),
             'cleaned_text': result.get('cleaned_text'),
+            'justification': justification,
             'link': link,
             'user_logged_in': user is not None
         })
@@ -1102,11 +1123,12 @@ def extension_batch_predict(request):
                 'error': f'Invalid number of reviews (1-{batch_limit} allowed)'
             }, status=400)
 
-        # Get user from token (new)
+        # Get user from token
         token = data.get('token')
         user = get_user_from_token(token) if token else None
 
         detector_instance = get_detector()
+        justification_gen = get_justification_generator()
         results = []
         skipped = []
         
@@ -1170,6 +1192,12 @@ def extension_batch_predict(request):
                 
                 result = detector_instance.predict_single_review(review_text)
                 
+                justification = justification_gen.generate_justification(
+                    review_text=review_text,
+                    prediction=result['prediction'],
+                    confidence=result['confidence'],
+                    cleaned_text=result.get('cleaned_text')
+                )
                 
                 try:
                     cleaned_text = result.get('cleaned_text', review_text)
@@ -1189,7 +1217,7 @@ def extension_batch_predict(request):
                         
                         # Save cleaned text
                         review = Review.objects.create(
-                            user=user,  # Now associates with user if logged in
+                            user=user,
                             product_name=product_name[:255],
                             review_text=cleaned_text,
                             platform=platform,
@@ -1246,7 +1274,9 @@ def extension_batch_predict(request):
                     'probabilities': result['probabilities'],
                     'individual_predictions': result.get('individual_predictions'),
                     'cleaned_text': result.get('cleaned_text'),
-                    'link': link 
+                    'justification': justification,
+                    'link': link,
+                    'text': review_text
                 })
                 
             except Exception as e:
@@ -1298,6 +1328,14 @@ def extension_quick_analyze(request):
         
         result = detector_instance.predict_single_review(review_text)
         
+        # justification_gen = get_justification_generator()
+        # justification = justification_gen.generate_justification(
+        #     review_text=review_text,
+        #     prediction=result['prediction'],
+        #     confidence=result['confidence'],
+        #     cleaned_text=result.get('cleaned_text')
+        # )
+        
         logger.info(f"Quick analysis completed (not saved): {len(review_text)} chars")
         
         return JsonResponse({
@@ -1305,7 +1343,8 @@ def extension_quick_analyze(request):
             'confidence': result['confidence'],
             'probabilities': result['probabilities'],
             'individual_predictions': result.get('individual_predictions'),
-            'cleaned_text': result.get('cleaned_text')
+            'cleaned_text': result.get('cleaned_text'),
+            # 'justification': justification 
         })
         
     except Exception as e:

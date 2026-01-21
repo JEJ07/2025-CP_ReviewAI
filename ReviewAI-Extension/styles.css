@@ -1796,3 +1796,384 @@
     font-size: 16px;
   }
 }
+
+/* Justification Section Styles */
+.reviewai-justification-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.reviewai-justification-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.reviewai-info-icon {
+  flex-shrink: 0;
+}
+
+.reviewai-justification-summary {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.reviewai-justification-summary p {
+  margin: 0;
+  line-height: 1.5;
+  color: #374151;
+}
+
+/* Sentiment Box */
+.reviewai-sentiment-box {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reviewai-sentiment-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.reviewai-sentiment-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  text-transform: capitalize;
+}
+
+/* Flags Box */
+.reviewai-flags-box {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.reviewai-flags-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.reviewai-flags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.reviewai-flag-badge {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Indicators Box */
+.reviewai-indicators-box {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.reviewai-indicators-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.reviewai-indicators-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.reviewai-indicators-list li {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.reviewai-bullet {
+  color: #ef4444;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.reviewai-more-indicators {
+  font-size: 11px;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reviewai-justification-section {
+    padding: 0.75rem;
+    font-size: 12px;
+  }
+  
+  .reviewai-justification-title {
+    font-size: 13px;
+  }
+}
+
+/* Expandable justification Section */
+.reviewai-expand-section {
+  margin-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.75rem;
+}
+
+.reviewai-expand-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.reviewai-expand-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.reviewai-expand-btn.expanded {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
+.reviewai-expand-icon {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.reviewai-batch-details {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  animation: reviewai-slide-down 0.3s ease-out;
+}
+
+@keyframes reviewai-slide-down {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* Details Sections */
+.reviewai-details-section {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.reviewai-details-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.reviewai-details-section h6 {
+  margin: 0 0 0.5rem 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.reviewai-full-review-text {
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+.reviewai-no-details {
+  font-size: 13px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Compact Justification */
+.reviewai-justification-summary-compact {
+  padding: 0.75rem;
+  background: white;
+  border-left: 3px solid #3b82f6;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.reviewai-justification-summary-compact p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #374151;
+}
+
+.reviewai-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.reviewai-detail-box {
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.reviewai-detail-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reviewai-detail-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  text-transform: capitalize;
+}
+
+.reviewai-flags-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.reviewai-flag-mini {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.reviewai-indicators-compact ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+}
+
+.reviewai-indicators-compact li {
+  padding: 0.4rem 0;
+  font-size: 12px;
+  color: #374151;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.reviewai-indicators-compact li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #ef4444;
+  font-weight: bold;
+}
+
+.reviewai-indicators-compact li.reviewai-more {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* Compact Probability Bars */
+.reviewai-prob-bars-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reviewai-prob-item-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 12px;
+}
+
+.reviewai-prob-label-compact {
+  min-width: 60px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.reviewai-prob-bar-compact {
+  flex: 1;
+  height: 16px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reviewai-prob-value-compact {
+  min-width: 45px;
+  text-align: right;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reviewai-details-grid {
+    grid-template-columns: 1fr;
+  }
+}

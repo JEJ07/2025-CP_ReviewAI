@@ -67,7 +67,7 @@ class ReviewAnalyzer {
 
       const data = await response.json();
 
-      // SIMPLIFIED: Handle clean format only
+      // Handle clean format only
       if (data.prediction) {
         this.displayResult(data, reviewText);
       } else if (data.error) {
@@ -127,6 +127,7 @@ class ReviewAnalyzer {
     const colors = this.getConfidenceColors(result.prediction, confidence);
 
     const displayText = result.cleaned_text || reviewText;
+    const justification = result.justification || {};
 
     // Create result HTML
     this.resultDiv.innerHTML = this.createResultHTML(
@@ -137,7 +138,8 @@ class ReviewAnalyzer {
       confidence,
       confidencePercentage,
       isGenuine,
-      result
+      result,
+      justification
     );
 
     // Initialize interactive components
@@ -161,7 +163,8 @@ class ReviewAnalyzer {
     confidence,
     confidencePercentage,
     isGenuine,
-    result
+    result,
+    justification
   ) {
     return `
             <div class="bg-white rounded-xl shadow-lg border-2 ${
@@ -192,6 +195,8 @@ class ReviewAnalyzer {
                 </div>
 
                 ${confidence < 0.6 ? this.createLowConfidenceWarning() : ""}
+                
+                ${this.createJustificationSection(justification, colors)}
             </div>
 
             <div class="grid md:grid-cols-2 gap-6">
@@ -214,6 +219,77 @@ class ReviewAnalyzer {
         `;
   }
 
+ createJustificationSection(justification, colors) {
+    if (!justification || !justification.overall_summary) {
+      return '';
+    }
+
+    const reasons = justification.reasons || [];
+    const sentiment = justification.sentiment_analysis || {};
+    const flags = justification.flags || {};
+
+    return `
+      <div class="mt-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
+        <h4 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+          <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Why This Classification?
+        </h4>
+        
+        <div class="mb-3 p-3 bg-white rounded-md border border-gray-200 text-sm">
+          <p class="text-gray-700 leading-relaxed">${justification.overall_summary}</p>
+        </div>
+
+        ${sentiment.polarity !== undefined ? `
+        <div class="mb-3 p-3 bg-white rounded-md border border-gray-200">
+          <h5 class="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Sentiment Analysis</h5>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500">Tone:</span>
+            <span class="text-sm font-semibold text-gray-800 capitalize">
+              ${sentiment.polarity_label || 'neutral'}
+            </span>
+          </div>
+        </div>
+      ` : ''}
+
+        ${Object.keys(flags).length > 0 ? `
+          <div class="mb-3 p-3 bg-white rounded-md border border-gray-200">
+            <h5 class="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Detection Flags</h5>
+            <div class="flex flex-wrap gap-1.5">
+              ${Object.entries(flags).map(([flag, value]) => {
+                if (value) {
+                  return `<span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs border border-yellow-300 font-medium">
+                    ${flag.replace(/_/g, ' ')}
+                  </span>`;
+                }
+                return '';
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${reasons.length > 0 ? `
+          <div class="p-3 bg-white rounded-md border border-gray-200">
+            <h5 class="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Key Indicators</h5>
+            <ul class="space-y-1">
+              ${reasons.slice(0, 4).map(reason => `
+                <li class="flex items-start text-sm">
+                  <span class="text-red-500 mr-2 mt-0.5">•</span>
+                  <span class="text-gray-700 flex-1">${reason}</span>
+                </li>
+              `).join('')}
+              ${reasons.length > 4 ? `
+                <li class="text-xs text-gray-500 italic mt-1">
+                  +${reasons.length - 4} more indicator${reasons.length - 4 > 1 ? 's' : ''}
+                </li>
+              ` : ''}
+            </ul>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
   createLowConfidenceWarning() {
     return `
             <div class="mt-6 p-4 bg-yellow-100 border border-yellow-300 rounded-lg">

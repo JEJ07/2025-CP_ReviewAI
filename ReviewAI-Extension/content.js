@@ -8,6 +8,9 @@ class ReviewAIContentScript {
     this.isInitialized = false;
     this.currentUser = null;
     this.isLoggedIn = false;
+    this.currentBatchResults = [];
+
+    window.reviewAIInstance = this;
 
     this.reviewSelectors = {
       amazon: ['div[data-hook="review-collapsed"]', ".review-text-content"],
@@ -40,6 +43,9 @@ class ReviewAIContentScript {
         ".list--itemReview--d9Z9Z5Z",
       ],
       newegg: [".comments-content"],
+      tiktok: [
+        ".H4-Regular.text-color-UIText1"
+      ],
       general: [
         // ".review-text",
         // ".review-content",
@@ -745,7 +751,8 @@ class ReviewAIContentScript {
       hostname.includes("shein.") ||
       hostname.includes("flipkart.") ||
       hostname.includes("alibaba.") ||
-      hostname.includes("newegg.");
+      hostname.includes("newegg.") ||
+      hostname.includes("tiktok."); 
 
     console.log(`🔍 Step 2 - Is supported site:`, isSupportedSite);
 
@@ -787,7 +794,7 @@ class ReviewAIContentScript {
       return this.removeDuplicateReviews(hardcodedReviews);
     }
 
-    // 5. FIFTH: LAST RESORT: Intelligent detection (more restrictive)
+    // 5. FIFTH: LAST RESORT: Intelligent detection (restrictive)
     console.log(`🔍 Step 5 - Running intelligent detection...`);
     const intelligentReviews = this.findReviewPatterns();
     console.log(
@@ -848,6 +855,11 @@ class ReviewAIContentScript {
       hostname.includes("newegg.")
     ) {
       selectors = [...this.reviewSelectors.newegg];
+      } else if (
+      hostname.includes("tiktok.com") ||
+      hostname.includes("tiktok.")
+    ) {
+      selectors = [...this.reviewSelectors.tiktok];
     } else {
       selectors = this.reviewSelectors.general;
     }
@@ -1649,6 +1661,7 @@ class ReviewAIContentScript {
     if (hostname.includes("temu.")) return "temu";
     if (hostname.includes("zalora.")) return "zalora";
     if (hostname.includes("carousell.")) return "carousell";
+    if (hostname.includes("tiktok.")) return "tiktok"; 
 
 
     return "extension";
@@ -1851,6 +1864,71 @@ class ReviewAIContentScript {
     );
   }
 
+  createJustificationSection(justification, statusClass) {
+    if (!justification || !justification.overall_summary) {
+      return '';
+    }
+
+    const reasons = justification.reasons || [];
+    const sentiment = justification.sentiment_analysis || {};
+    const flags = justification.flags || {};
+
+    return `
+      <div class="reviewai-justification-section">
+        <h5 class="reviewai-justification-title">
+          <svg class="reviewai-info-icon" width="16" height="16" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="9" fill="#3b82f6" stroke="#2563eb" stroke-width="1"/>
+            <path d="M10 10v4M10 6h.01" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Why This Classification?
+        </h5>
+        
+        <!-- Overall Summary -->
+        <div class="reviewai-justification-summary">
+          <p>${justification.overall_summary}</p>
+        </div>
+
+        <!-- Sentiment Analysis (Only Tone) -->
+        ${sentiment.polarity !== undefined ? `
+          <div class="reviewai-sentiment-box">
+            <div class="reviewai-sentiment-label">Sentiment Tone:</div>
+            <div class="reviewai-sentiment-value">${sentiment.polarity_label || 'neutral'}</div>
+          </div>
+        ` : ''}
+
+        <!-- Detection Flags -->
+        ${Object.keys(flags).length > 0 ? `
+          <div class="reviewai-flags-box">
+            <div class="reviewai-flags-label">Detection Flags:</div>
+            <div class="reviewai-flags-list">
+              ${Object.entries(flags).map(([flag, value]) => {
+                if (value) {
+                  return `<span class="reviewai-flag-badge">${flag.replace(/_/g, ' ')}</span>`;
+                }
+                return '';
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Key Indicators -->
+        ${reasons.length > 0 ? `
+          <div class="reviewai-indicators-box">
+            <div class="reviewai-indicators-label">Key Indicators:</div>
+            <ul class="reviewai-indicators-list">
+              ${reasons.slice(0, 4).map(reason => `
+                <li><span class="reviewai-bullet">•</span>${reason}</li>
+              `).join('')}
+              ${reasons.length > 4 ? `
+                <li class="reviewai-more-indicators">+${reasons.length - 4} more indicator${reasons.length - 4 > 1 ? 's' : ''}</li>
+              ` : ''}
+            </ul>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
   displaySingleResult(result) {
     console.log("Full result object:", result);
     console.log("Prediction:", result.prediction);
@@ -1863,6 +1941,7 @@ class ReviewAIContentScript {
     const confidence = result.confidence;
     const confidencePercentage = Math.round(confidence * 100);
     const probabilities = result.probabilities;
+    const justification = result.justification || {};
 
     const isGenuine = prediction.toLowerCase() === "genuine";
 
@@ -1935,6 +2014,8 @@ class ReviewAIContentScript {
       
       ${confidence < 0.6 ? this.createLowConfidenceWarning() : ""}
       
+      ${this.createJustificationSection(justification, statusClass)}
+      
       <div class="reviewai-probabilities">
         <h5>Detailed Probabilities:</h5>
         <div class="reviewai-prob-bar">
@@ -1981,6 +2062,94 @@ class ReviewAIContentScript {
   `;
   }
 
+  toggleBatchDetails(reviewIndex, buttonElement) {
+    console.log(`toggleBatchDetails called for index: ${reviewIndex}`);
+    
+    const detailsSection = document.getElementById(`reviewai-batch-details-${reviewIndex}`);
+    const icon = buttonElement.querySelector('.reviewai-expand-icon');
+    const text = buttonElement.querySelector('.reviewai-expand-text');
+    
+    console.log('Details section found:', detailsSection);
+    console.log('Current display:', detailsSection?.style.display);
+    
+    if (!detailsSection) {
+      console.error('Details section not found for index:', reviewIndex);
+      return;
+    }
+    
+    if (detailsSection.style.display === 'none' || detailsSection.style.display === '') {
+      // Expand
+      detailsSection.style.display = 'block';
+      icon.textContent = '▲';
+      text.textContent = 'Hide';
+      buttonElement.classList.add('expanded');
+      
+      // Smooth scroll into view
+      setTimeout(() => {
+        detailsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    } else {
+      // Collapse
+      detailsSection.style.display = 'none';
+      icon.textContent = '▼';
+      text.textContent = 'View Justification';
+      buttonElement.classList.remove('expanded');
+    }
+  }
+
+  createBatchJustificationSection(justification, statusClass) {
+    if (!justification || !justification.overall_summary) {
+      return '<div class="reviewai-details-section"><p class="reviewai-no-details">No additional analysis available</p></div>';
+    }
+
+    const reasons = justification.reasons || [];
+    const sentiment = justification.sentiment_analysis || {};
+    const flags = justification.flags || {};
+
+    return `
+      <div class="reviewai-details-section">
+        <h6>Why This Classification?</h6>
+        
+        <div class="reviewai-justification-summary-compact">
+          <p>${justification.overall_summary}</p>
+        </div>
+
+        <div class="reviewai-details-grid">
+          ${sentiment.polarity !== undefined ? `
+            <div class="reviewai-detail-box">
+              <div class="reviewai-detail-label">Sentiment Tone</div>
+              <div class="reviewai-detail-value">${sentiment.polarity_label || 'neutral'}</div>
+            </div>
+          ` : ''}
+
+          ${Object.keys(flags).length > 0 ? `
+            <div class="reviewai-detail-box">
+              <div class="reviewai-detail-label">Flags</div>
+              <div class="reviewai-flags-compact">
+                ${Object.entries(flags).map(([flag, value]) => {
+                  if (value) {
+                    return `<span class="reviewai-flag-mini">${flag.replace(/_/g, ' ')}</span>`;
+                  }
+                  return '';
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+
+        ${reasons.length > 0 ? `
+          <div class="reviewai-indicators-compact">
+            <div class="reviewai-detail-label">Key Indicators:</div>
+            <ul>
+              ${reasons.slice(0, 3).map(reason => `<li>${reason}</li>`).join('')}
+              ${reasons.length > 3 ? `<li class="reviewai-more">+${reasons.length - 3} more</li>` : ''}
+            </ul>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
   displayBatchResults(results) {
     const resultEl = document.getElementById("reviewai-batch-result");
 
@@ -1989,6 +2158,9 @@ class ReviewAIContentScript {
       return;
     }
 
+    this.currentBatchResults = results;
+    console.log('Stored batch results:', this.currentBatchResults.length);
+
     const fakeCount = results.filter(
       (r) => r.prediction && r.prediction.toLowerCase() === "fake"
     ).length;
@@ -1996,9 +2168,7 @@ class ReviewAIContentScript {
       (r) => r.prediction && r.prediction.toLowerCase() === "genuine"
     ).length;
     const fakePercentage = ((fakeCount / results.length) * 100).toFixed(1);
-    const genuinePercentage = ((genuineCount / results.length) * 100).toFixed(
-      1
-    );
+    const genuinePercentage = ((genuineCount / results.length) * 100).toFixed(1);
 
     let resultsHTML = `
       <div class="reviewai-batch-summary">
@@ -2024,18 +2194,12 @@ class ReviewAIContentScript {
     `;
 
     results.forEach((result, index) => {
-      const prediction = result.prediction
-        ? result.prediction.toLowerCase()
-        : "";
-      const confidence =
-        typeof result.confidence === "number"
-          ? result.confidence
-          : parseFloat(result.confidence);
+      const prediction = result.prediction ? result.prediction.toLowerCase() : "";
+      const confidence = typeof result.confidence === "number" ? result.confidence : parseFloat(result.confidence);
 
       let statusClass;
       if (confidence >= 0.75) {
-        statusClass =
-          prediction === "genuine" ? "reviewai-genuine" : "reviewai-fake";
+        statusClass = prediction === "genuine" ? "reviewai-genuine" : "reviewai-fake";
       } else if (confidence >= 0.6) {
         statusClass = "reviewai-medium";
       } else {
@@ -2044,31 +2208,87 @@ class ReviewAIContentScript {
 
       const iconType = this.getIconType(prediction, confidence);
       const statusIcon = this.getStatusIcon(iconType, 18);
-      const confidenceDisplay = confidence
-        ? (confidence * 100).toFixed(1)
-        : "N/A";
+      const confidenceDisplay = confidence ? (confidence * 100).toFixed(1) : "N/A";
 
-      const link = result.link || "N/A";
       const cleanedText = result.cleaned_text || result.text || "N/A";
-      const preview =
-        cleanedText.substring(0, 100) + (cleanedText.length > 100 ? "..." : "");
+      const preview = cleanedText.substring(0, 100) + (cleanedText.length > 100 ? "..." : "");
 
       const predictionLabel = this.getPredictionLabel(prediction, confidence);
+      const justification = result.justification || {};
 
       resultsHTML += `
-    <div class="reviewai-batch-item ${statusClass}">
-      <div class="reviewai-batch-header">
-        <span class="reviewai-status-icon">${statusIcon}</span>
-        <span class="reviewai-batch-prediction ${statusClass}">${predictionLabel}</span>
-        <span class="reviewai-batch-confidence">${confidenceDisplay}%</span>
-      </div>
-      <div class="reviewai-batch-preview">${preview}</div>
-    </div>
-  `;
+        <div class="reviewai-batch-item ${statusClass}">
+          <div class="reviewai-batch-header">
+            <span class="reviewai-status-icon">${statusIcon}</span>
+            <span class="reviewai-batch-prediction ${statusClass}">${predictionLabel}</span>
+            <span class="reviewai-batch-confidence">${confidenceDisplay}%</span>
+          </div>
+          <div class="reviewai-batch-preview">${preview}</div>
+          
+          <div class="reviewai-expand-section">
+            <button class="reviewai-expand-btn" data-index="${index}">
+              <span class="reviewai-expand-icon">▼</span>
+              <span class="reviewai-expand-text">View Justification</span>
+            </button>
+            
+            <div class="reviewai-batch-details" id="reviewai-batch-details-${index}" style="display: none;">
+              <div class="reviewai-details-section">
+                <h6>Full Review:</h6>
+                <div class="reviewai-full-review-text">${cleanedText}</div>
+              </div>
+
+              ${this.createBatchJustificationSection(justification, statusClass)}
+
+              <div class="reviewai-details-section">
+                <h6>Probability Breakdown:</h6>
+                <div class="reviewai-prob-bars-compact">
+                  <div class="reviewai-prob-item-compact">
+                    <span class="reviewai-prob-label-compact">Genuine</span>
+                    <div class="reviewai-prob-bar-compact">
+                      <div class="reviewai-prob-fill reviewai-genuine" style="width: ${result.probabilities.genuine * 100}%"></div>
+                    </div>
+                    <span class="reviewai-prob-value-compact">${(result.probabilities.genuine * 100).toFixed(1)}%</span>
+                  </div>
+                  <div class="reviewai-prob-item-compact">
+                    <span class="reviewai-prob-label-compact">Fake</span>
+                    <div class="reviewai-prob-bar-compact">
+                      <div class="reviewai-prob-fill reviewai-fake" style="width: ${result.probabilities.fake * 100}%"></div>
+                    </div>
+                    <span class="reviewai-prob-value-compact">${(result.probabilities.fake * 100).toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
     });
 
     resultsHTML += "</div>";
     resultEl.innerHTML = resultsHTML;
+
+    setTimeout(() => {
+      this.setupBatchExpandButtons();
+    }, 100);
+  }
+
+  setupBatchExpandButtons() {
+    console.log('Setting up batch expand buttons...');
+    
+    const buttons = document.querySelectorAll('.reviewai-expand-btn');
+    console.log(`Found ${buttons.length} expand buttons`);
+    
+    buttons.forEach((button) => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const index = parseInt(button.getAttribute('data-index'));
+        console.log(`Button clicked for index: ${index}`);
+        
+        this.toggleBatchDetails(index, button);
+      });
+    });
   }
 
   renderIndividualPredictions(predictions) {
