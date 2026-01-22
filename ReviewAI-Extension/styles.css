@@ -2192,3 +2192,77 @@
 .reviewai-fake-fill {
   background: linear-gradient(90deg, #ef4444, #f87171);
 }
+
+/* DETECTION FLAGS STYLES */
+.reviewai-flags-list-detailed {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reviewai-flag-item-detected {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background-color: #fef3c7;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid #fbbf24; 
+}
+
+.reviewai-flag-item-detected .reviewai-flag-icon {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.reviewai-flag-item-detected .reviewai-flag-label {
+  color: #92400e;
+  font-weight: 500;
+}
+
+.reviewai-flag-item-not-detected {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.reviewai-flag-item-not-detected .reviewai-flag-icon {
+  color: #d1d5db;
+  flex-shrink: 0;
+}
+
+.reviewai-flag-item-not-detected .reviewai-flag-label {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.reviewai-flags-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 10px;
+}
+
+/* Batch flags */
+.reviewai-flags-compact-batch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* Compact sentiment display (for quick tooltip) */
+.reviewai-sentiment-compact {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #6b7280;
+  padding: 4px 8px;
+  background-color: #f9fafb;
+  border-radius: 4px;
+}

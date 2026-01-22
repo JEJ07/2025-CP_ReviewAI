@@ -1890,20 +1890,15 @@ class ReviewAIContentScript {
         ${sentiment.polarity !== undefined ? `
           <div class="reviewai-sentiment-box">
             <div class="reviewai-sentiment-label">Sentiment Tone:</div>
-            <div class="reviewai-sentiment-value">${sentiment.polarity_label || 'neutral'}</div>
+            <div class="reviewai-sentiment-value" style="text-transform: capitalize;">${sentiment.polarity_label || 'neutral'}</div>
           </div>
         ` : ''}
 
         ${Object.keys(flags).length > 0 ? `
           <div class="reviewai-flags-box">
             <div class="reviewai-flags-label">Detection Flags:</div>
-            <div class="reviewai-flags-list">
-              ${Object.entries(flags).map(([flag, value]) => {
-                if (value) {
-                  return `<span class="reviewai-flag-badge">${flag.replace(/_/g, ' ')}</span>`;
-                }
-                return '';
-              }).join('')}
+            <div class="reviewai-flags-list-detailed">
+              ${this.createDetailedFlagsList(flags)}
             </div>
           </div>
         ` : ''}
@@ -1923,6 +1918,51 @@ class ReviewAIContentScript {
         ` : ''}
       </div>
     `;
+  }
+
+  createDetailedFlagsList(flags) {
+    return Object.entries(flags).map(([flag, value]) => {
+      const label = this.formatFlagLabel(flag);
+      
+      if (value) {
+        return `
+          <div class="reviewai-flag-item-detected">
+            <svg class="reviewai-flag-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <span class="reviewai-flag-label">${label}</span>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="reviewai-flag-item-not-detected">
+            <svg class="reviewai-flag-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <span class="reviewai-flag-label">${label}</span>
+          </div>
+        `;
+      }
+    }).join('');
+  }
+
+  formatFlagLabel(flag) {
+    const acronyms = {
+      'rf': 'RF',
+      'svm': 'SVM'
+    };
+    
+    return flag
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => {
+        const lowerWord = word.toLowerCase();
+        if (acronyms[lowerWord]) {
+          return acronyms[lowerWord];
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
   }
 
   displaySingleResult(result) {
@@ -2112,20 +2152,15 @@ class ReviewAIContentScript {
           ${sentiment.polarity !== undefined ? `
             <div class="reviewai-detail-box">
               <div class="reviewai-detail-label">Sentiment Tone</div>
-              <div class="reviewai-detail-value">${sentiment.polarity_label || 'neutral'}</div>
+              <div class="reviewai-detail-value" style="text-transform: capitalize;">${sentiment.polarity_label || 'neutral'}</div>
             </div>
           ` : ''}
 
           ${Object.keys(flags).length > 0 ? `
             <div class="reviewai-detail-box">
-              <div class="reviewai-detail-label">Flags</div>
-              <div class="reviewai-flags-compact">
-                ${Object.entries(flags).map(([flag, value]) => {
-                  if (value) {
-                    return `<span class="reviewai-flag-mini">${flag.replace(/_/g, ' ')}</span>`;
-                  }
-                  return '';
-                }).join('')}
+              <div class="reviewai-detail-label">Detection Flags</div>
+              <div class="reviewai-flags-compact-batch">
+                ${this.createBatchFlagsList(flags)}
               </div>
             </div>
           ` : ''}
@@ -2141,6 +2176,20 @@ class ReviewAIContentScript {
         ` : ''}
       </div>
     `;
+  }
+
+  createBatchFlagsList(flags) {
+    const activeFlags = Object.entries(flags)
+      .filter(([flag, value]) => value)
+      .map(([flag, value]) => this.formatFlagLabel(flag));
+    
+    if (activeFlags.length === 0) {
+      return '<span style="color: #9ca3af; font-size: 11px;">No flags detected</span>';
+    }
+    
+    return activeFlags.map(label => 
+      `<span class="reviewai-flag-mini">${label}</span>`
+    ).join('');
   }
 
   displayBatchResults(results) {

@@ -13,9 +13,10 @@ import json
 import logging
 import re
 from collections import Counter
-# from .utils.fake_review_detector import get_detector
-from .utils.fake_review_detector2 import get_detector
-from .utils.justification_generator import get_justification_generator
+from .utils.fake_review_detector import get_detector
+from .utils.model_justification_generator import get_model_justification_generator  # NEW
+# from .utils.fake_review_detector2 import get_detector
+# from .utils.justification_generator import get_justification_generator
 from .utils.language_detector import is_english, get_language_error_message
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
@@ -335,8 +336,8 @@ def predict_review(request):
         
         result = detector_instance.predict_single_review(review_text)
         
-        # Generate justification
-        justification_gen = get_justification_generator()
+        # Generate model-based justification
+        justification_gen = get_model_justification_generator(detector_instance)
         justification = justification_gen.generate_justification(
             review_text=review_text,
             prediction=result['prediction'],
@@ -1002,14 +1003,14 @@ def extension_predict(request):
 
         result = detector_instance.predict_single_review(review_text)
         
-        justification_gen = get_justification_generator()
+        justification_gen = get_model_justification_generator(detector_instance)
         justification = justification_gen.generate_justification(
             review_text=review_text,
             prediction=result['prediction'],
             confidence=result['confidence'],
             cleaned_text=result.get('cleaned_text')
         )
-        
+
         try:
             raw_product = data.get('product_name', 'Unknown Product')
             product_name = str(raw_product).strip() if raw_product else 'Unknown Product'
@@ -1128,7 +1129,7 @@ def extension_batch_predict(request):
         user = get_user_from_token(token) if token else None
 
         detector_instance = get_detector()
-        justification_gen = get_justification_generator()
+        justification_gen = get_model_justification_generator(detector_instance)
         results = []
         skipped = []
         
