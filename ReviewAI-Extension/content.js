@@ -472,6 +472,29 @@ class ReviewAIContentScript {
         await this.scrapeBatchReviews();
       });
 
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'reviewai-single-toggle') {
+        const simpleDiv = document.getElementById('reviewai-single-simple');
+        const technicalDiv = document.getElementById('reviewai-single-technical');
+        const button = e.target;
+        
+        if (!simpleDiv || !technicalDiv) {
+          console.error("Toggle divs not found");
+          return;
+        }
+        
+        if (simpleDiv.style.display === 'none') {
+          simpleDiv.style.display = 'block';
+          technicalDiv.style.display = 'none';
+          button.textContent = 'Show Technical';
+        } else {
+          simpleDiv.style.display = 'none';
+          technicalDiv.style.display = 'block';
+          button.textContent = 'Show Simple';
+        }
+      }
+    });
+
     document
       .getElementById("reviewai-teach-btn")
       ?.addEventListener("click", () => {
@@ -1851,7 +1874,6 @@ class ReviewAIContentScript {
 
           this.displayBatchResults(results);
 
-          // Show save status
           if (response.data.user_logged_in) {
             this.showTempMessage("✅ Batch reviews saved to your account!");
           } else {
@@ -1972,12 +1994,17 @@ class ReviewAIContentScript {
     console.log("Probabilities:", result.probabilities);
 
     const resultEl = document.getElementById("reviewai-single-result");
+    const displayText = result.original_text || result.cleaned_text || result.text || '';
 
     const prediction = result.prediction;
     const confidence = result.confidence;
     const confidencePercentage = Math.round(confidence * 100);
     const probabilities = result.probabilities;
     const justification = result.justification || {};
+    const justificationSimple = result.justification_simple || {};
+    const overallSummary = justificationSimple.overall_summary || justification.overall_summary || '';
+    const simpleReasons = justificationSimple.reasons || justification.simple_reasons || [];
+    const technicalReasons = justification.reasons || [];
 
     const isGenuine = prediction.toLowerCase() === "genuine";
 
@@ -2017,6 +2044,12 @@ class ReviewAIContentScript {
           <span class="reviewai-status-icon">${statusIcon}</span>
           <h4>Review Analysis Result</h4>
         </div>
+
+        ${displayText ? `
+          <div class="reviewai-review-display">
+            <p class="reviewai-review-text">${this.escapeHtml(displayText)}</p>
+          </div>
+        ` : ''}
         
         <div class="reviewai-main-result">
           <div class="reviewai-circular-progress">
@@ -2053,7 +2086,7 @@ class ReviewAIContentScript {
         
         ${confidence < 0.6 ? this.createLowConfidenceWarning() : ""}
         
-        ${this.createJustificationSection(justification, statusClass)}
+        ${this.createSingleJustificationSection(overallSummary, simpleReasons, technicalReasons, justification.sentiment_analysis, justification.flags, statusClass)}
         
         <div class="reviewai-probabilities">
           <h5>Probability Breakdown:</h5>
@@ -2082,6 +2115,91 @@ class ReviewAIContentScript {
         }
       </div>
     `;
+  }
+
+  createSingleJustificationSection(overallSummary, simpleReasons, technicalReasons, sentiment, flags, statusClass) {
+    if (!overallSummary && simpleReasons.length === 0 && technicalReasons.length === 0) {
+      return '';
+    }
+
+    const confidenceColor = statusClass === 'reviewai-genuine' ? '#22c55e' : 
+                           statusClass === 'reviewai-fake' ? '#ef4444' : '#f59e0b';
+
+    return `
+      <div class="reviewai-justification-section">
+        <h5 class="reviewai-justification-title">
+          <svg class="reviewai-info-icon" width="16" height="16" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="9" fill="#3b82f6" stroke="#2563eb" stroke-width="1"/>
+            <path d="M10 10v4M10 6h.01" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Why This Classification?
+          
+          ${technicalReasons.length > 0 && simpleReasons.length > 0 ? `
+            <button id="reviewai-single-toggle" style="
+              font-size: 11px;
+              color: #2563eb;
+              background: none;
+              border: 1px solid #2563eb;
+              border-radius: 4px;
+              padding: 4px 8px;
+              cursor: pointer;
+              margin-left: auto;
+            ">
+              Show Technical
+            </button>
+          ` : ''}
+        </h5>
+        
+        ${overallSummary ? `
+          <div style="
+            background: linear-gradient(to right, #eff6ff, #dbeafe);
+            border-left: 4px solid ${confidenceColor};
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #1e40af;
+            font-weight: 500;
+          ">
+            💡 ${overallSummary}
+          </div>
+        ` : ''}
+
+        <!-- Simple Reasons (Default) -->
+        <div id="reviewai-single-simple" style="${simpleReasons.length === 0 ? 'display: none;' : ''}">
+          ${simpleReasons.map(reason => `
+            <div style="margin: 8px 0; display: flex; align-items: start; font-size: 12px;">
+              <span style="color: ${confidenceColor}; margin-right: 8px; flex-shrink: 0;">•</span>
+              <span style="flex: 1; color: #374151;">${reason}</span>
+            </div>
+          `).join('')}
+        </div>
+        
+        <!-- Technical Reasons (Hidden) -->
+        <div id="reviewai-single-technical" style="display: none;">
+          ${technicalReasons.map(reason => `
+            <div style="margin: 8px 0; display: flex; align-items: start; font-size: 12px;">
+              <span style="color: ${confidenceColor}; margin-right: 8px; flex-shrink: 0;">•</span>
+              <span style="flex: 1; color: #374151;">${reason}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        ${sentiment && sentiment.polarity !== undefined ? `
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+            <div style="font-size: 11px; color: #6b7280;">
+              <strong>Sentiment:</strong> ${sentiment.polarity_label || 'N/A'} (${(sentiment.polarity || 0).toFixed(2)})
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   createLowConfidenceWarning() {
@@ -2126,7 +2244,7 @@ class ReviewAIContentScript {
     } else {
       detailsSection.style.display = 'none';
       icon.textContent = '▼';
-      text.textContent = 'View Justification';
+      text.textContent = 'View Details';
       buttonElement.classList.remove('expanded');
     }
   }
@@ -2252,15 +2370,24 @@ class ReviewAIContentScript {
       const statusIcon = this.getStatusIcon(iconType, 18);
       const confidenceDisplay = confidence ? (confidence * 100).toFixed(1) : "N/A";
 
-      const cleanedText = result.cleaned_text || result.text || "N/A";
-      const preview = cleanedText.substring(0, 100) + (cleanedText.length > 100 ? "..." : "");
+      const displayText = result.original_text || result.cleaned_text || result.text || "N/A";
+      const preview = displayText.substring(0, 100) + (displayText.length > 100 ? "..." : "");
 
       const predictionLabel = this.getPredictionLabel(prediction, confidence);
+      
+      // GET BOTH JUSTIFICATIONS
       const justification = result.justification || {};
+      const justificationSimple = result.justification_simple || {};
+      const overallSummary = justificationSimple.overall_summary || justification.overall_summary || '';
+      const simpleReasons = justificationSimple.reasons || justification.simple_reasons || [];
+      const technicalReasons = justification.reasons || [];
+      const sentiment = justificationSimple.sentiment_analysis || justification.sentiment_analysis || {};
 
       const genuineWidth = (result.probabilities.genuine * 100).toFixed(1);
       const fakeWidth = (result.probabilities.fake * 100).toFixed(1);
 
+      const confidenceColor = this.getConfidenceColor(prediction, confidence);
+  
       resultsHTML += `
         <div class="reviewai-batch-item ${statusClass}">
           <div class="reviewai-batch-header">
@@ -2273,17 +2400,86 @@ class ReviewAIContentScript {
           <div class="reviewai-expand-section">
             <button class="reviewai-expand-btn" data-index="${index}">
               <span class="reviewai-expand-icon">▼</span>
-              <span class="reviewai-expand-text">View Justification</span>
+              <span class="reviewai-expand-text">View Details</span>
             </button>
             
             <div class="reviewai-batch-details" id="reviewai-batch-details-${index}" style="display: none;">
+              <!-- Full Review -->
               <div class="reviewai-details-section">
                 <h6>Full Review:</h6>
-                <div class="reviewai-full-review-text">${cleanedText}</div>
+                <div class="reviewai-full-review-text">${displayText}</div>
               </div>
 
-              ${this.createBatchJustificationSection(justification, statusClass)}
+              <!-- OVERALL SUMMARY -->
+              ${overallSummary ? `
+                <div class="reviewai-details-section">
+                  <div style="
+                    background: linear-gradient(to right, #eff6ff, #dbeafe);
+                    border-left: 4px solid ${confidenceColor};
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-size: 13px;
+                    color: #1e40af;
+                    font-weight: 500;
+                  ">
+                    💡 ${overallSummary}
+                  </div>
+                </div>
+              ` : ''}
 
+              <!-- KEY FINDINGS WITH TOGGLE -->
+              ${simpleReasons.length > 0 || technicalReasons.length > 0 ? `
+                <div class="reviewai-details-section">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h6 style="margin: 0;">Key Findings:</h6>
+                    ${technicalReasons.length > 0 && simpleReasons.length > 0 ? `
+                      <button class="reviewai-batch-toggle" data-index="${index}" style="
+                        font-size: 11px;
+                        color: #2563eb;
+                        background: none;
+                        border: 1px solid #2563eb;
+                        border-radius: 4px;
+                        padding: 4px 8px;
+                        cursor: pointer;
+                      ">
+                        Show Technical
+                      </button>
+                    ` : ''}
+                  </div>
+                  
+                  <!-- Simple Reasons (Default) -->
+                  <div id="reviewai-batch-simple-${index}" class="reviewai-reasons-list">
+                    ${simpleReasons.map(reason => `
+                      <div style="margin: 8px 0; display: flex; align-items: start; font-size: 12px;">
+                        <span style="color: ${confidenceColor}; margin-right: 8px; flex-shrink: 0;">•</span>
+                        <span style="flex: 1; color: #374151;">${reason}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                  
+                  <!-- Technical Reasons (Hidden) -->
+                  <div id="reviewai-batch-technical-${index}" class="reviewai-reasons-list" style="display: none;">
+                    ${technicalReasons.map(reason => `
+                      <div style="margin: 8px 0; display: flex; align-items: start; font-size: 12px;">
+                        <span style="color: ${confidenceColor}; margin-right: 8px; flex-shrink: 0;">•</span>
+                        <span style="flex: 1; color: #374151;">${reason}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Sentiment Analysis -->
+              ${sentiment.polarity !== undefined ? `
+                <div class="reviewai-details-section">
+                  <h6>Sentiment Analysis:</h6>
+                  <div style="font-size: 12px; color: #6b7280;">
+                    <strong>${sentiment.polarity_label || 'N/A'}</strong> (score: ${(sentiment.polarity || 0).toFixed(2)})
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Probability Breakdown -->
               <div class="reviewai-details-section">
                 <h6>Probability Breakdown:</h6>
                 <div class="reviewai-prob-bars-compact">
@@ -2314,6 +2510,7 @@ class ReviewAIContentScript {
 
     setTimeout(() => {
       this.setupBatchExpandButtons();
+      this.setupBatchToggleButtons();
     }, 100);
   }
 
@@ -2332,6 +2529,37 @@ class ReviewAIContentScript {
         console.log(`Button clicked for index: ${index}`);
         
         this.toggleBatchDetails(index, button);
+      });
+    });
+  }
+
+  setupBatchToggleButtons() {
+    const toggleButtons = document.querySelectorAll('.reviewai-batch-toggle');
+    console.log(`Found ${toggleButtons.length} batch toggle buttons`);
+    
+    toggleButtons.forEach((button) => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const index = button.getAttribute('data-index');
+        const simpleDiv = document.getElementById(`reviewai-batch-simple-${index}`);
+        const technicalDiv = document.getElementById(`reviewai-batch-technical-${index}`);
+        
+        if (!simpleDiv || !technicalDiv) {
+          console.error(`Toggle divs not found for batch index ${index}`);
+          return;
+        }
+        
+        if (simpleDiv.style.display === 'none') {
+          simpleDiv.style.display = 'block';
+          technicalDiv.style.display = 'none';
+          button.textContent = 'Show Technical';
+        } else {
+          simpleDiv.style.display = 'none';
+          technicalDiv.style.display = 'block';
+          button.textContent = 'Show Simple';
+        }
       });
     });
   }
@@ -2568,7 +2796,7 @@ class ReviewAIContentScript {
         );
       } else {
         this.showSuccessMessage(
-          `Found ${validReviews.length} English reviews (highlighted in green)`
+          `Found ${validReviews.length} English reviews`
         );
       }
 

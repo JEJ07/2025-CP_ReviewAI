@@ -310,6 +310,9 @@ def predict_review(request):
         data = json.loads(request.body)
         review_text = data.get('review_text', '').strip()
         
+        logger.info(f"DEBUG: Received review_text = '{review_text}'")
+        logger.info(f"DEBUG: Byte representation = {review_text.encode('utf-8')}")
+
         if not review_text or len(review_text) < 3:
             return JsonResponse({
                 'success': False,
@@ -410,6 +413,7 @@ def predict_review(request):
             'probabilities': result['probabilities'],
             'individual_predictions': result.get('individual_predictions'),
             'cleaned_text': result.get('cleaned_text'),
+            'original_text': review_text,
             'justification': justification
         })
         
@@ -1099,7 +1103,16 @@ def extension_predict(request):
             'probabilities': result['probabilities'],
             'individual_predictions': result.get('individual_predictions'),
             'cleaned_text': result.get('cleaned_text'),
+            'original_text': review_text,
             'justification': justification,
+            'justification_simple': {
+                'prediction': justification['prediction'],
+                'confidence': justification['confidence'],
+                'reasons': justification.get('simple_reasons', justification.get('reasons', [])),
+                'overall_summary': justification.get('overall_summary', ''),
+                'flags': justification.get('flags', {}),
+                'sentiment_analysis': justification.get('sentiment_analysis', {})
+            },
             'link': link,
             'user_logged_in': user is not None
         })
@@ -1276,6 +1289,15 @@ def extension_batch_predict(request):
                     'individual_predictions': result.get('individual_predictions'),
                     'cleaned_text': result.get('cleaned_text'),
                     'justification': justification,
+                    'justification_simple': {
+                        'prediction': justification['prediction'],
+                        'confidence': justification['confidence'],
+                        'reasons': justification.get('simple_reasons', justification.get('reasons', [])),
+                        'overall_summary': justification.get('overall_summary', ''),
+                        'flags': justification.get('flags', {}),
+                        'sentiment_analysis': justification.get('sentiment_analysis', {})
+                    },
+                    'original_text': review_text,
                     'link': link,
                     'text': review_text
                 })

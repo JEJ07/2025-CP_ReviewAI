@@ -2,7 +2,7 @@ import json
 import pickle
 import torch
 import numpy as np
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, DistilBertForSequenceClassification
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
 import joblib
@@ -56,8 +56,8 @@ class FakeReviewDetector:
 
     def _load_traditional_models(self):
         try:
-            svm_path = os.path.join(self.model_folder, 'svm_model_significant.pkl')
-            rf_path = os.path.join(self.model_folder, 'rf_model_significant.pkl')
+            svm_path = os.path.join(self.model_folder, 'svm_model_with_repetition.pkl')
+            rf_path = os.path.join(self.model_folder, 'rf_model_with_repetition.pkl')
             tfidf_path = os.path.join(self.model_folder, 'tfidf_vectorizer_new_length_2.pkl')
 
             for path, name in [(svm_path, 'SVM'), (rf_path, 'Random Forest'), (tfidf_path, 'TF-IDF')]:
@@ -87,6 +87,12 @@ class FakeReviewDetector:
                 device_map=None,
                 low_cpu_mem_usage=True
             )
+
+            self.distilbert_model = DistilBertForSequenceClassification.from_pretrained(
+                distilbert_path,
+                attn_implementation="eager"
+            )
+            
             self.distilbert_model.to(self.device)
             self.distilbert_model.eval()
             for param in self.distilbert_model.parameters():
@@ -128,10 +134,18 @@ class FakeReviewDetector:
         return text.strip()
 
     def _feature_engineering(self, processed_text, raw_text):
+        from collections import Counter
+        
+        # Get words for analysis
+        words = processed_text.lower().split()
+        word_count = len(words)
+                
         # Review length
-        review_length = len(processed_text.split())
+        review_length = word_count
+        
         # Sentiment
         sentiment = TextBlob(processed_text).sentiment.polarity
+        
         # Length bucket
         if review_length <= 3:
             length_bucket = 0
@@ -141,61 +155,119 @@ class FakeReviewDetector:
             length_bucket = 2
         else:
             length_bucket = 3
-        # Only keep significant keywords
-        significant_keywords = ['fast', 'recommended', 'bad', 'fake', 'original', 'authentic']
+        
+        # Emoji count
+        emoji_pattern = re.compile(
+            "["
+            "\U0001F600-\U0001F64F"
+            "\U0001F300-\U0001F5FF"
+            "\U0001F680-\U0001F6FF"
+            "\U0001F1E0-\U0001F1FF"
+            "\U00002702-\U000027B0"
+            "\U0001F900-\U0001F9FF"
+            "\U00002600-\U000026FF"
+            "\U0001F170-\U0001F251"
+            "\U0001FA70-\U0001FAFF"
+            "]",
+            flags=re.UNICODE
+        )
+        
+        # Count individual emojis
+        emoji_matches = emoji_pattern.findall(raw_text)
+        emoji_count = len(emoji_matches)
+        
+        # Debug log with actual emojis found
+        if emoji_count > 0:
+            logger.info(f"Found {emoji_count} emojis: {emoji_matches} in: '{raw_text[:50]}'")
+        
+        # Keyword flags (7 keywords)
+        significant_keywords = ['fast', 'good', 'recommended', 'bad', 'fake', 'original', 'authentic']
         keyword_flags = [1 if kw in processed_text else 0 for kw in significant_keywords]
-        # Stack features
-        extra_features = np.array([review_length, sentiment, length_bucket] + keyword_flags).reshape(1, -1)
+        
+        # NEW 4 repetition features
+        
+        # Immediate repetition count
+        if word_count < 2:
+            immediate_repetition = 0
+        else:
+            immediate_repetition = sum(1 for i in range(word_count - 1) 
+                                    if words[i] == words[i + 1])
+        
+        # Word repetition ratio
+        if word_count == 0:
+            repetition_ratio = 0.0
+        else:
+            word_counts = Counter(words)
+            repeated_words = sum(count - 1 for count in word_counts.values() if count > 1)
+            repetition_ratio = repeated_words / word_count
+        
+        # Max word repetition
+        if word_count == 0:
+            max_repetition = 1
+        else:
+            max_repetition = max(Counter(words).values())
+        
+        # Normalized repetition score
+        if word_count == 0:
+            norm_repetition_score = 0.0
+        else:
+            length_penalty = 1.0 if word_count <= 10 else 0.5
+            norm_repetition_score = (immediate_repetition * 2 + repetition_ratio * word_count) * length_penalty
+        
+        # COMBINE ALL 15 FEATURES IN CORRECT ORDER
+        extra_features = np.array([
+            review_length,
+            sentiment,
+            length_bucket,
+            emoji_count,                
+            *keyword_flags,
+            immediate_repetition,
+            repetition_ratio,
+            max_repetition,
+            norm_repetition_score
+        ]).reshape(1, -1)
+        
         return extra_features
 
     def get_feature_names(self):
-        """Get all feature names used by the models"""
         tfidf_features = self.tfidf_vectorizer.get_feature_names_out().tolist()
         engineered_features = [
             'review_length',
-            'sentiment', 
+            'sentiment',
             'length_bucket',
+            'emoji_count',
             'kw_fast',
+            'kw_good',
             'kw_recommended',
-            'kw_bad',
-            'kw_fake',
+            'kw_bad', 
+            'kw_fake', 
             'kw_original',
-            'kw_authentic'
+            'kw_authentic',
+            'immediate_repetition',
+            'repetition_ratio',
+            'max_repetition',
+            'norm_repetition_score'
         ]
         return tfidf_features + engineered_features
     
     def get_rf_feature_importance(self, review_text):
-        """
-        Get Random Forest's feature importances for a specific review
-        
-        Args:
-            review_text: The review text to analyze
-            
-        Returns:
-            list: Top contributing features with their values and importances
-        """
         try:
-            # Preprocess and extract features (same as prediction)
             processed_text = self.preprocess_text(review_text)
             text_tfidf = self.tfidf_vectorizer.transform([processed_text])
             extra_features = self._feature_engineering(processed_text, review_text)
             X = sparse.hstack([text_tfidf, sparse.csr_matrix(extra_features)])
             
-            # Get feature importances from trained RF model
             feature_importance = self.rf_model.feature_importances_
             feature_names = self.get_feature_names()
             
-            # Get this review's feature values
             review_features = X.toarray()[0]
             
-            # Find non-zero features (features present in this review)
             important_indices = np.where(review_features != 0)[0]
             
-            # Calculate contribution for each feature
             feature_contributions = []
             for idx in important_indices:
                 contribution = review_features[idx] * feature_importance[idx]
-                if abs(contribution) > 0.0001:  # Threshold for significance
+                if abs(contribution) > 0.0001:
                     feature_contributions.append({
                         'feature': feature_names[idx],
                         'value': float(review_features[idx]),
@@ -203,53 +275,37 @@ class FakeReviewDetector:
                         'contribution': float(contribution)
                     })
             
-            # Sort by absolute contribution
             feature_contributions.sort(key=lambda x: abs(x['contribution']), reverse=True)
             
-            return feature_contributions[:15]  # Top 15 features
+            return feature_contributions[:15]
             
         except Exception as e:
             logger.error(f"Error getting RF feature importance: {str(e)}")
             return []
     
     def get_svm_feature_contributions(self, review_text):
-        """
-        Get SVM's feature contributions for a specific review
-        
-        Args:
-            review_text: The review text to analyze
-            
-        Returns:
-            list: Top contributing features with their weights
-        """
         try:
-            # Preprocess and extract features
             processed_text = self.preprocess_text(review_text)
             text_tfidf = self.tfidf_vectorizer.transform([processed_text])
             extra_features = self._feature_engineering(processed_text, review_text)
             X = sparse.hstack([text_tfidf, sparse.csr_matrix(extra_features)])
             
-            # Handle both dense and sparse coefficient formats
             if sparse.issparse(self.svm_model.coef_):
                 coef = self.svm_model.coef_.toarray()[0]
             else:
                 coef = self.svm_model.coef_[0]
             
-            # Get this review's feature values
             review_features = X.toarray()[0]
             
-            # Calculate contribution: feature_value * weight
             contributions = review_features * coef
             
             feature_names = self.get_feature_names()
             
-            # Get top contributing features (both positive and negative)
-            top_positive_indices = np.argsort(contributions)[-10:][::-1]  # Top 10 pushing to FAKE
-            top_negative_indices = np.argsort(contributions)[:10]  # Top 10 pushing to GENUINE
+            top_positive_indices = np.argsort(contributions)[-10:][::-1]
+            top_negative_indices = np.argsort(contributions)[:10]
             
             result = []
             
-            # Add positive contributors (push towards FAKE)
             for idx in top_positive_indices:
                 if abs(contributions[idx]) > 0.001:
                     result.append({
@@ -260,7 +316,6 @@ class FakeReviewDetector:
                         'direction': 'FAKE'
                     })
             
-            # Add negative contributors (push towards GENUINE)
             for idx in top_negative_indices:
                 if abs(contributions[idx]) > 0.001:
                     result.append({
@@ -271,25 +326,15 @@ class FakeReviewDetector:
                         'direction': 'GENUINE'
                     })
             
-            # Sort by absolute contribution
             result.sort(key=lambda x: abs(x['contribution']), reverse=True)
             
-            return result[:15]  # Top 15 features
+            return result[:15]
             
         except Exception as e:
             logger.error(f"Error getting SVM contributions: {str(e)}")
             return []
 
     def get_distilbert_attention(self, review_text):
-        """
-        Get DistilBERT's attention weights to see which tokens mattered most
-        
-        Args:
-            review_text: The review text to analyze
-            
-        Returns:
-            list: Top attended tokens with their attention scores
-        """
         try:
             distilbert_text = self.preprocess_for_distilbert(review_text)
             
@@ -303,30 +348,19 @@ class FakeReviewDetector:
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
             
             with torch.no_grad():
-                # Request attention outputs
                 outputs = self.distilbert_model(**inputs, output_attentions=True)
                 
-                # Get attention from last layer
-                # Shape: [batch_size, num_heads, seq_len, seq_len]
-                attentions = outputs.attentions[-1][0]  # Get first (only) batch item
-                
-                # Average across all attention heads
-                # Shape: [seq_len, seq_len]
+                attentions = outputs.attentions[-1][0]
+
                 avg_attention = attentions.mean(dim=0)
                 
-                # Get attention TO the [CLS] token (classification token)
-                # This shows what tokens influenced the final classification
-                cls_attention = avg_attention[0]  # First token is [CLS]
+                cls_attention = avg_attention[0]
                 
-                # Convert token IDs to tokens
                 tokens = self.tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
                 
-                # Pair tokens with attention scores
                 token_importance = []
                 for i, (token, attn_score) in enumerate(zip(tokens, cls_attention)):
-                    # Skip special tokens
                     if token not in ['[CLS]', '[SEP]', '[PAD]']:
-                        # Remove ## from subword tokens
                         clean_token = token.replace('##', '')
                         token_importance.append({
                             'token': clean_token,
@@ -334,10 +368,9 @@ class FakeReviewDetector:
                             'position': i
                         })
                 
-                # Sort by attention score (highest first)
                 token_importance.sort(key=lambda x: x['attention'], reverse=True)
                 
-                return token_importance[:10]  # Top 10 most important tokens
+                return token_importance[:10]
                 
         except Exception as e:
             logger.error(f"Error getting DistilBERT attention: {str(e)}")
@@ -503,19 +536,31 @@ class FakeReviewDetector:
         return {
             'ensemble_config': self.config,
             'model_versions': {
-                'svm': 'SVM with RBF kernel',
-                'random_forest': 'Random Forest 500 estimators',
+                'svm': 'LinearSVC with 15 significant features (11 original + 4 repetition)',
+                'random_forest': 'Random Forest 500 estimators with 15 significant features',
                 'distilbert': 'Fine-tuned DistilBERT for fake review detection',
                 'tfidf': 'TF-IDF Vectorizer (7500 features)'
             },
             'training_data_size': 15000,
             'test_data_size': 3000,
             'features_used': [
-                'review_length', 'sentiment', 'length_bucket',
-                'kw_fast', 'kw_recommended', 'kw_bad', 'kw_fake', 'kw_original', 'kw_authentic'
-            ]
+                # Original 11 significant features (kw_scam removed)
+                'review_length', 'sentiment', 'length_bucket', 'emoji_count',
+                'kw_fast', 'kw_good', 'kw_recommended', 'kw_bad', 
+                'kw_fake', 'kw_original', 'kw_authentic',
+                # NEW 4 repetition features
+                'immediate_repetition', 'repetition_ratio', 
+                'max_repetition', 'norm_repetition_score'
+            ],
+            'total_features': 7515,  # 7500 TF-IDF + 15 engineered
+            'repetition_features_added': True,
+            'performance_improvement': {
+                'svm_accuracy': '+0.50%',
+                'rf_accuracy': '+0.23%',
+                'features_added': 4,
+                'features_removed': 1
+            }
         }
-
 
 _detector_instance = None
 

@@ -10,6 +10,7 @@ class ReviewAnalyzer {
     this.csrfToken = window.csrfToken;
 
     this.init();
+    this.initializeToggleHandler(); 
   }
 
   init() {
@@ -66,6 +67,11 @@ class ReviewAnalyzer {
       });
 
       const data = await response.json();
+
+      console.log("Full API Response:", data);
+      console.log("Justification Object:", data.justification);
+      console.log("Simple Reasons:", data.justification?.simple_reasons);
+      console.log("Technical Reasons:", data.justification?.reasons);
 
       // Handle clean format only
       if (data.prediction) {
@@ -166,6 +172,9 @@ class ReviewAnalyzer {
     result,
     justification
   ) {
+    
+    const displayText = result.original_text || result.cleaned_text || reviewText;
+
     return `
             <div class="bg-white rounded-xl shadow-lg border-2 ${
               colors.border
@@ -176,14 +185,8 @@ class ReviewAnalyzer {
                     </div>
                     
                     <div class="flex-1 max-w-md">
-                        <div class="text-sm ${
-                          colors.accent
-                        } italic mb-4 line-clamp-3">
-                            "${
-                              reviewText.length > 150
-                                ? reviewText.substring(0, 150) + "..."
-                                : reviewText
-                            }"
+                        <div class="text-sm ${colors.accent} italic mb-4 line-clamp-3">
+                        "${displayText.length > 150 ? displayText.substring(0, 150) + "..." : displayText}"
                         </div>
                         <div class="text-2xl font-bold ${colors.text} mb-2">
                             ${predictionLabel}
@@ -219,90 +222,106 @@ class ReviewAnalyzer {
         `;
   }
 
- createJustificationSection(justification, colors) {
-    if (!justification || !justification.overall_summary) {
-      return '';
-    }
+  createJustificationSection(justification, colors) {
+      if (!justification) {
+          console.warn("No justification provided");
+          return '';
+      }
 
-    const reasons = justification.reasons || [];
-    const sentiment = justification.sentiment_analysis || {};
-    const flags = justification.flags || {};
+      const simpleReasons = justification.simple_reasons || [];
+      const technicalReasons = justification.reasons || [];
+      const sentiment = justification.sentiment_analysis || {};
+      const flags = justification.flags || {};
+      
+      if (simpleReasons.length === 0 && technicalReasons.length === 0) {
+          console.warn("No reasons found in justification");
+          return '';
+      }
 
-    return `
-      <div class="mt-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
-        <h4 class="text-base font-bold text-gray-800 mb-3 flex items-center">
-          <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          Why This Classification?
-        </h4>
-        
-        <div class="mb-3 p-3 bg-white rounded-md border border-gray-200 text-sm">
-          <p class="text-gray-700 leading-relaxed">${justification.overall_summary}</p>
-        </div>
-
-        ${sentiment.polarity !== undefined ? `
-        <div class="mb-3 p-3 bg-white rounded-md border border-gray-200">
-          <h5 class="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Sentiment Analysis</h5>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-500">Tone:</span>
-            <span class="text-sm font-semibold text-gray-800 capitalize">
-              ${sentiment.polarity_label || 'neutral'}
+      const displayReasons = simpleReasons.length > 0 ? simpleReasons : technicalReasons;
+      
+      return `
+        <div class="mt-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-md border border-blue-100">
+          <h4 class="text-base font-bold text-gray-800 mb-3 flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <svg class="w-5 h-5 ${colors.text}" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+              </svg>
+              Why This Classification?
             </span>
-          </div>
-        </div>
-      ` : ''}
+            
+            ${technicalReasons.length > 0 && simpleReasons.length > 0 ? `
+              <button id="toggle-technical" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 px-3 py-1 bg-white rounded-lg shadow-sm hover:shadow">
+                Show Technical Details
+              </button>
+            ` : ''}
+          </h4>
 
-        <div class="mb-3 p-3 bg-white rounded-md border border-gray-200">
-          <h5 class="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Detection Flags</h5>
-          <div class="space-y-1.5">
-            ${Object.entries(flags).map(([flag, value]) => {
-              const label = this.formatFlagLabel(flag);
-              
-              if (value) {
-                return `
-                  <div class="flex items-center justify-between px-2 py-1 bg-yellow-50 rounded text-xs">
-                    <span class="text-yellow-700 font-medium">${label}</span>
-                    <svg class="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                    </svg>
-                  </div>
-                `;
-              } else {
-                return `
-                  <div class="flex items-center justify-between px-2 py-1 bg-gray-50 rounded text-xs">
-                    <span class="text-gray-500 font-medium">${label}</span>
-                    <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                    </svg>
-                  </div>
-                `;
-              }
-            }).join('')}
-          </div>
-        </div>
+          ${justification.overall_summary ? `
+            <div class="mb-4 p-3 bg-white rounded-lg border-l-4 ${colors.border}">
+              <p class="text-sm ${colors.text} font-medium">
+                ${justification.overall_summary}
+              </p>
+            </div>
+          ` : ''}
 
-        ${reasons.length > 0 ? `
-          <div class="p-3 bg-white rounded-md border border-gray-200">
-            <h5 class="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Key Indicators</h5>
-            <ul class="space-y-1">
-              ${reasons.slice(0, 4).map(reason => `
-                <li class="flex items-start text-sm">
-                  <span class="text-red-500 mr-2 mt-0.5">•</span>
-                  <span class="text-gray-700 flex-1">${reason}</span>
-                </li>
-              `).join('')}
-              ${reasons.length > 4 ? `
-                <li class="text-xs text-gray-500 italic mt-1">
-                  +${reasons.length - 4} more indicator${reasons.length - 4 > 1 ? 's' : ''}
-                </li>
-              ` : ''}
-            </ul>
+          <div id="simple-reasons" class="space-y-2 ${simpleReasons.length === 0 ? 'hidden' : ''}">
+            ${displayReasons.map(reason => `
+              <div class="flex items-start text-sm bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow duration-200">
+                <span class="${colors.accent} mr-2 mt-0.5 font-bold">•</span>
+                <span class="text-gray-700 flex-1">${reason}</span>
+              </div>
+            `).join('')}
           </div>
-        ` : ''}
-      </div>
-    `;
+          
+          <div id="technical-reasons" class="space-y-2 hidden">
+            ${technicalReasons.map(reason => `
+              <div class="flex items-start text-sm bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow duration-200">
+                <span class="${colors.accent} mr-2 mt-0.5 font-bold">•</span>
+                <span class="text-gray-700 flex-1">${reason}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          ${sentiment.polarity !== undefined ? `
+            <div class="mt-4 pt-4 border-t border-blue-200">
+              <p class="text-xs text-gray-600">
+                <strong>Sentiment Analysis:</strong> 
+                ${sentiment.polarity_label || 'N/A'} 
+                (score: ${(sentiment.polarity || 0).toFixed(2)})
+              </p>
+            </div>
+          ` : ''}
+        </div>
+      `;
   }
+
+  initializeToggleHandler() {
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'toggle-technical') {
+            const simpleDiv = document.getElementById('simple-reasons');
+            const technicalDiv = document.getElementById('technical-reasons');
+            const button = e.target;
+            
+            // ✅ NULL CHECKS
+            if (!simpleDiv || !technicalDiv) {
+                console.error("Toggle divs not found");
+                return;
+            }
+            
+            if (simpleDiv.classList.contains('hidden')) {
+                simpleDiv.classList.remove('hidden');
+                technicalDiv.classList.add('hidden');
+                button.textContent = 'Show Technical Details';
+            } else {
+                simpleDiv.classList.add('hidden');
+                technicalDiv.classList.remove('hidden');
+                button.textContent = 'Show Simple Explanation';
+            }
+        }
+    });
+  }
+
 
   formatFlagLabel(flag) {
     const acronyms = {

@@ -2266,3 +2266,81 @@
   background-color: #f9fafb;
   border-radius: 4px;
 }
+
+/* ===== SIMPLE REVIEW TEXT DISPLAY ===== */
+
+.reviewai-review-display {
+  margin: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.reviewai-review-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1f2937;
+  font-style: italic;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* ===== STATUS-SPECIFIC BACKGROUNDS ===== */
+
+.reviewai-result-card.reviewai-genuine .reviewai-review-display {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.reviewai-result-card.reviewai-fake .reviewai-review-display {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.reviewai-result-card.reviewai-medium .reviewai-review-display {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.reviewai-result-card.reviewai-uncertain .reviewai-review-display {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+/* ===== SCROLLBAR FOR LONG REVIEWS ===== */
+
+.reviewai-review-display::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reviewai-review-display::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.reviewai-review-display::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.reviewai-review-display::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 480px) {
+  .reviewai-review-display {
+    padding: 12px;
+    max-height: 150px;
+  }
+  
+  .reviewai-review-text {
+    font-size: 13px;
+  }
+}
