@@ -233,7 +233,7 @@ class ModelJustificationGenerator:
             if feature_name == 'sentiment':
                 polarity = value
                 
-                if polarity > 0.5:
+                if polarity > 0.4:
                     reasons.append(f"Highly positive sentiment (score: {polarity:.2f}) flagged by model")
                     simple_reasons.append(f"Overly enthusiastic tone (suspiciously happy)")
                     flags['extreme_sentiment'] = True
@@ -279,7 +279,7 @@ class ModelJustificationGenerator:
             
             # REPETITION FEATURES
             elif feature_name == 'immediate_repetition':
-                if value > 2:
+                if value >= 2:
                     reasons.append(f"Excessive immediate word repetition ({int(value)} occurrences) suggests unnatural language")
                     simple_reasons.append(f"Repeats words back-to-back unnaturally ({int(value)} times)")
                     flags['excessive_repetition'] = True
@@ -312,6 +312,13 @@ class ModelJustificationGenerator:
                     reasons.append(f"Excessive emoji usage ({int(value)} emojis) may indicate fake review")
                     simple_reasons.append(f"Too many emojis ({int(value)}) - trying too hard")
                     flags['excessive_emojis'] = True
+
+            elif feature_name == 'excessive_punctuation':
+                if value > 0:
+                    reasons.append(f"Excessive punctuation marks detected (more than 3 exclamation/question marks)")
+                    simple_reasons.append(f"Too many exclamation marks - trying too hard")
+                    flags['unnatural_language'] = True
+                    flags['excessive_emphasis'] = True
             
             # MEANINGFUL TF-IDF WORDS
             elif contribution > 0.005 and self._is_meaningful_word(feature_name):
