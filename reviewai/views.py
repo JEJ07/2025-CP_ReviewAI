@@ -345,7 +345,8 @@ def predict_review(request):
             review_text=review_text,
             prediction=result['prediction'],
             confidence=result['confidence'],
-            cleaned_text=result.get('cleaned_text')
+            cleaned_text=result.get('cleaned_text'),
+            individual_predictions=result.get('individual_predictions')
         )
         
         logger.info(f"Prediction completed for review length: {len(review_text)}")

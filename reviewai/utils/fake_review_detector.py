@@ -58,6 +58,8 @@ class FakeReviewDetector:
         try:
             svm_path = os.path.join(self.model_folder, 'svm_model_16_features.pkl')
             rf_path = os.path.join(self.model_folder, 'rf_model_16_features.pkl')
+            # svm_path = os.path.join(self.model_folder, 'svm_model_final_no_length_bucket.pkl')
+            # rf_path = os.path.join(self.model_folder, 'rf_model_final_no_length_bucket.pkl')
             tfidf_path = os.path.join(self.model_folder, 'tfidf_vectorizer_new_length_2.pkl')
 
             for path, name in [(svm_path, 'SVM'), (rf_path, 'Random Forest'), (tfidf_path, 'TF-IDF')]:
