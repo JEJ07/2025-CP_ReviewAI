@@ -101,12 +101,19 @@ class ModelJustificationGenerator:
                                'fits', 'material', 'design', 'feature', 'function'],
             'positive_words': ['good', 'great', 'love', 'excellent', 'amazing', 'perfect', 
                               'happy', 'satisfied', 'recommend'],
-            'negative_words': ['but', 'however', 'although', 'issue', 'problem', 'disappointed',
-                              'not', 'wish', 'could', 'better'],
+            'negative_words': ['issue', 'problem', 'disappointed', 'defect', 'broken', 
+                              'poor', 'terrible', 'awful', 'waste', 'cheap', 'worst'],
+            'complaint_patterns': ['wish it', 'would be better if', 'only problem', 
+                                  'only issue', 'downside', 'cons:', 'negatives:', 
+                                  'disappointed that', 'unfortunately', 'however', 
+                                  'but the', 'but it'],
+            'positive_negations': ['nothing is wrong', 'nothing wrong', 'no issues', 
+                                  'no problems', 'not bad', 'not disappointed', 
+                                  'no complaints', 'nothing to complain', 'can\'t complain', 
+                                  'no regrets', 'couldn\'t be better'],
             'time_references': ['yesterday', 'today', 'week', 'month', 'day', 'ago', 'recently'],
             'comparison_words': ['than', 'compared', 'better', 'worse', 'similar', 'like', 'unlike']
         }
-
     def generate_justification(self, review_text, prediction, confidence, cleaned_text=None, individual_predictions=None):
         try:
             justification = {
@@ -180,11 +187,17 @@ class ModelJustificationGenerator:
         model_agreement = 0
         ind_preds = justification.get('individual_predictions', {})
         if ind_preds:
-            svm_fake = ind_preds.get('svm', {}).get('fake', 0) > 0.5
-            rf_fake = ind_preds.get('rf', {}).get('fake', 0) > 0.5
-            bert_fake = ind_preds.get('distilbert', {}).get('fake', 0) > 0.5
-            model_agreement = sum([svm_fake, rf_fake, bert_fake])
-
+            svm_fake = ind_preds.get('svm', {}).get('fake', 0)
+            rf_fake = ind_preds.get('rf', {}).get('fake', 0)
+            bert_fake = ind_preds.get('distilbert', {}).get('fake', 0)
+            
+            # Count "strong agreement" (>0.6) separately from "weak agreement" (>0.5)
+            strong_agreements = sum([svm_fake > 0.6, rf_fake > 0.6, bert_fake > 0.6])
+            weak_agreements = sum([svm_fake > 0.5, rf_fake > 0.5, bert_fake > 0.5])
+            
+            model_agreement = weak_agreements
+            justification['strong_agreement'] = strong_agreements
+        
         justification['model_agreement'] = model_agreement
 
         if confidence >= 0.9:
@@ -197,22 +210,41 @@ class ModelJustificationGenerator:
             reasons.append(f"Moderate confidence")
             simple_reasons.append(f"Some red flags")
         
-        sentiment_feature = next((f for f in rf_features if f['feature'] == 'sentiment'), None)
-        if sentiment_feature:
-            polarity = sentiment_feature['value']
+        if not rf_features or len(rf_features) == 0:
+            logger.warning("Random Forest features are empty - using fallback analysis")
+            
+            # Use TextBlob for sentiment fallback
+            polarity = TextBlob(text).sentiment.polarity
+            
             justification['sentiment_analysis'] = {
                 'polarity': polarity,
                 'polarity_label': self._get_polarity_label(polarity)
             }
             
-            if polarity > 0.4:
+            if polarity > 0.7:
                 reasons.append(f"Overly positive sentiment (score: {polarity:.2f}) - exaggerated enthusiasm")
-                simple_reasons.append(f"Overly enthusiastic tone (suspiciously happy)")
                 flags['extreme_sentiment'] = True
-            elif polarity < -0.5:
+            elif polarity < -0.3:
                 reasons.append(f"Overly negative sentiment (score: {polarity:.2f}) - biased or malicious")
-                simple_reasons.append(f"Extremely negative tone (possibly malicious)")
                 flags['extreme_sentiment'] = True
+            
+            reasons.append("Model feature extraction incomplete - analysis may be limited")
+            simple_reasons.append("Analysis based on available data")
+        
+        else:
+            sentiment_feature = next((f for f in rf_features if f['feature'] == 'sentiment'), None)
+            if sentiment_feature:
+                polarity = sentiment_feature['value']
+                justification['sentiment_analysis'] = {
+                    'polarity': polarity,
+                    'polarity_label': self._get_polarity_label(polarity)
+                }
+                if polarity > 0.7:
+                    reasons.append(f"Overly positive sentiment (score: {polarity:.2f}) - exaggerated enthusiasm")
+                    flags['extreme_sentiment'] = True
+                elif polarity < -0.3:
+                    reasons.append(f"Overly negative sentiment (score: {polarity:.2f}) - biased or malicious")
+                    flags['extreme_sentiment'] = True
         
         processed_text = self.detector.preprocess_text(text).lower()
     
@@ -238,36 +270,34 @@ class ModelJustificationGenerator:
                 simple_reasons.append(f"{simple_msg}")
                 flags['suspicious_keywords'] = True
         
+        has_excessive_repetition = False
+
         immediate_rep = next((f for f in rf_features if f['feature'] == 'immediate_repetition'), None)
         max_rep = next((f for f in rf_features if f['feature'] == 'max_repetition'), None)
-        
+
         if immediate_rep and immediate_rep['value'] >= 2:
             if max_rep:
                 total_occurrences = int(max_rep['value'])
                 consecutive_pairs = int(immediate_rep['value'])
                 
                 if consecutive_pairs + 1 == total_occurrences:
-                    reasons.append(
-                        f"Excessive immediate word repetition: {total_occurrences} identical words in continuous sequence"
-                    )
-                    simple_reasons.append(
-                        f"Same word repeated {total_occurrences} times in a row - unnatural pattern"
-                    )
+                    reasons.append(f"Excessive immediate word repetition: {total_occurrences} identical words in continuous sequence")
+                    simple_reasons.append(f"Same word repeated {total_occurrences} times in a row - unnatural pattern")
                 else:
-                    reasons.append(
-                        f"Excessive word repetition: word appears {total_occurrences} times with {consecutive_pairs} back-to-back occurrences"
-                    )
-                    simple_reasons.append(
-                        f"Same word used {total_occurrences} times ({consecutive_pairs} repetitive patterns)"
-                    )
-            
-            flags['excessive_repetition'] = True
-            flags['unnatural_language'] = True
-        
+                    reasons.append(f"Excessive word repetition: word appears {total_occurrences} times with {consecutive_pairs} back-to-back occurrences")
+                    simple_reasons.append(f"Same word used {total_occurrences} times ({consecutive_pairs} repetitive patterns)")
+            elif immediate_rep['value'] >= 1:
+                reasons.append("Moderate word repetition detected")
+                simple_reasons.append("Some repeated words (borderline)")
+
+            has_excessive_repetition = True
+
         norm_rep = next((f for f in rf_features if f['feature'] == 'norm_repetition_score'), None)
         if norm_rep and norm_rep['value'] > 5.0:
             reasons.append(f"Abnormal repetition pattern score: {norm_rep['value']:.2f} (bot-like behavior)")
             simple_reasons.append(f"Unnatural writing pattern (bot-like behavior)")
+            has_excessive_repetition = True
+        if has_excessive_repetition:
             flags['excessive_repetition'] = True
             flags['unnatural_language'] = True
         
@@ -327,7 +357,6 @@ class ModelJustificationGenerator:
                                 if t['token'].lower() in suspicious_keywords]
                 
                 if suspicious_found and len(suspicious_found) >= 2:
-                    # Only mention if multiple suspicious words detected
                     reasons.append(
                         f"Multiple known red-flag words detected: {', '.join(suspicious_found[:3])}"
                     )
@@ -348,9 +377,17 @@ class ModelJustificationGenerator:
         
         active_flags = sum(1 for v in flags.values() if v)
         if reasons and confidence >= 0.75:
-            if model_agreement > 0:
-                reasons[0] = f"High confidence: {active_flags} red flags detected, {model_agreement} out of 3 AI models agree"
+            strong_count = justification.get('strong_agreement', 0)
+            
+            if model_agreement >= 3:
+                reasons[0] = f"High confidence: {active_flags} red flags detected, all 3 AI models agree (unanimous)"
+                simple_reasons[0] = f"{active_flags} warning signs found, all 3 AI systems agree it's fake"
+            elif model_agreement >= 2:
+                reasons[0] = f"High confidence: {active_flags} red flags detected, {model_agreement}/3 AI models agree"
                 simple_reasons[0] = f"{active_flags} warning signs found, {model_agreement}/3 AI systems agree it's fake"
+            elif strong_count >= 1:
+                reasons[0] = f"High confidence: {active_flags} red flags detected, {strong_count} model(s) strongly agree"
+                simple_reasons[0] = f"{active_flags} warning signs found (AI models lean toward fake)"
             else:
                 reasons[0] = f"High confidence: {active_flags} red flags detected"
                 simple_reasons[0] = f"{active_flags} warning signs found"
@@ -380,18 +417,26 @@ class ModelJustificationGenerator:
         model_agreement = 0
         ind_preds = justification.get('individual_predictions', {})
         if ind_preds:
-            svm_genuine = ind_preds.get('svm', {}).get('genuine', 0) > 0.5
-            rf_genuine = ind_preds.get('rf', {}).get('genuine', 0) > 0.5
-            bert_genuine = ind_preds.get('distilbert', {}).get('genuine', 0) > 0.5
-            model_agreement = sum([svm_genuine, rf_genuine, bert_genuine])
+            svm_genuine = ind_preds.get('svm', {}).get('genuine', 0)
+            rf_genuine = ind_preds.get('rf', {}).get('genuine', 0)
+            bert_genuine = ind_preds.get('distilbert', {}).get('genuine', 0)
+            
+            strong_agreements = sum([svm_genuine > 0.6, rf_genuine > 0.6, bert_genuine > 0.6])
+            weak_agreements = sum([svm_genuine > 0.5, rf_genuine > 0.5, bert_genuine > 0.5])
+            
+            model_agreement = weak_agreements
+            justification['strong_agreement'] = strong_agreements
         
         justification['model_agreement'] = model_agreement
-
+        
         # Confidence explanation
         if confidence >= 0.9:
             if model_agreement >= 3:
                 reasons.append("Strong confidence in genuine classification - all 3 models agree")
                 simple_reasons.append("Very likely real - all AI systems agree")
+            elif strong_agreements >= 2:
+                reasons.append(f"Strong confidence in genuine classification - {strong_agreements}/3 models strongly agree")
+                simple_reasons.append(f"Very likely real - {strong_agreements}/3 AI systems strongly agree")
             else:
                 reasons.append("Strong confidence in genuine classification based on model analysis")
                 simple_reasons.append("Very likely real - natural patterns detected")
@@ -423,12 +468,15 @@ class ModelJustificationGenerator:
         max_rep = next((f for f in rf_features if f['feature'] == 'max_repetition'), None)
         norm_rep = next((f for f in rf_features if f['feature'] == 'norm_repetition_score'), None)
         
-        if immediate_rep and immediate_rep['value'] <= 1:
-            reasons.append(f"Natural word usage without excessive repetition")
-            simple_reasons.append(f"Words flow naturally (not repetitive)")
-            flags['natural_repetition'] = True
-            flags['natural_language'] = True
-        
+        if immediate_rep:
+            if immediate_rep['value'] <= 1:
+                reasons.append(f"Natural word usage without excessive repetition")
+                simple_reasons.append(f"Words flow naturally (not repetitive)")
+                flags['natural_repetition'] = True
+                flags['natural_language'] = True
+            else:
+                pass
+
         if repetition_ratio_feat and repetition_ratio_feat['value'] <= 0.2:
             reasons.append(f"Low repetition ratio ({repetition_ratio_feat['value']:.2f}) indicates natural language")
             simple_reasons.append(f"Good vocabulary variety (natural writing)")
@@ -487,12 +535,23 @@ class ModelJustificationGenerator:
             flags['specific_details'] = True
         
         # Check for balanced perspective
-        positive_words = self.positive_indicators['positive_words']
-        negative_words = self.positive_indicators['negative_words']
-        has_positive = any(word in processed_text for word in positive_words)
-        has_negative = any(word in processed_text for word in negative_words)
+        processed_text = text.lower()
         
-        if has_positive and has_negative:
+        # Check for positive words
+        positive_words = self.positive_indicators['positive_words']
+        has_positive = any(word in processed_text for word in positive_words)
+        
+        negative_words = self.positive_indicators['negative_words']
+        complaint_patterns = self.positive_indicators['complaint_patterns']
+        positive_negations = self.positive_indicators['positive_negations']
+        
+        is_positive_negation = any(phrase in processed_text for phrase in positive_negations)
+        
+        has_negative_words = any(word in processed_text for word in negative_words)
+        has_complaint_pattern = any(pattern in processed_text for pattern in complaint_patterns)
+        has_actual_negative = (has_negative_words or has_complaint_pattern) and not is_positive_negation
+        
+        if has_positive and has_actual_negative:
             reasons.append("Review discusses both positives and negatives (balanced perspective typical of genuine reviews)")
             simple_reasons.append("Mentions both good and bad points (honest review)")
             flags['balanced_perspective'] = True
