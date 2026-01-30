@@ -184,7 +184,9 @@ class ModelJustificationGenerator:
             rf_fake = ind_preds.get('rf', {}).get('fake', 0) > 0.5
             bert_fake = ind_preds.get('distilbert', {}).get('fake', 0) > 0.5
             model_agreement = sum([svm_fake, rf_fake, bert_fake])
-        
+
+        justification['model_agreement'] = model_agreement
+
         if confidence >= 0.9:
             reasons.append(f"Very high confidence")
             simple_reasons.append(f"Very suspicious")
@@ -212,9 +214,12 @@ class ModelJustificationGenerator:
                 simple_reasons.append(f"Extremely negative tone (possibly malicious)")
                 flags['extreme_sentiment'] = True
         
+        processed_text = self.detector.preprocess_text(text).lower()
+    
         keyword_features = [f for f in rf_features if f['feature'].startswith('kw_') and f['value'] > 0]
         for kw_feat in keyword_features:
             keyword = kw_feat['feature'].replace('kw_', '')
+            keyword_count = processed_text.count(keyword)
             
             if keyword == 'good':
                 reasons.append(f"Use of repetitive generic praise word 'good' without specifics")
@@ -222,8 +227,12 @@ class ModelJustificationGenerator:
                 flags['suspicious_keywords'] = True
             else:
                 context_info = self.keyword_context.get(keyword, {}).get('fake', {})
-                technical_msg = context_info.get('technical', f"Suspicious keyword '{keyword}' detected")
-                simple_msg = context_info.get('simple', f"Uses suspicious word '{keyword}'")
+                if keyword_count == 1:
+                    technical_msg = f"Detected keyword '{keyword}' (model considers it suspicious in this context)"
+                    simple_msg = f"Word '{keyword}' flagged by AI model"
+                else:
+                    technical_msg = f"Repeated use of '{keyword}' ({keyword_count} times) - {context_info.get('technical', 'generic language pattern')}"
+                    simple_msg = f"Says '{keyword}' {keyword_count} times - {context_info.get('simple', 'suspicious pattern')}"
                 
                 reasons.append(f"Suspicious keyword '{keyword}': {technical_msg}")
                 simple_reasons.append(f"{simple_msg}")
@@ -306,16 +315,23 @@ class ModelJustificationGenerator:
             ]
             
             if meaningful_tokens:
-                suspicious_keywords = ['good', 'bad', 'amazing', 'terrible', 'best', 'worst', 
-                                    'perfect', 'awful', 'love', 'hate']
+                top_words = ', '.join([t['token'] for t in meaningful_tokens[:3]])
+                reasons.append(f"DistilBERT AI focused on: {top_words}")
+                simple_reasons.append(f"AI examined: {top_words}")
                 
-                suspicious_tokens = [t['token'] for t in meaningful_tokens 
+                suspicious_keywords = ['good', 'bad', 'amazing', 'terrible', 'best', 'worst', 
+                                    'perfect', 'awful', 'love', 'hate', 'dissapointed', 
+                                    'recommended', 'authentic', 'fake', 'original']
+                
+                suspicious_found = [t['token'] for t in meaningful_tokens 
                                 if t['token'].lower() in suspicious_keywords]
                 
-                if suspicious_tokens:
-                    token_names = ', '.join(suspicious_tokens[:3])
-                    reasons.append(f"DistilBERT AI detected suspicious language patterns in: {token_names}")
-                    simple_reasons.append(f"AI flagged suspicious words: {token_names}")
+                if suspicious_found and len(suspicious_found) >= 2:
+                    # Only mention if multiple suspicious words detected
+                    reasons.append(
+                        f"Multiple known red-flag words detected: {', '.join(suspicious_found[:3])}"
+                    )
+                    simple_reasons.append(f"Red-flag words: {', '.join(suspicious_found[:2])}")
         
         # SVM contributions
         svm_fake_pushers = [f for f in svm_features if f['direction'] == 'FAKE'][:10]
@@ -332,8 +348,12 @@ class ModelJustificationGenerator:
         
         active_flags = sum(1 for v in flags.values() if v)
         if reasons and confidence >= 0.75:
-            reasons[0] = f"High confidence: {active_flags} red flags detected, {model_agreement} out of 3 AI models agree"
-            simple_reasons[0] = f"{active_flags} warning signs found, {model_agreement}/3 AI systems agree it's fake"
+            if model_agreement > 0:
+                reasons[0] = f"High confidence: {active_flags} red flags detected, {model_agreement} out of 3 AI models agree"
+                simple_reasons[0] = f"{active_flags} warning signs found, {model_agreement}/3 AI systems agree it's fake"
+            else:
+                reasons[0] = f"High confidence: {active_flags} red flags detected"
+                simple_reasons[0] = f"{active_flags} warning signs found"
         
         justification['reasons'] = reasons[:7]
         justification['simple_reasons'] = simple_reasons[:7]
@@ -356,14 +376,32 @@ class ModelJustificationGenerator:
             'balanced_perspective': False,
             'natural_questions': False
         }
+
+        model_agreement = 0
+        ind_preds = justification.get('individual_predictions', {})
+        if ind_preds:
+            svm_genuine = ind_preds.get('svm', {}).get('genuine', 0) > 0.5
+            rf_genuine = ind_preds.get('rf', {}).get('genuine', 0) > 0.5
+            bert_genuine = ind_preds.get('distilbert', {}).get('genuine', 0) > 0.5
+            model_agreement = sum([svm_genuine, rf_genuine, bert_genuine])
         
+        justification['model_agreement'] = model_agreement
+
         # Confidence explanation
         if confidence >= 0.9:
-            reasons.append("Strong confidence in genuine classification based on model analysis")
-            simple_reasons.append("Very likely real - all AI systems agree")
+            if model_agreement >= 3:
+                reasons.append("Strong confidence in genuine classification - all 3 models agree")
+                simple_reasons.append("Very likely real - all AI systems agree")
+            else:
+                reasons.append("Strong confidence in genuine classification based on model analysis")
+                simple_reasons.append("Very likely real - natural patterns detected")
         elif confidence >= 0.75:
-            reasons.append("High confidence in genuine classification based on model analysis")
-            simple_reasons.append("Likely genuine - natural patterns detected")
+            if model_agreement >= 2:
+                reasons.append(f"High confidence in genuine classification - {model_agreement}/3 models agree")
+                simple_reasons.append(f"Likely genuine - {model_agreement}/3 AI systems agree")
+            else:
+                reasons.append("High confidence in genuine classification based on model analysis")
+                simple_reasons.append("Likely genuine - natural patterns detected")
         
         # FORCE CHECK SENTIMENT (ALWAYS)
         sentiment_feature = next((f for f in rf_features if f['feature'] == 'sentiment'), None)
@@ -476,7 +514,17 @@ class ModelJustificationGenerator:
             if meaningful_tokens:
                 token_names = ', '.join([t['token'] for t in meaningful_tokens[:3]])
                 reasons.append(f"DistilBERT AI analyzed key terms: {token_names}")
-                simple_reasons.append(f"AI examined important words: {token_names}")
+                simple_reasons.append(f"AI examined: {token_names}")
+                
+                product_terms = self.positive_indicators['product_details']
+                specific_tokens = [t['token'] for t in meaningful_tokens 
+                                if t['token'].lower() in product_terms]
+                
+                if specific_tokens:
+                    reasons.append(
+                        f"DistilBERT focused on product-specific details: {', '.join(specific_tokens[:3])}"
+                    )
+                    simple_reasons.append(f"AI noticed product details: {', '.join(specific_tokens[:2])}")
         
         # SVM contributions
         svm_genuine_pushers = [f for f in svm_features if f['direction'] == 'GENUINE'][:10]
